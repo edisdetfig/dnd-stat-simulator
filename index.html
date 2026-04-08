@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D&D Stat Simulator — Dark and Darker</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+
+// ============================================================
+// GAME DATA — stat_curves.json embedded as JS objects
+// In production these load from external JSON files.
+// NOTE: debuffDuration has been updated to full 59-segment wiki
+//   LaTeX curve. stat_curves.json in project needs same update.
+// ============================================================
+
+const STAT_CURVES = {
+  physicalPowerBonus: {
+    segments: [
+      { start: 0, end: 5, startValue: -0.80, slope: 0.10 },
+      { start: 5, end: 7, startValue: -0.30, slope: 0.05 },
+      { start: 7, end: 11, startValue: -0.20, slope: 0.03 },
+      { start: 11, end: 15, startValue: -0.08, slope: 0.02 },
+      { start: 15, end: 50, startValue: 0.00, slope: 0.01 },
+      { start: 50, end: 60, startValue: 0.35, slope: 0.005 },
+      { start: 60, end: 100, startValue: 0.40, slope: 0.002 },
+    ],
+    lowerLimit: -1.0,
+  },
+  magicPowerBonus: {
+    segments: [
+      { start: 0, end: 5, startValue: -0.80, slope: 0.10 },
+      { start: 5, end: 7, startValue: -0.30, slope: 0.05 },
+      { start: 7, end: 11, startValue: -0.20, slope: 0.03 },
+      { start: 11, end: 15, startValue: -0.08, slope: 0.02 },
+      { start: 15, end: 50, startValue: 0.00, slope: 0.01 },
+      { start: 50, end: 60, startValue: 0.35, slope: 0.005 },
+      { start: 60, end: 100, startValue: 0.40, slope: 0.002 },
+    ],
+    lowerLimit: -1.0,
+  },
+  health: {
+    segments: [
+      { start: 0, end: 15, startValue: 95.0, slope: 2.0 },
+      { start: 15, end: 21, startValue: 125.0, slope: 1.75 },
+      { start: 21, end: 44, startValue: 135.5, slope: 1.5 },
+      { start: 44, end: 48, startValue: 170.0, slope: 1.25 },
+      { start: 48, end: 64, startValue: 175.0, slope: 1.0 },
+      { start: 64, end: 100, startValue: 191.0, slope: 0.5 },
+    ],
+  },
+  actionSpeed: {
+    segments: [
+      { start: 0, end: 10, startValue: -0.38, slope: 0.030 },
+      { start: 10, end: 13, startValue: -0.08, slope: 0.020 },
+      { start: 13, end: 15, startValue: -0.02, slope: 0.010 },
+      { start: 15, end: 33, startValue: 0.00, slope: 0.0125 },
+      { start: 33, end: 45, startValue: 0.225, slope: 0.010 },
+      { start: 45, end: 49, startValue: 0.345, slope: 0.0075 },
+      { start: 49, end: 100, startValue: 0.375, slope: 0.005 },
+    ],
+  },
+  moveSpeed: {
+    segments: [
+      { start: 0, end: 10, startValue: -10.0, slope: 0.5 },
+      { start: 10, end: 15, startValue: -5.0, slope: 1.0 },
+      { start: 15, end: 75, startValue: 0.0, slope: 0.5 },
+      { start: 75, end: 100, startValue: 30.0, slope: 0.25 },
+    ],
+  },
+  healthRecovery: {
+    segments: [
+      { start: 0, end: 5, startValue: -0.55, slope: 0.05 },
+      { start: 5, end: 15, startValue: -0.30, slope: 0.03 },
+      { start: 15, end: 25, startValue: 0.00, slope: 0.07 },
+      { start: 25, end: 35, startValue: 0.70, slope: 0.05 },
+      { start: 35, end: 84, startValue: 1.20, slope: 0.02 },
+      { start: 84, end: 85, startValue: 2.18, slope: 0.01 },
+      { start: 85, end: 86, startValue: 2.19, slope: 0.03 },
+      { start: 86, end: 100, startValue: 2.22, slope: 0.02 },
+    ],
+  },
+  itemEquipSpeed: {
+    segments: [
+      { start: 0, end: 1, startValue: -0.95, slope: 0.0 },
+      { start: 1, end: 2, startValue: -0.95, slope: 0.04 },
+      { start: 2, end: 15, startValue: -0.91, slope: 0.07 },
+      { start: 15, end: 35, startValue: 0.00, slope: 0.05 },
+      { start: 35, end: 70, startValue: 1.00, slope: 0.02 },
+      { start: 70, end: 100, startValue: 1.70, slope: 0.01 },
+    ],
+  },
+  manualDexterity: {
+    segments: [
+      { start: 0, end: 15, startValue: -0.15, slope: 0.01 },
+      { start: 15, end: 23, startValue: 0.00, slope: 0.03 },
+      { start: 23, end: 31, startValue: 0.24, slope: 0.02 },
+      { start: 31, end: 37, startValue: 0.40, slope: 0.01 },
+      { start: 37, end: 45, startValue: 0.46, slope: 0.005 },
+      { start: 45, end: 95, startValue: 0.50, slope: 0.001 },
+      { start: 95, end: 100, startValue: 0.55, slope: 0.0 },
+    ],
+    upperLimit: 0.55,
+  },
+  willToMagicResistance: {
+    segments: [
+      { start: 0, end: 5, startValue: -20.0, slope: 4.0 },
+      { start: 5, end: 15, startValue: 0.0, slope: 3.0 },
+      { start: 15, end: 33, startValue: 30.0, slope: 4.0 },
+      { start: 33, end: 48, startValue: 102.0, slope: 3.0 },
+      { start: 48, end: 58, startValue: 147.0, slope: 2.0 },
+      { start: 58, end: 100, startValue: 167.0, slope: 1.0 },
+    ],
+  },
+  magicResistanceToMDR: {
+    segments: [
+      { start: -300, end: -15, startValue: -5.95, slope: 0.02 },
+      { start: -15, end: 8, startValue: -0.25, slope: 0.01 },
+      { start: 8, end: 18, startValue: -0.02, slope: 0.005 },
+      { start: 18, end: 33, startValue: 0.03, slope: 0.004 },
+      { start: 33, end: 53, startValue: 0.09, slope: 0.003 },
+      { start: 53, end: 85, startValue: 0.15, slope: 0.0025 },
+      { start: 85, end: 280, startValue: 0.23, slope: 0.002 },
+      { start: 280, end: 340, startValue: 0.62, slope: 0.0015 },
+      { start: 340, end: 430, startValue: 0.71, slope: 0.001 },
+      { start: 430, end: 500, startValue: 0.80, slope: 0.0005 },
+    ],
+    cap: 0.65,
+  },
+  armorRatingToPDR: {
+    segments: [
+      { start: -300, end: -12, startValue: -6.148, slope: 0.020 },
+      { start: -12, end: -4, startValue: -0.388, slope: 0.015 },
+      { start: -4, end: 6, startValue: -0.268, slope: 0.012 },
+      { start: 6, end: 12, startValue: -0.148, slope: 0.013 },
+      { start: 12, end: 20, startValue: -0.070, slope: 0.014 },
+      { start: 20, end: 75, startValue: 0.042, slope: 0.0015 },
+      { start: 75, end: 95, startValue: 0.1245, slope: 0.00155 },
+      { start: 95, end: 115, startValue: 0.1555, slope: 0.0015 },
+      { start: 115, end: 135, startValue: 0.1855, slope: 0.00145 },
+      { start: 135, end: 155, startValue: 0.2145, slope: 0.0014 },
+      { start: 155, end: 175, startValue: 0.2425, slope: 0.00135 },
+      { start: 175, end: 195, startValue: 0.2695, slope: 0.0013 },
+      { start: 195, end: 215, startValue: 0.2955, slope: 0.00125 },
+      { start: 215, end: 235, startValue: 0.3205, slope: 0.0012 },
+      { start: 235, end: 255, startValue: 0.3445, slope: 0.00115 },
+      { start: 255, end: 275, startValue: 0.3675, slope: 0.0011 },
+      { start: 275, end: 295, startValue: 0.3895, slope: 0.001 },
+      { start: 295, end: 315, startValue: 0.4095, slope: 0.001 },
+      { start: 315, end: 335, startValue: 0.4305, slope: 0.00095 },
+      { start: 335, end: 355, startValue: 0.4495, slope: 0.0009 },
+      { start: 355, end: 375, startValue: 0.4675, slope: 0.00085 },
+      { start: 375, end: 395, startValue: 0.4845, slope: 0.0008 },
+      { start: 395, end: 415, startValue: 0.5005, slope: 0.00075 },
+      { start: 415, end: 435, startValue: 0.5155, slope: 0.0007 },
+      { start: 435, end: 455, startValue: 0.5295, slope: 0.00065 },
+      { start: 455, end: 475, startValue: 0.5425, slope: 0.0006 },
+      { start: 475, end: 495, startValue: 0.5545, slope: 0.00055 },
+      { start: 495, end: 600, startValue: 0.5655, slope: 0.0005 },
+    ],
+  },
+  cooldownReduction: {
+    segments: [
+      { start: 0, end: 20, startValue: -0.30, slope: 0.02 },
+      { start: 20, end: 50, startValue: 0.10, slope: 0.01 },
+      { start: 50, end: 100, startValue: 0.40, slope: 0.005 },
+    ],
+    upperLimit: 0.65,
+  },
+  spellCastingSpeed: {
+    segments: [
+      { start: 0, end: 5, startValue: -0.60, slope: 0.05 },
+      { start: 5, end: 10, startValue: -0.35, slope: 0.04 },
+      { start: 10, end: 15, startValue: -0.15, slope: 0.03 },
+      { start: 15, end: 25, startValue: 0.00, slope: 0.021 },
+      { start: 25, end: 40, startValue: 0.21, slope: 0.02 },
+      { start: 40, end: 100, startValue: 0.51, slope: 0.01 },
+    ],
+  },
+  memoryCapacity: {
+    segments: [
+      { start: 0, end: 6, startValue: 0, slope: 0 },
+      { start: 6, end: 100, startValue: 0, slope: 1 },
+    ],
+  },
+  memoryRecovery: {
+    segments: [
+      { start: 0, end: 28, startValue: 0.43, slope: 0.015 },
+      { start: 28, end: 35, startValue: 0.85, slope: 0.05 },
+      { start: 35, end: 84, startValue: 1.20, slope: 0.02 },
+      { start: 84, end: 85, startValue: 2.18, slope: 0.01 },
+      { start: 85, end: 86, startValue: 2.19, slope: 0.03 },
+      { start: 86, end: 100, startValue: 2.22, slope: 0.02 },
+    ],
+  },
+  buffDuration: {
+    segments: [
+      { start: 0, end: 5, startValue: -0.80, slope: 0.10 },
+      { start: 5, end: 7, startValue: -0.30, slope: 0.05 },
+      { start: 7, end: 11, startValue: -0.20, slope: 0.03 },
+      { start: 11, end: 15, startValue: -0.08, slope: 0.02 },
+      { start: 15, end: 50, startValue: 0.00, slope: 0.01 },
+      { start: 50, end: 100, startValue: 0.35, slope: 0.005 },
+    ],
+  },
+  debuffDuration: {
+    segments: [
+      { start: 0, end: 1, startValue: 4.0, slope: -1.667 },
+      { start: 1, end: 2, startValue: 2.333, slope: -0.833 },
+      { start: 2, end: 3, startValue: 1.5, slope: -0.5 },
+      { start: 3, end: 4, startValue: 1.0, slope: -0.333 },
+      { start: 4, end: 5, startValue: 0.667, slope: -0.238 },
+      { start: 5, end: 6, startValue: 0.429, slope: -0.096 },
+      { start: 6, end: 7, startValue: 0.333, slope: -0.083 },
+      { start: 7, end: 8, startValue: 0.25, slope: -0.045 },
+      { start: 8, end: 9, startValue: 0.205, slope: -0.042 },
+      { start: 9, end: 10, startValue: 0.163, slope: -0.039 },
+      { start: 10, end: 11, startValue: 0.124, slope: -0.037 },
+      { start: 11, end: 12, startValue: 0.087, slope: -0.023 },
+      { start: 12, end: 14, startValue: 0.064, slope: -0.022 },
+      { start: 14, end: 15, startValue: 0.02, slope: -0.02 },
+      { start: 15, end: 17, startValue: 0.0, slope: -0.01 },
+      { start: 17, end: 19, startValue: -0.02, slope: -0.009 },
+      { start: 19, end: 20, startValue: -0.038, slope: -0.01 },
+      { start: 20, end: 21, startValue: -0.048, slope: -0.009 },
+      { start: 21, end: 22, startValue: -0.057, slope: -0.008 },
+      { start: 22, end: 24, startValue: -0.065, slope: -0.009 },
+      { start: 24, end: 29, startValue: -0.083, slope: -0.008 },
+      { start: 29, end: 30, startValue: -0.123, slope: -0.007 },
+      { start: 30, end: 31, startValue: -0.13, slope: -0.008 },
+      { start: 31, end: 32, startValue: -0.138, slope: -0.007 },
+      { start: 32, end: 33, startValue: -0.145, slope: -0.008 },
+      { start: 33, end: 36, startValue: -0.153, slope: -0.007 },
+      { start: 36, end: 37, startValue: -0.174, slope: -0.006 },
+      { start: 37, end: 39, startValue: -0.18, slope: -0.007 },
+      { start: 39, end: 41, startValue: -0.194, slope: -0.006 },
+      { start: 41, end: 42, startValue: -0.206, slope: -0.007 },
+      { start: 42, end: 46, startValue: -0.213, slope: -0.006 },
+      { start: 46, end: 47, startValue: -0.237, slope: -0.005 },
+      { start: 47, end: 49, startValue: -0.242, slope: -0.006 },
+      { start: 49, end: 50, startValue: -0.254, slope: -0.005 },
+      { start: 50, end: 52, startValue: -0.259, slope: -0.003 },
+      { start: 52, end: 53, startValue: -0.265, slope: -0.002 },
+      { start: 53, end: 55, startValue: -0.267, slope: -0.003 },
+      { start: 55, end: 56, startValue: -0.273, slope: -0.002 },
+      { start: 56, end: 58, startValue: -0.275, slope: -0.003 },
+      { start: 58, end: 59, startValue: -0.281, slope: -0.002 },
+      { start: 59, end: 60, startValue: -0.283, slope: -0.003 },
+      { start: 60, end: 61, startValue: -0.286, slope: -0.002 },
+      { start: 61, end: 62, startValue: -0.288, slope: -0.003 },
+      { start: 62, end: 63, startValue: -0.291, slope: -0.002 },
+      { start: 63, end: 64, startValue: -0.293, slope: -0.003 },
+      { start: 64, end: 65, startValue: -0.296, slope: -0.002 },
+      { start: 65, end: 66, startValue: -0.298, slope: -0.003 },
+      { start: 66, end: 67, startValue: -0.301, slope: -0.002 },
+      { start: 67, end: 68, startValue: -0.303, slope: -0.003 },
+      { start: 68, end: 70, startValue: -0.306, slope: -0.002 },
+      { start: 70, end: 71, startValue: -0.31, slope: -0.003 },
+      { start: 71, end: 73, startValue: -0.313, slope: -0.002 },
+      { start: 73, end: 74, startValue: -0.317, slope: -0.003 },
+      { start: 74, end: 76, startValue: -0.32, slope: -0.002 },
+      { start: 76, end: 77, startValue: -0.324, slope: -0.003 },
+      { start: 77, end: 80, startValue: -0.327, slope: -0.002 },
+      { start: 80, end: 81, startValue: -0.333, slope: -0.003 },
+      { start: 81, end: 86, startValue: -0.336, slope: -0.002 },
+      { start: 86, end: 87, startValue: -0.346, slope: -0.003 },
+      { start: 87, end: 100, startValue: -0.349, slope: -0.002 },
+    ],
+    lowerLimit: -0.95,
+  },
+  magicalInteractionSpeed: {
+    segments: [
+      { start: 0, end: 15, startValue: -0.75, slope: 0.05 },
+      { start: 15, end: 25, startValue: 0.00, slope: 0.07 },
+      { start: 25, end: 35, startValue: 0.70, slope: 0.05 },
+      { start: 35, end: 84, startValue: 1.20, slope: 0.02 },
+      { start: 84, end: 85, startValue: 2.18, slope: 0.01 },
+      { start: 85, end: 86, startValue: 2.19, slope: 0.03 },
+      { start: 86, end: 100, startValue: 2.22, slope: 0.02 },
+    ],
+  },
+  regularInteractionSpeed: {
+    segments: [
+      { start: 0, end: 7, startValue: -0.26, slope: 0.02 },
+      { start: 7, end: 15, startValue: -0.12, slope: 0.015 },
+      { start: 15, end: 20, startValue: 0.00, slope: 0.056 },
+      { start: 20, end: 25, startValue: 0.28, slope: 0.048 },
+      { start: 25, end: 30, startValue: 0.52, slope: 0.040 },
+      { start: 30, end: 35, startValue: 0.72, slope: 0.032 },
+      { start: 35, end: 40, startValue: 0.88, slope: 0.024 },
+      { start: 40, end: 45, startValue: 1.00, slope: 0.016 },
+      { start: 45, end: 100, startValue: 1.08, slope: 0.008 },
+    ],
+  },
+  persuasiveness: {
+    segments: [
+      { start: 0, end: 35, startValue: 0.0, slope: 1.0 },
+      { start: 35, end: 71, startValue: 35.0, slope: 0.5 },
+      { start: 71, end: 99, startValue: 53.0, slope: 0.25 },
+      { start: 99, end: 100, startValue: 60.0, slope: 0.0 },
+    ],
+  },
+};
+
+// ============================================================
+// CONSTANTS & CLASS DATA
+// ============================================================
+
+const CONSTANTS = {
+  PDR_CAP: 0.65, PDR_CAP_FIGHTER: 0.75,
+  MDR_CAP: 0.65, MDR_CAP_BARBARIAN: 0.75,
+  MOVE_SPEED_CAP: 330, BASE_MOVE_SPEED: 300,
+  CDR_CAP: 0.65, MANUAL_DEX_CAP: 0.55,
+  HS_BASE_MULT: 0.5, LIMB_MULT: 0.5,
+  ANTIMAGIC: 0.20,
+};
+
+const CORE_ATTRS = new Set(["str", "vig", "agi", "dex", "wil", "kno", "res"]);
+
+const WARLOCK = {
+  id: "warlock", name: "Warlock",
+  baseStats: { str: 11, vig: 14, agi: 14, dex: 15, wil: 22, kno: 15, res: 14 },
+};
+
+// ============================================================
+// EQUIPPED ITEMS — from current_build_data.md
+// Each item has inherentStats + modifiers. All values are
+// computation-ready: percentages as decimals, flats as-is.
+// Weapon-specific fields (weaponDamage, etc.) are separate
+// from stats — used by damage calculator, not aggregated.
+// ============================================================
+
+const EQUIPPED_GEAR = {
+  weaponSlot1: {
+    primary: {
+      id: "spectral_blade", name: "Spectral Blade", rarity: "epic",
+      handType: "twoHanded", weaponDamage: 40,
+      inherentStats: [
+        { stat: "moveSpeed", value: -30 },
+        { stat: "actionSpeed", value: 0.05 },
+        { stat: "headshotDamageBonus", value: 0.05 },
+      ],
+      modifiers: [
+        { stat: "armorPenetration", value: 0.045 },
+        { stat: "physicalDamageBonus", value: 0.025 },
+        { stat: "additionalWeaponDamage", value: 2 },
+      ],
+    },
+    secondary: null,
+  },
+  weaponSlot2: {
+    primary: {
+      id: "spellbook", name: "Spellbook", rarity: "epic",
+      handType: "twoHanded", weaponDamage: 22, magicWeaponDamage: 5,
+      inherentStats: [
+        { stat: "moveSpeed", value: -10 },
+        { stat: "magicPenetration", value: 0.05 },
+      ],
+      modifiers: [
+        { stat: "memoryCapacityBonus", value: 0.062 },
+        { stat: "additionalMemoryCapacity", value: 4 },
+        { stat: "buffDurationBonus", value: 0.06 },
+      ],
+    },
+    secondary: null,
+  },
+  head: {
+    id: "rubysilver_barbuta_helm", name: "Rubysilver Barbuta Helm", rarity: "epic",
+    inherentStats: [
+      { stat: "armorRating", value: 32 },
+      { stat: "projectileDamageReduction", value: 0.012 },
+      { stat: "headshotDamageReduction", value: 0.15 },
+      { stat: "magicResistance", value: 30 },
+      { stat: "moveSpeed", value: -4 },
+      { stat: "dex", value: 4 },
+      { stat: "physicalDamageReduction", value: 0.01 },
+    ],
+    modifiers: [
+      { stat: "str", value: 3 },
+      { stat: "wil", value: 2 },
+      { stat: "armorPenetration", value: 0.022 },
+    ],
+  },
+  chest: {
+    id: "dark_plate_armor", name: "Dark Plate Armor", rarity: "epic",
+    inherentStats: [
+      { stat: "armorRating", value: 121 },
+      { stat: "projectileDamageReduction", value: 0.035 },
+      { stat: "magicResistance", value: 41 },
+      { stat: "moveSpeed", value: -11 },
+      { stat: "vig", value: 2 },
+    ],
+    modifiers: [
+      { stat: "agi", value: 3 },
+      { stat: "wil", value: 3 },
+      { stat: "kno", value: 3 },
+    ],
+  },
+  back: {
+    id: "spectral_cloak", name: "Spectral Cloak", rarity: "epic",
+    inherentStats: [
+      { stat: "armorRating", value: 19 },
+      { stat: "str", value: 2 },
+      { stat: "dex", value: 2 },
+      { stat: "wil", value: 2 },
+    ],
+    modifiers: [
+      { stat: "magicalDamageReduction", value: 0.028 },
+      { stat: "actionSpeed", value: 0.03 },
+      { stat: "magicResistance", value: 24 },
+    ],
+  },
+  hands: {
+    id: "spiked_gauntlet", name: "Spiked Gauntlet", rarity: "epic",
+    inherentStats: [
+      { stat: "armorRating", value: 43 },
+      { stat: "projectileDamageReduction", value: 0.025 },
+      { stat: "magicResistance", value: -5 },
+      { stat: "moveSpeed", value: -1 },
+      { stat: "dex", value: 2 },
+      { stat: "vig", value: 2 },
+    ],
+    onHitEffects: [{ damage: 1, damageType: "true_physical", trueDamage: true }],
+    modifiers: [
+      { stat: "wil", value: 3 },
+      { stat: "str", value: 2 },
+      { stat: "physicalPower", value: 2 },
+    ],
+  },
+  legs: {
+    id: "dark_padded_hose", name: "Dark Padded Hose", rarity: "epic",
+    inherentStats: [
+      { stat: "armorRating", value: 44 },
+      { stat: "magicResistance", value: 25 },
+      { stat: "moveSpeed", value: -4 },
+      { stat: "vig", value: 2 },
+    ],
+    modifiers: [
+      { stat: "dex", value: 2 },
+      { stat: "wil", value: 3 },
+      { stat: "str", value: 3 },
+    ],
+  },
+  feet: {
+    id: "golden_boots", name: "Golden Boots", rarity: "epic",
+    inherentStats: [
+      { stat: "armorRating", value: 38 },
+      { stat: "moveSpeed", value: 5 },
+      { stat: "str", value: 4 },
+      { stat: "luck", value: 10 },
+      { stat: "magicalDamageReduction", value: 0.02 },
+    ],
+    modifiers: [
+      { stat: "dex", value: 2 },
+      { stat: "wil", value: 3 },
+      { stat: "actionSpeed", value: 0.017 },
+    ],
+  },
+  ring1: {
+    id: "ring_of_courage_1", name: "Ring of Courage", rarity: "epic",
+    inherentStats: [{ stat: "str", value: 3 }],
+    modifiers: [
+      { stat: "physicalDamageBonus", value: 0.032 },
+      { stat: "physicalPower", value: 4 },
+      { stat: "armorPenetration", value: 0.018 },
+    ],
+  },
+  ring2: {
+    id: "ring_of_courage_2", name: "Ring of Courage", rarity: "epic",
+    inherentStats: [{ stat: "str", value: 3 }],
+    modifiers: [
+      { stat: "physicalPower", value: 4 },
+      { stat: "physicalDamageBonus", value: 0.034 },
+      { stat: "armorPenetration", value: 0.02 },
+    ],
+  },
+  necklace: {
+    id: "necklace_of_peace", name: "Necklace of Peace", rarity: "epic",
+    inherentStats: [{ stat: "maxHealth", value: 6 }],
+    modifiers: [
+      { stat: "magicResistance", value: 27 },
+      { stat: "magicalDamageReduction", value: 0.029 },
+      { stat: "actionSpeed", value: 0.039 },
+    ],
+  },
+};
+
+const ACTIVE_PERKS = {
+  demonArmor: true, shadowTouch: true, darkReflection: true, antimagic: false,
+};
+
+const ACTIVE_LOADOUT = {
+  skills: ["spell_memory_1", "blow_of_corruption"],
+  spells: [
+    { id: "curse_of_weakness", memoryCost: 1 },
+    { id: "power_of_sacrifice", memoryCost: 1 },
+    { id: "bloodstained_blade", memoryCost: 2 },
+    { id: "eldritch_shield", memoryCost: 5 },
+    { id: "spell_predation", memoryCost: 3 },
+  ],
+  totalMemoryCost: 12,
+};
+
+// ============================================================
+// CORE ENGINE
+// ============================================================
+
+function evaluateCurve(curveDef, inputValue) {
+  const { segments, lowerLimit, upperLimit } = curveDef;
+  const v = Math.max(segments[0].start, Math.min(segments[segments.length - 1].end, inputValue));
+  let seg = segments[segments.length - 1];
+  for (let i = 0; i < segments.length; i++) {
+    if (v >= segments[i].start && v < segments[i].end) { seg = segments[i]; break; }
+    if (i === segments.length - 1 && v === segments[i].end) seg = segments[i];
+  }
+  let r = seg.startValue + seg.slope * (v - seg.start);
+  if (lowerLimit != null) r = Math.max(lowerLimit, r);
+  if (upperLimit != null) r = Math.min(upperLimit, r);
+  return r;
+}
+
+// ============================================================
+// GEAR AGGREGATOR
+// ============================================================
+
+const ARMOR_SLOTS = ["head", "chest", "back", "hands", "legs", "feet", "ring1", "ring2", "necklace"];
+const WEAPON_ONLY = new Set(["additionalWeaponDamage"]);
+
+function aggregateGear(classData, gear, weaponHeldState) {
+  const attrs = { ...classData.baseStats };
+  const bonuses = {};
+
+  function addItem(item) {
+    if (!item) return;
+    for (const { stat, value } of [...(item.inherentStats || []), ...(item.modifiers || [])]) {
+      if (WEAPON_ONLY.has(stat)) continue;
+      if (CORE_ATTRS.has(stat)) attrs[stat] = (attrs[stat] || 0) + value;
+      else bonuses[stat] = (bonuses[stat] || 0) + value;
+    }
+  }
+
+  for (const slot of ARMOR_SLOTS) addItem(gear[slot]);
+
+  let activeWeapon = null;
+  if (weaponHeldState !== "none" && gear[weaponHeldState]) {
+    const ws = gear[weaponHeldState];
+    addItem(ws.primary);
+    addItem(ws.secondary);
+    activeWeapon = ws.primary;
+  }
+
+  return { attrs, bonuses, activeWeapon };
+}
+
+// ============================================================
+// DERIVED STAT PIPELINE
+// ============================================================
+
+function computeDerivedStats(attrs, bonuses, perkEffects) {
+  const s = {};
+  const C = CONSTANTS;
+
+  s.physicalPower = attrs.str + (bonuses.physicalPower || 0);
+  s.ppbFromCurve = evaluateCurve(STAT_CURVES.physicalPowerBonus, s.physicalPower);
+  s.ppbFromBonuses = bonuses.physicalDamageBonus || 0;
+  s.ppb = s.ppbFromCurve + s.ppbFromBonuses;
+
+  s.magicalPower = attrs.wil + (bonuses.magicalPower || 0);
+  s.mpbFromCurve = evaluateCurve(STAT_CURVES.magicPowerBonus, s.magicalPower);
+  s.mpbFromBonuses = bonuses.magicalDamageBonus || 0;
+  s.mpb = s.mpbFromCurve + s.mpbFromBonuses;
+
+  s.healthRating = attrs.str * 0.25 + attrs.vig * 0.75;
+  s.health = Math.ceil(evaluateCurve(STAT_CURVES.health, s.healthRating)) + (bonuses.maxHealth || 0);
+
+  s.actionSpeedRating = attrs.agi * 0.25 + attrs.dex * 0.75;
+  s.actionSpeed = evaluateCurve(STAT_CURVES.actionSpeed, s.actionSpeedRating) + (bonuses.actionSpeed || 0);
+
+  s.moveSpeed = Math.min(C.MOVE_SPEED_CAP,
+    C.BASE_MOVE_SPEED + evaluateCurve(STAT_CURVES.moveSpeed, attrs.agi) + (bonuses.moveSpeed || 0));
+
+  s.armorRating = (bonuses.armorRating || 0) + (bonuses.additionalArmorRating || 0);
+  s.pdrFromCurve = evaluateCurve(STAT_CURVES.armorRatingToPDR, s.armorRating);
+  s.pdrFromBonuses = bonuses.physicalDamageReduction || 0;
+  s.pdrCap = perkEffects.fighterDefenseMastery ? C.PDR_CAP_FIGHTER : C.PDR_CAP;
+  s.pdr = Math.min(s.pdrCap, s.pdrFromCurve + s.pdrFromBonuses);
+
+  s.magicResistance = evaluateCurve(STAT_CURVES.willToMagicResistance, attrs.wil) + (bonuses.magicResistance || 0);
+  s.mdrFromCurve = evaluateCurve(STAT_CURVES.magicResistanceToMDR, s.magicResistance);
+  s.mdrFromBonuses = bonuses.magicalDamageReduction || 0;
+  s.mdrCap = perkEffects.barbarianIronWill ? C.MDR_CAP_BARBARIAN : C.MDR_CAP;
+  s.mdr = Math.min(s.mdrCap, s.mdrFromCurve + s.mdrFromBonuses);
+
+  s.hasAntimagic = !!perkEffects.antimagic;
+  s.effectiveMagicDmgTaken = s.hasAntimagic ? (1 - s.mdr) * (1 - C.ANTIMAGIC) : (1 - s.mdr);
+
+  s.healthRecovery = evaluateCurve(STAT_CURVES.healthRecovery, attrs.vig);
+  s.spellCastingSpeed = evaluateCurve(STAT_CURVES.spellCastingSpeed, attrs.kno) + (perkEffects.spellCastingSpeedBonus || 0);
+  const memCurve = evaluateCurve(STAT_CURVES.memoryCapacity, attrs.kno);
+  s.memoryCapacity = Math.ceil(memCurve * (1 + (bonuses.memoryCapacityBonus || 0))) + (bonuses.additionalMemoryCapacity || 0);
+  s.memoryRecovery = evaluateCurve(STAT_CURVES.memoryRecovery, attrs.kno);
+  s.buffDuration = evaluateCurve(STAT_CURVES.buffDuration, attrs.wil) + (bonuses.buffDurationBonus || 0);
+  s.debuffDuration = evaluateCurve(STAT_CURVES.debuffDuration, attrs.wil);
+  s.cdr = Math.min(C.CDR_CAP, evaluateCurve(STAT_CURVES.cooldownReduction, attrs.res) + (bonuses.cooldownReductionBonus || 0));
+  s.persuasiveness = evaluateCurve(STAT_CURVES.persuasiveness, attrs.res);
+  s.manualDexterity = Math.min(C.MANUAL_DEX_CAP, evaluateCurve(STAT_CURVES.manualDexterity, attrs.dex));
+  s.equipSpeed = evaluateCurve(STAT_CURVES.itemEquipSpeed, attrs.dex);
+  s.regularInteractionSpeed = evaluateCurve(STAT_CURVES.regularInteractionSpeed, attrs.dex * 0.25 + attrs.res * 0.75);
+  s.magicalInteractionSpeed = evaluateCurve(STAT_CURVES.magicalInteractionSpeed, attrs.wil);
+  s.armorPenetration = bonuses.armorPenetration || 0;
+  s.magicPenetration = bonuses.magicPenetration || 0;
+  s.headshotDamageBonus = bonuses.headshotDamageBonus || 0;
+  s.projectileDamageReduction = bonuses.projectileDamageReduction || 0;
+  s.headshotDamageReduction = bonuses.headshotDamageReduction || 0;
+
+  return s;
+}
+
+// ============================================================
+// DAMAGE CALCULATORS
+// ============================================================
+
+function calcPhysicalMeleeDamage({ baseWeaponDmg, buffWeaponDmg = 0, comboMultiplier = 1.0,
+  impactZone = 1.0, gearWeaponDmg = 0, ppb, additionalPhysicalDmg = 0, hitLocation = "body",
+  headshotBonus = 0, targetHeadshotDR = 0, targetPDR, attackerPen = 0, projectileReduction = 0, truePhysicalDmg = 0 }) {
+  const C = CONSTANTS;
+  let hlm = 1.0;
+  if (hitLocation === "head") hlm = 1.0 + C.HS_BASE_MULT + headshotBonus - targetHeadshotDR;
+  else if (hitLocation === "limb") hlm = C.LIMB_MULT;
+  const dr = Math.max(1 - targetPDR * (1 - attackerPen), 1 - targetPDR);
+  const base = (baseWeaponDmg + buffWeaponDmg) * comboMultiplier * impactZone + gearWeaponDmg;
+  return Math.floor((base * (1 + ppb) + additionalPhysicalDmg) * hlm * dr * (1 - projectileReduction) + truePhysicalDmg);
+}
+
+function calcSpellDamage({ baseDamage, scaling, mpb, hitLocation = "body", affectedByHitLocation = true,
+  headshotBonus = 0, targetHeadshotDR = 0, targetMDR, attackerMagicPen = 0, typeBonuses = 0 }) {
+  const C = CONSTANTS;
+  let hlm = 1.0;
+  if (affectedByHitLocation) {
+    if (hitLocation === "head") hlm = 1.0 + C.HS_BASE_MULT + headshotBonus - targetHeadshotDR;
+    else if (hitLocation === "limb") hlm = C.LIMB_MULT;
+  }
+  const dr = Math.max(1 - targetMDR * (1 - attackerMagicPen), 1 - targetMDR);
+  return Math.floor(baseDamage * (1 + mpb * scaling + typeBonuses) * hlm * dr);
+}
+
+// ============================================================
+// UNIT TESTS
+// ============================================================
+
+function runTests() {
+  const R = [];
+  const pass = (n) => R.push({ name: n, status: "PASS" });
+  const fail = (n, e, g) => R.push({ name: n, status: "FAIL", expected: e, got: g });
+  const eq = (a, b, t = 0.015) => Math.abs(a - b) <= t;
+  let v;
+
+  // Naked warlock curves
+  v = evaluateCurve(STAT_CURVES.physicalPowerBonus, 11); eq(v, -0.08) ? pass("PPB(11)=-8%") : fail("PPB(11)", -0.08, v);
+  v = evaluateCurve(STAT_CURVES.physicalPowerBonus, 15); eq(v, 0) ? pass("PPB(15)=0%") : fail("PPB(15)", 0, v);
+  v = evaluateCurve(STAT_CURVES.magicPowerBonus, 22); eq(v, 0.07) ? pass("MPB(22)=7%") : fail("MPB(22)", 0.07, v);
+  v = evaluateCurve(STAT_CURVES.health, 13.25); eq(v, 121.5, 0.5) ? pass("HP(13.25)=121.5") : fail("HP(13.25)", 121.5, v);
+  v = evaluateCurve(STAT_CURVES.actionSpeed, 14.75); eq(v, -0.0025, 0.005) ? pass("AS(14.75)") : fail("AS(14.75)", -0.0025, v);
+  v = evaluateCurve(STAT_CURVES.moveSpeed, 14); eq(v, -1, 0.1) ? pass("MS(14)=-1") : fail("MS(14)", -1, v);
+  v = evaluateCurve(STAT_CURVES.willToMagicResistance, 22); eq(v, 58, 0.5) ? pass("WIL→MR(22)=58") : fail("WIL→MR(22)", 58, v);
+  v = evaluateCurve(STAT_CURVES.cooldownReduction, 14); eq(v, -0.02) ? pass("CDR(14)=-2%") : fail("CDR(14)", -0.02, v);
+  v = evaluateCurve(STAT_CURVES.spellCastingSpeed, 15); eq(v, 0) ? pass("SCS(15)=0%") : fail("SCS(15)", 0, v);
+  v = evaluateCurve(STAT_CURVES.memoryCapacity, 15); eq(v, 9, 0.1) ? pass("Mem(15)=9") : fail("Mem(15)", 9, v);
+  v = evaluateCurve(STAT_CURVES.buffDuration, 22); eq(v, 0.07) ? pass("BD(22)=7%") : fail("BD(22)", 0.07, v);
+  v = evaluateCurve(STAT_CURVES.debuffDuration, 22); eq(v, -0.065) ? pass("DD(22)=-6.5%") : fail("DD(22)", -0.065, v);
+  v = evaluateCurve(STAT_CURVES.debuffDuration, 38); eq(v, -0.187) ? pass("DD(38)=-18.7%") : fail("DD(38)", -0.187, v);
+  v = evaluateCurve(STAT_CURVES.healthRecovery, 14); eq(v, -0.03) ? pass("HRec(14)=-3%") : fail("HRec(14)", -0.03, v);
+  v = evaluateCurve(STAT_CURVES.persuasiveness, 14); eq(v, 14, 0.1) ? pass("Pers(14)=14") : fail("Pers(14)", 14, v);
+  v = evaluateCurve(STAT_CURVES.manualDexterity, 15); eq(v, 0) ? pass("MD(15)=0%") : fail("MD(15)", 0, v);
+  v = evaluateCurve(STAT_CURVES.itemEquipSpeed, 15); eq(v, 0) ? pass("ES(15)=0%") : fail("ES(15)", 0, v);
+  v = evaluateCurve(STAT_CURVES.magicalInteractionSpeed, 22); eq(v, 0.49) ? pass("MIS(22)=49%") : fail("MIS(22)", 0.49, v);
+  v = evaluateCurve(STAT_CURVES.memoryRecovery, 15); eq(v, 0.655) ? pass("MRec(15)=65.5%") : fail("MRec(15)", 0.655, v);
+  v = evaluateCurve(STAT_CURVES.regularInteractionSpeed, 14.25); eq(v, -0.01125, 0.005) ? pass("RIS(14.25)") : fail("RIS(14.25)", -0.01125, v);
+
+  // Dynamic aggregation — no weapon
+  const { attrs, bonuses } = aggregateGear(WARLOCK, EQUIPPED_GEAR, "none");
+  attrs.str === 31 ? pass("AGG STR=31") : fail("AGG STR", 31, attrs.str);
+  attrs.vig === 20 ? pass("AGG VIG=20") : fail("AGG VIG", 20, attrs.vig);
+  attrs.agi === 17 ? pass("AGG AGI=17") : fail("AGG AGI", 17, attrs.agi);
+  attrs.dex === 27 ? pass("AGG DEX=27") : fail("AGG DEX", 27, attrs.dex);
+  attrs.wil === 38 ? pass("AGG WIL=38") : fail("AGG WIL", 38, attrs.wil);
+  attrs.kno === 18 ? pass("AGG KNO=18") : fail("AGG KNO", 18, attrs.kno);
+  attrs.res === 14 ? pass("AGG RES=14") : fail("AGG RES", 14, attrs.res);
+  eq(bonuses.physicalPower, 10, 0.1) ? pass("AGG PP=10") : fail("AGG PP", 10, bonuses.physicalPower);
+  eq(bonuses.armorRating, 297, 0.1) ? pass("AGG AR=297") : fail("AGG AR", 297, bonuses.armorRating);
+  eq(bonuses.magicResistance, 142, 0.5) ? pass("AGG gearMR=142") : fail("AGG gearMR", 142, bonuses.magicResistance);
+
+  // Derived stats vs in-game
+  const pe = { antimagic: false, spellCastingSpeedBonus: -0.10 };
+  const ds = computeDerivedStats(attrs, bonuses, pe);
+  ds.health === 145 ? pass("HP=145") : fail("HP", 145, ds.health);
+  eq(ds.ppb, 0.326) ? pass("PPB=32.6%") : fail("PPB", 0.326, ds.ppb);
+  eq(ds.mpb, 0.23) ? pass("MPB=23%") : fail("MPB", 0.23, ds.mpb);
+  eq(ds.pdr, 0.4225, 0.005) ? pass("PDR≈42.2%") : fail("PDR", 0.4225, ds.pdr);
+  eq(ds.magicResistance, 259, 1) ? pass("MR=259") : fail("MR", 259, ds.magicResistance);
+  eq(ds.mdr, 0.65) ? pass("MDR=65%cap") : fail("MDR", 0.65, ds.mdr);
+  eq(ds.debuffDuration, -0.187) ? pass("DD=-18.7%") : fail("DD", -0.187, ds.debuffDuration);
+  ds.memoryCapacity === 12 ? pass("Mem=12") : fail("Mem", 12, ds.memoryCapacity);
+  eq(ds.buffDuration, 0.23) ? pass("BD=23%") : fail("BD", 0.23, ds.buffDuration);
+  eq(ds.spellCastingSpeed, -0.037) ? pass("SCS=-3.7%") : fail("SCS", -0.037, ds.spellCastingSpeed);
+
+  // Weapon slot aggregation
+  const w1 = aggregateGear(WARLOCK, EQUIPPED_GEAR, "weaponSlot1");
+  eq(w1.bonuses.armorPenetration, 0.105, 0.001) ? pass("W1 APen=10.5%") : fail("W1 APen", 0.105, w1.bonuses.armorPenetration);
+  w1.activeWeapon?.weaponDamage === 40 ? pass("W1 WpnDmg=40") : fail("W1 WpnDmg", 40, w1.activeWeapon?.weaponDamage);
+
+  const w2 = aggregateGear(WARLOCK, EQUIPPED_GEAR, "weaponSlot2");
+  const ds2 = computeDerivedStats(w2.attrs, w2.bonuses, pe);
+  ds2.memoryCapacity === 17 ? pass("W2 Mem=17") : fail("W2 Mem", 17, ds2.memoryCapacity);
+
+  // Damage calcs
+  v = calcSpellDamage({ baseDamage: 12, scaling: 1.0, mpb: 0.23, targetMDR: 0.06 });
+  v === 13 ? pass("BoC body=13") : fail("BoC body", 13, v);
+  v = calcSpellDamage({ baseDamage: 12, scaling: 1.0, mpb: 0.23, hitLocation: "head", affectedByHitLocation: true, targetMDR: 0.06 });
+  v === 20 ? pass("BoC head=20") : fail("BoC head", 20, v);
+  v = calcPhysicalMeleeDamage({ baseWeaponDmg: 40, buffWeaponDmg: 5, gearWeaponDmg: 2, ppb: 0.351, targetPDR: -0.22, attackerPen: 0.105 });
+  v === 77 ? pass("Spectral+BSB=77") : fail("Spectral+BSB", 77, v);
+
+  return R;
+}
+
+// ============================================================
+// DISPLAY
+// ============================================================
+
+const fmtPct = (v) => {
+  const p = v * 100;
+  // Round to 1 decimal (matches in-game display)
+  const rounded = Math.round(Math.abs(p) * 10) / 10;
+  return `${p < -0.0001 ? "-" : ""}${rounded}%`;
+};
+const fmtFlat = (v) => typeof v === "number" ? (Number.isInteger(v) ? String(v) : v.toFixed(1)) : v;
+
+function App() {
+  const [showTests, setShowTests] = useState(null);
+  const [weapon, setWeapon] = useState("none");
+  const [showDebug, setShowDebug] = useState(false);
+
+  const tests = useMemo(() => runTests(), []);
+  const pc = tests.filter(t => t.status === "PASS").length;
+  const fc = tests.filter(t => t.status === "FAIL").length;
+
+  const computed = useMemo(() => {
+    const { attrs, bonuses, activeWeapon } = aggregateGear(WARLOCK, EQUIPPED_GEAR, weapon);
+    const pe = { antimagic: ACTIVE_PERKS.antimagic, spellCastingSpeedBonus: ACTIVE_PERKS.demonArmor ? -0.10 : 0 };
+    return { attrs, bonuses, ds: computeDerivedStats(attrs, bonuses, pe), activeWeapon };
+  }, [weapon]);
+
+  const { ds } = computed;
+
+  return (
+    <div style={{ fontFamily: "'JetBrains Mono', monospace", background: "#0a0a0f", color: "#c8c8d4", minHeight: "100vh", padding: 20, maxWidth: 1100, margin: "0 auto" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; } body { background: #0a0a0f; }`}</style>
+
+      <div style={{ borderBottom: "1px solid #1e1e2e", paddingBottom: 16, marginBottom: 24 }}>
+        <h1 style={{ fontSize: 18, fontWeight: 600, color: "#e0e0ec", letterSpacing: "0.05em", textTransform: "uppercase" }}>D&D Simulator — Phase 1</h1>
+        <div style={{ fontSize: 11, color: "#666", marginTop: 4 }}>Patch 6.10 · Season 8 · Dynamic Aggregation · {ARMOR_SLOTS.length + 2} gear slots</div>
+      </div>
+
+      <div style={{ background: fc > 0 ? "#1a0a0a" : "#0a1a0a", border: `1px solid ${fc > 0 ? "#4a1515" : "#154a15"}`, borderRadius: 6, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ color: fc > 0 ? "#ff6b6b" : "#6bff6b", fontWeight: 600 }}>{fc > 0 ? "⚠" : "✓"} {pc}/{tests.length} tests{fc > 0 ? ` (${fc} failed)` : ""}</span>
+        <button onClick={() => setShowTests(showTests ? null : tests)} style={{ background: "none", border: "1px solid #333", color: "#888", padding: "4px 12px", borderRadius: 4, cursor: "pointer", fontFamily: "inherit", fontSize: 11 }}>{showTests ? "Hide" : "Show"}</button>
+      </div>
+      {showTests && (
+        <div style={{ background: "#0d0d14", border: "1px solid #1e1e2e", borderRadius: 6, padding: 12, marginBottom: 20, maxHeight: 300, overflowY: "auto", fontSize: 11 }}>
+          {showTests.map((t, i) => <div key={i} style={{ padding: "3px 0", color: t.status === "PASS" ? "#4a8" : "#f66" }}>{t.status === "PASS" ? "✓" : "✗"} {t.name}{t.status === "FAIL" && <span style={{ color: "#a66" }}> — exp {t.expected}, got {t.got}</span>}</div>)}
+        </div>
+      )}
+
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 11, color: "#666", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.1em" }}>Weapon Held</div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {[["none", "Bare Hands"], ["weaponSlot1", "Spectral Blade"], ["weaponSlot2", "Spellbook"]].map(([k, l]) => (
+            <button key={k} onClick={() => setWeapon(k)} style={{ background: weapon === k ? "#1a1a2e" : "transparent", border: `1px solid ${weapon === k ? "#4a4a6e" : "#1e1e2e"}`, color: weapon === k ? "#e0e0ec" : "#666", padding: "8px 16px", borderRadius: 4, cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: weapon === k ? 600 : 400 }}>{l}</button>
+          ))}
+        </div>
+      </div>
+
+      <Sec title="Core Attributes"><SG>{["str", "vig", "agi", "dex", "wil", "kno", "res"].map(a => <SR key={a} label={a.toUpperCase()} value={computed.attrs[a]} base={WARLOCK.baseStats[a]} />)}</SG></Sec>
+
+      <Sec title="Derived Stats"><SG>
+        <SR label="Health" value={ds.health} detail={`rating ${ds.healthRating.toFixed(1)}`} />
+        <SR label="Physical Power" value={ds.physicalPower} />
+        <SR label="PPB" value={fmtPct(ds.ppb)} detail={ds.ppbFromBonuses > 0 ? `${fmtPct(ds.ppbFromBonuses)} from bonuses` : null} />
+        <SR label="Magical Power" value={ds.magicalPower} />
+        <SR label="MPB" value={fmtPct(ds.mpb)} detail={ds.mpbFromBonuses > 0 ? `${fmtPct(ds.mpbFromBonuses)} from bonuses` : null} />
+        <SR label="Move Speed" value={`${ds.moveSpeed.toFixed(0)} (${fmtPct(ds.moveSpeed / CONSTANTS.BASE_MOVE_SPEED)})`} />
+        <SR label="Action Speed" value={fmtPct(ds.actionSpeed)} detail={`rating ${ds.actionSpeedRating.toFixed(1)}`} />
+      </SG></Sec>
+
+      <Sec title="Defense"><SG>
+        <SR label="Armor Rating" value={ds.armorRating} />
+        <CapSR label="PDR" value={ds.pdr} cap={ds.pdrCap} curve={ds.pdrFromCurve} bonus={ds.pdrFromBonuses} />
+        <SR label="Magic Resistance" value={Math.round(ds.magicResistance)} />
+        <CapSR label="MDR" value={ds.mdr} cap={ds.mdrCap} curve={ds.mdrFromCurve} bonus={ds.mdrFromBonuses} />
+        {ds.hasAntimagic && <SR label="Antimagic" value="Active (-20%)" />}
+        <SR label="Headshot DR" value={fmtPct(ds.headshotDamageReduction)} />
+        <SR label="Projectile DR" value={fmtPct(ds.projectileDamageReduction)} />
+      </SG></Sec>
+
+      <Sec title="Utility"><SG>
+        <SR label="Memory Capacity" value={ds.memoryCapacity} />
+        <SR label="Spell Cast Speed" value={fmtPct(ds.spellCastingSpeed)} />
+        <SR label="Spell Recovery" value={fmtPct(ds.memoryRecovery)} />
+        <SR label="Health Recovery" value={fmtPct(ds.healthRecovery)} />
+        <SR label="Buff Duration" value={fmtPct(ds.buffDuration)} />
+        <SR label="Debuff Duration" value={fmtPct(ds.debuffDuration)} />
+        <SR label="CDR" value={fmtPct(ds.cdr)} />
+        <SR label="Manual Dexterity" value={fmtPct(ds.manualDexterity)} />
+        <SR label="Equip Speed" value={fmtPct(ds.equipSpeed)} />
+        <SR label="Regular Int. Speed" value={fmtPct(ds.regularInteractionSpeed)} />
+        <SR label="Magical Int. Speed" value={fmtPct(ds.magicalInteractionSpeed)} />
+        <SR label="Persuasiveness" value={fmtFlat(ds.persuasiveness)} />
+      </SG></Sec>
+
+      <Sec title="Offense"><SG>
+        <SR label="Armor Pen" value={fmtPct(ds.armorPenetration)} />
+        <SR label="Magic Pen" value={fmtPct(ds.magicPenetration)} />
+        <SR label="Headshot Bonus" value={fmtPct(ds.headshotDamageBonus)} />
+      </SG></Sec>
+
+      <div style={{ marginTop: 24 }}>
+        <button onClick={() => setShowDebug(!showDebug)} style={{ background: "none", border: "1px solid #1e1e2e", color: "#555", padding: "6px 14px", borderRadius: 4, cursor: "pointer", fontFamily: "inherit", fontSize: 11 }}>{showDebug ? "Hide" : "Show"} Debug</button>
+        {showDebug && <pre style={{ marginTop: 12, background: "#0d0d14", border: "1px solid #1e1e2e", borderRadius: 6, padding: 12, fontSize: 10, overflow: "auto", maxHeight: 400, color: "#888" }}>{JSON.stringify({ attrs: computed.attrs, bonuses: computed.bonuses, derived: ds }, null, 2)}</pre>}
+      </div>
+
+      <div style={{ marginTop: 40, padding: "16px 0", borderTop: "1px solid #1e1e2e", fontSize: 10, color: "#444" }}>Phase 1 · {tests.length} tests · Dynamic gear aggregation from {Object.keys(EQUIPPED_GEAR).length} items</div>
+    </div>
+  );
+}
+
+function Sec({ title, children }) {
+  return <div style={{ marginBottom: 20 }}><div style={{ fontSize: 11, color: "#555", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontWeight: 600 }}>{title}</div><div style={{ background: "#0d0d14", border: "1px solid #1a1a28", borderRadius: 6, padding: 12 }}>{children}</div></div>;
+}
+function SG({ children }) {
+  return <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "2px 16px" }}>{children}</div>;
+}
+function SR({ label, value, base, detail }) {
+  return <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "4px 0", borderBottom: "1px solid #111118" }}>
+    <span style={{ color: "#888", fontSize: 12 }}>{label}{base != null && <span style={{ color: "#444", fontSize: 10 }}> ({base})</span>}</span>
+    <span style={{ color: "#e0e0ec", fontSize: 12, fontWeight: 500 }}>
+      {value}
+      {detail && (() => {
+        const isRating = typeof detail === "string" && detail.startsWith("rating");
+        return <span title={isRating ? "Intermediate value before curve — not shown in-game. Shows where you sit on the piecewise stat curve." : undefined}
+          style={{ color: "#555", fontSize: 10, marginLeft: 6, ...(isRating ? { cursor: "help", borderBottom: "1px dotted #444" } : {}) }}>{detail}</span>;
+      })()}
+    </span>
+  </div>;
+}
+function CapSR({ label, value, cap, curve, bonus }) {
+  const capped = value >= cap - 0.0001;
+  const parts = [];
+  if (capped) {
+    parts.push("capped");
+    if (bonus > 0.0001) {
+      const eff = Math.max(0, cap - curve);
+      parts.push(`${fmtPct(bonus)} from bonuses (${fmtPct(eff)} applied)`);
+      if (bonus - eff > 0.0001) parts.push(`${fmtPct(bonus - eff)} over cap`);
+    }
+  } else if (bonus > 0.0001) parts.push(`${fmtPct(bonus)} from bonuses`);
+  return <SR label={label} value={fmtPct(value)} detail={parts.length ? parts.join(" · ") : null} />;
+}
+
+    // Mount the app
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
