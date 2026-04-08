@@ -20,9 +20,13 @@ Game Data (JSON files, read-only at runtime)
       ↓
 Class Selection → Base Stats, Equippable Armor, Spells, Skills, Perks
       ↓
-Active Perks (max 4) → may grant additional armor types (e.g., Demon Armor → plate)
+Active Perks (max 4) → stat effects + perk flags (antimagic, type damage bonuses, etc.)
       ↓
-Active Skills (2 slots) → includes Spell Memory (required for casting)
+Active Skills (2 slots) → includes Spell Memory (required for casting). Combat skills (BoC, etc.)
+      ↓
+Active Spells (constrained by spell memory slots + memory capacity)
+      ↓
+Active Buffs (derived from equipped spells that have self-buff effects)
       ↓
 Gear Slots
   ├── Weapon Loadout 1 (primary + optional secondary)
@@ -39,8 +43,14 @@ Attribute Aggregator
   ├── Sum of all gear inherent stats + random modifier stats
   │   (weapon stats only included when weaponHeldState is true)
   ├── Active buff/spell attribute bonuses (e.g., Power of Sacrifice +15 STR/VIG)
+  │   (pre-curve buffs applied here)
   └── Attribute bonus multipliers applied AFTER all additive sources
       (e.g., Curse of Weakness -25% all attributes)
+      ↓
+Derive perkEffects from selected perks
+  ├── statEffects → additive bonuses (e.g., Demon Armor -10% SCS)
+  ├── perkFlags → boolean flags (antimagic, fighterDefenseMastery, etc.)
+  └── typeDamageBonus → type-specific damage maps (e.g., Dark Enhancement +20% dark_magical)
       ↓
 Intermediate Values (formulas in season8_constants.md)
   ├── Physical Power = STR × 1 + gear PP bonuses
@@ -64,11 +74,18 @@ Derived Stats (curve output + post-curve bonuses)
   ├── Buff/Debuff Duration, CDR, Spell Casting Speed, etc.
   └── Memory Capacity = ceil(MemCap_curve(KNO) × (1 + MemCap Bonus%)) + Add MemCap
       ↓
+Post-Curve Modifications
+  ├── Post-curve buff effects (e.g., ES break +50% SCS)
+  ├── Type damage bonuses from buffs (e.g., ES break +30% dark_magical)
+  ├── Religion bonuses (flat post-curve additive: Noxulon +20% RIS, Zorin +8% Magic Pen, etc.)
+  └── All post-curve bonuses stored separately for display (ds.buffPostCurve, ds.religionBonuses)
+      ↓
 Damage Calculator (formulas in damage_formulas.md)
   ├── Physical damage per hit (weapon + combo + impact zone + PPB + DR)
-  ├── Spell/skill damage (base × (1 + MPB) × hit location × MDR)
+  ├── Spell/skill damage ((base + weapon magical dmg) × (1 + MPB × scaling + type bonuses) × hit loc × MDR)
   ├── On-hit effects (each as separate damage instance)
   ├── Damage type validation (dark ≠ evil ≠ curse ≠ divine ≠ fire)
+  ├── Type-specific bonuses from perks + buffs (ds.typeDamageBonuses map)
   └── All display values use Math.floor()
       ↓
 DPS Module (damage per hit × weapon swing timing / (1 + action speed))
@@ -99,6 +116,18 @@ Comparison Engine (snapshot → swap → diff)
 | Ring 1 | ring | No | Higher Physical/Magical Power/Healing ranges |
 | Ring 2 | ring | No | Same pool as Ring 1 |
 | Necklace | necklace | No | Higher modifier ranges than armor |
+
+### Weapon Properties
+
+Weapons have three distinct damage-related properties:
+
+| Property | Field | Purpose | Affects Spells? | Scales with PPB/MPB? |
+|----------|-------|---------|----------------|---------------------|
+| Weapon Damage | `weaponDamage` | Physical melee damage | No | Yes (PPB) |
+| Magical Damage | `magicalDamage` | Flat addition to spell/skill base damage when held | YES | No (flat pre-multiplier) |
+| Magic Weapon Damage | `magicWeaponDamage` | Magic melee damage (e.g., Crystal Sword) | NO | Yes (MPB) — separate melee instance |
+
+**Critical distinction:** `magicalDamage` (Spellbook +5) adds to spell base damage. `magicWeaponDamage` (Crystal Sword) is a separate melee damage instance that does NOT affect spells.
 
 ### Item Definition Structure
 
@@ -154,10 +183,34 @@ Each class has:
 - **Base Memory:** Starting spell memory capacity
 - **Equippable armor:** Base armor types (perks can grant additional)
 - **Spell cost type:** Warlock uses "health" (spells cost HP). Per-spell healthCost values.
-- **Perks:** Max 4 active. Effects use typed system (stat_modifier, damage_bonus, grant_armor_type, etc.) with `special` escape hatch for complex effects. `conditions` field for situational restrictions (e.g., PvE only).
-- **Skills:** 2 slots. Includes Spell Memory I/II (required for casting). Combat skills (Blow of Corruption, Blood Pact, Phantomize).
-- **Spells:** Up to 5 per Spell Memory skill. Memory cost = tier. Constrained by total memory capacity. Spells exceeding available memory cannot be cast.
+- **Perks:** Max 4 active. Each has `statEffects` (additive bonuses fed to perkEffects) and `perkFlags` (boolean flags + typeDamageBonus maps). Class-agnostic: engine reads perk data, doesn't hardcode class-specific behavior.
+- **Skills:** 2 slots. Includes Spell Memory I/II (required for casting). Combat skills (Blow of Corruption, Blood Pact, Phantomize). Skills with `dmg` field show inline damage.
+- **Spells:** Up to 5 per Spell Memory skill. Memory cost = tier. Constrained by total memory capacity. Spells with `dmg` field show inline damage. Spells with self-buff effects appear as toggleable Active Buffs (via CLASS_BUFFS `sourceSpell` field).
 - **Shared resources:** Class-level mechanics like Darkness Shards that multiple abilities interact with.
+
+### Perk Effect System
+
+Perks contribute to the stat pipeline via two mechanisms:
+
+1. **`statEffects`** — additive bonuses merged into perkEffects object. E.g., Demon Armor: `[{ stat: "spellCastingSpeedBonus", value: -0.10 }]`
+2. **`perkFlags`** — boolean flags and type bonus maps:
+   - `{ antimagic: true }` → 20% separate magic DR multiplier
+   - `{ fighterDefenseMastery: true }` → PDR cap raised to 75%
+   - `{ typeDamageBonus: { dark_magical: 0.20 } }` → type-specific damage bonus
+   - Multiple perks' typeDamageBonus maps are merged (not overwritten)
+
+### Buff System
+
+Active buffs are derived from equipped spells that have self-buff effects. Each buff in CLASS_BUFFS has:
+- `sourceSpell` — the spell that must be equipped for this buff to appear
+- `effects` with `phase`:
+  - `"pre"` — applied to attrs/bonuses before computeDerivedStats (e.g., PoS +15 STR/VIG)
+  - `"post"` — applied to derived stats after computeDerivedStats (e.g., ES break +50% SCS)
+  - `"type_bonus"` — type-specific damage bonus from buff (e.g., ES break +30% dark_magical)
+
+### Religion System
+
+Blessings are flat post-curve additive bonuses, independent of class. Applied after all curve calculations. Stored as `ds.religionBonuses` for display. Noxulon (+20% RIS) VERIFIED; others at face value pending testing.
 
 ### Attribute → Derived Stat Mapping (from in-game tooltips)
 
@@ -181,9 +234,9 @@ Each class has:
 
 3. **Attribute Aggregator** — Sums class base + all gear inherent stats + all gear random modifiers + active buff bonuses. Respects weapon held state. Applies attribute bonus multipliers (e.g., Curse of Weakness -25%) AFTER all additive sources.
 
-4. **Buff/Spell State Manager** — Toggle switches for active buffs/spells. Reads definitions from class data. Feeds into attribute aggregator (for stat-modifying buffs) or damage formula (for damage-modifying buffs). Tracks spell memory usage and health cost.
+4. **Class / Buff / Religion Manager** — Class dropdown populates perks, skills, spells. Perk checkboxes (max 4) with live stat effects. Skill dropdowns (2 slots). Spell selection grid with memory tracking. Active buff toggles derived from equipped spells. Religion blessing selector with post-curve bonuses. All state-driven, class-agnostic.
 
-5. **Damage Calculator** — Physical damage formula and spell damage. Reads weapon/spell data. Validates magic damage types before applying type-specific bonuses. Handles separate damage instances (physical, magical, on-hit effects). Handles Antimagic as separate multiplicative layer.
+5. **Damage Calculator** — Physical damage formula and spell damage. Reads weapon/spell data. Validates magic damage types before applying type-specific bonuses. Handles separate damage instances (physical, magical, on-hit effects). Handles Antimagic as separate multiplicative layer. Inline spell/skill damage display uses weapon's `magicalDamage` + type bonuses from perks/buffs.
 
 6. **DPS Module** — Per-hit damage × weapon swing timing / (1 + action speed).
 
@@ -218,19 +271,25 @@ preferences           → UI preferences (dummy mode, default class, etc.)
 3. Derived Stat Pipeline — attributes → intermediate values → curves → post-curve bonuses → caps → final stats. All values verified against in-game display.
 4. Damage Calculator — physical melee formula + spell damage + on-hit effects. Verified against Ruins training dummy (8 test points, all passing). Spectral Blade combo multipliers derived from in-game testing (1.0/1.05/1.1).
 
-### Phase 2: UI & Gear System
-5. Gear slot UI — item selection filtered by class/armor/perks + inherent stat display + random modifier entry (constrained by pool + exclusion rules)
-6. Derived stat display with curve position indicators
-7. Weapon held state toggles
-8. Buff/spell toggle panel with memory tracking and health cost display
-9. Gear comparison (delta display)
-10. Build save/load with persistent storage
-11. Dummy mode toggle (sets target PDR -22%, MDR +6%)
+### Phase 2: UI & Gear System ✅ (Complete — 2026-04-08)
+5. ✅ Gear slot UI — per-slot collapsible editors with item name, rarity, inherent stats, modifier rows
+6. ✅ Derived stat display — two-column layout matching in-game stat screen, with breakdowns (PDR from AR/Bonuses, MDR from MR/Bonuses, PPB/MPB from Power/Bonuses)
+7. ✅ Weapon held state toggles — 3-way (none/slot1/slot2) with live recalculation
+8. ✅ Class selection system — dropdown with class-specific perks (checkboxes, max 4), skills (2 dropdowns), spells (toggleable grid with memory tracking), active buffs (from equipped spells), and religion blessing selector
+9. ✅ Spell/skill damage display — inline damage calculations for equipped damage-dealing spells and skills, using weapon magical damage + type-specific bonuses from perks/buffs
+10. ✅ Type-specific damage bonuses — generalizable system via perkFlags.typeDamageBonus maps and buff phase "type_bonus" effects. Dark Enhancement (+20% dark) verified in-game.
+11. ✅ Dummy MDR corrected to 7.5% (from ~6%) — verified with 8 spell damage test points
+12. ✅ Magical Damage vs Magic Weapon Damage distinction documented and implemented
+
+### Phase 2 Remaining (UI convenience — no engine changes needed)
+13. Gear comparison (delta display) — swap one piece, show stat deltas
+14. Build save/load with persistent storage — window.storage API
+15. Target property editor — configurable PDR/MDR instead of hardcoded dummy values
 
 ### Phase 3: Database & Polish
-12. Populate gear database (Warlock-relevant Epic items first, expand to other classes)
-13. Dropdown item selection from database with search/filter
-14. Additional class definitions (Fighter, etc.)
-15. DPS module with weapon swing timings and combo multipliers
-16. Spell/ability damage modeling with type validation
-17. Skin system (optional stat modifiers from cosmetics)
+16. Populate gear database (Warlock-relevant Epic items first, expand to other classes)
+17. Dropdown item selection from database with search/filter
+18. Additional class definitions (Fighter perks/skills, other classes)
+19. DPS module with weapon swing timings and combo multipliers
+20. Full spell/ability damage modeling with all damage types
+21. Skin system (optional stat modifiers from cosmetics)

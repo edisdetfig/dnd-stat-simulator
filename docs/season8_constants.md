@@ -23,12 +23,12 @@ Patch 6.10, Hotfix 112, Season 8.
 | Limb multiplier | 0.5 |
 | Base move speed | 300 (before AGI curve and gear) |
 
-## Test Dummy Properties (Ruins Map) — VERIFIED
+## Test Dummy Properties (Ruins Map) — VERIFIED (2026-04-08)
 
-| Property | Value |
-|----------|-------|
-| PDR | ~-22% (amplifies physical damage) |
-| MDR | ~+5-8% (slightly reduces magic; ~6% used for calculations) |
+| Property | Value | Verification |
+|----------|-------|-------------|
+| PDR | ~-22% (amplifies physical damage) | 8/8 physical melee tests match |
+| MDR | **7.5%** | 8/8 spell tests match. Previously estimated ~6%; corrected 2026-04-08 via Bolt of Darkness bare-hands vs spellbook testing. |
 
 At negative PDR, armor penetration has NO effect (max() in DR formula). Different dummy types/maps may differ. All testing on Ruins dummies.
 
