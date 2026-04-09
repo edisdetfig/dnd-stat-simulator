@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.idea/
+index.old.html
+*.log
+.DS_Store

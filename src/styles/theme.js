@@ -1,0 +1,72 @@
+// Shared styles
+
+export const styles = {
+  select: {
+    background: "#0d0d14",
+    border: "1px solid #1e1e2e",
+    color: "#c8c8d4",
+    padding: "4px 6px",
+    borderRadius: 3,
+    fontFamily: "inherit",
+    fontSize: 11,
+    minWidth: 140,
+    cursor: "pointer",
+  },
+  numInput: {
+    background: "#0d0d14",
+    border: "1px solid #1e1e2e",
+    color: "#e0e0ec",
+    padding: "4px 8px",
+    borderRadius: 3,
+    fontFamily: "inherit",
+    fontSize: 11,
+    width: 80,
+    textAlign: "right",
+  },
+  textInput: {
+    background: "#0d0d14",
+    border: "1px solid #1e1e2e",
+    color: "#e0e0ec",
+    padding: "4px 8px",
+    borderRadius: 3,
+    fontFamily: "inherit",
+    fontSize: 11,
+    flex: 1,
+    minWidth: 120,
+  },
+  addBtn: {
+    background: "none",
+    border: "1px solid #1e1e2e",
+    color: "#556",
+    padding: "2px 8px",
+    borderRadius: 3,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    fontSize: 9,
+    letterSpacing: "0.05em",
+  },
+  removeBtn: {
+    background: "none",
+    border: "none",
+    color: "#664444",
+    cursor: "pointer",
+    fontFamily: "inherit",
+    fontSize: 14,
+    padding: "0 4px",
+    lineHeight: 1,
+    width: 20,
+    textAlign: "center",
+  },
+  fieldLabel: {
+    fontSize: 10,
+    color: "#555",
+    whiteSpace: "nowrap",
+  },
+};
+
+export const TIER_LABELS = {
+  gold: "Peak efficiency",
+  green: "Good returns",
+  amber: "Tapering off",
+  gray: "Diminishing returns",
+};
