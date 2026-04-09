@@ -21,6 +21,14 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
+# Opt into Node.js 24 runtime for JS-based actions (checkout, configure-pages,
+# setup-node, upload-pages-artifact, deploy-pages). Node 20 is deprecated and
+# will be removed from runners 2026-09-16; Node 24 becomes the default 2026-06-02.
+# This env var silences the deprecation warning and surfaces any Node 24 issues
+# early. Safe to remove after 2026-06-02 when Node 24 is the default.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,7 +38,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
       - name: Install dependencies
         run: npm ci
