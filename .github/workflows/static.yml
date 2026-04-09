@@ -21,11 +21,15 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
-# Opt into Node.js 24 runtime for JS-based actions (checkout, configure-pages,
-# setup-node, upload-pages-artifact, deploy-pages). Node 20 is deprecated and
-# will be removed from runners 2026-09-16; Node 24 becomes the default 2026-06-02.
-# This env var silences the deprecation warning and surfaces any Node 24 issues
-# early. Safe to remove after 2026-06-02 when Node 24 is the default.
+# Opt into Node.js 24 runtime for JS-based actions. Node 20 becomes non-default
+# on 2026-06-02, and Node 20 will be removed from runners "later in fall 2026"
+# per https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/.
+# Our direct action pins (checkout@v6, setup-node@v6, configure-pages@v6,
+# upload-pages-artifact@v4, deploy-pages@v5) already declare node24. This env
+# var is load-bearing only for the transitive upload-artifact@v4.6.2 pinned
+# inside upload-pages-artifact@v4.0.0, which still declares node20. Safe to
+# remove once (a) upload-pages-artifact releases a version that internally
+# pins a node24 upload-artifact, or (b) 2026-06-02 lands and node24 is default.
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -34,9 +38,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'npm'
@@ -45,9 +49,9 @@ jobs:
       - name: Build
         run: npm run build
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: './dist'
 
