@@ -333,7 +333,8 @@ const CLASSES = {
       { id: "demon_armor", name: "Demon Armor", desc: "Equip plate armor. -10% Spell Casting Speed.",
         statEffects: [{ stat: "spellCastingSpeedBonus", value: -0.10 }], perkFlags: { grantPlate: true } },
       { id: "shadow_touch", name: "Shadow Touch", desc: "+2 dark magic on melee hit, heal 2 HP.",
-        statEffects: [] },
+        statEffects: [],
+        healEffects: [{ baseHeal: 2, scaling: 0, healType: "magical", trigger: "melee_hit", label: "per melee hit" }] },
       { id: "dark_reflection", name: "Dark Reflection", desc: "15(0.75) dark magic when hit by melee.",
         statEffects: [] },
       { id: "antimagic", name: "Antimagic", desc: "20% magic damage reduction (not divine).",
@@ -341,7 +342,8 @@ const CLASSES = {
       { id: "dark_enhancement", name: "Dark Enhancement", desc: "+20% dark magic damage.",
         statEffects: [], perkFlags: { typeDamageBonus: { dark_magical: 0.20 } } },
       { id: "torture_mastery", name: "Torture Mastery", desc: "Heal on curse damage. 2× spell costs.",
-        statEffects: [], perkFlags: { spellCostMultiplier: 2.0 } },
+        statEffects: [], perkFlags: { spellCostMultiplier: 2.0 },
+        healEffects: [{ baseHeal: 2, scaling: 0.15, healType: "magical", trigger: "curse_tick", label: "per curse tick" }] },
       { id: "curse_mastery", name: "Curse Mastery", desc: "+30% curse duration.",
         statEffects: [] },
       { id: "immortal_lament", name: "Immortal Lament", desc: "Spells can't kill you. +100% magic heal below 5% HP.",
@@ -349,7 +351,7 @@ const CLASSES = {
       { id: "infernal_pledge", name: "Infernal Pledge", desc: "-40% damage from undead/demons (PvE).",
         statEffects: [] },
       { id: "vampirism", name: "Vampirism", desc: "+20% magical healing bonus.",
-        statEffects: [] },
+        statEffects: [], perkFlags: { healingMod: 0.20 } },
       { id: "soul_collector", name: "Soul Collector", desc: "Gain Darkness Shard on kill.",
         statEffects: [] },
     ],
@@ -402,14 +404,12 @@ const CLASSES = {
   },
 };
 
-// Universal fallback for classes without majorDerivedStats defined
 const FALLBACK_MAJOR_STATS = ["hp", "ppb", "mpb", "pdr", "mdr", "moveSpeed", "actionSpeed", "spellCastingSpeed"];
 
 const WARLOCK = CLASSES.warlock;
 
 // ============================================================
-// STAT METADATA — display names, percent vs flat, categories
-// Added short labels for acronym toggle
+// STAT METADATA
 // ============================================================
 
 const STAT_META = {
@@ -460,7 +460,6 @@ const STAT_META = {
   magicWeaponDamage: { label: "Magic Weapon Damage", unit: "flat", cat: "weapon" },
 };
 
-// Derived stat display labels — short (acronym) and full versions
 const DERIVED_DISPLAY = {
   hp: { short: "HP", full: "Health" },
   ppb: { short: "PPB", full: "Physical Power Bonus" },
@@ -476,9 +475,10 @@ const DERIVED_DISPLAY = {
   buffDuration: { short: "Buff Dur", full: "Buff Duration" },
   debuffDuration: { short: "Debuff Dur", full: "Debuff Duration" },
   memoryCapacity: { short: "Mem Cap", full: "Memory Capacity" },
-  healthRecovery: { short: "Phys Heal", full: "Health Recovery Bonus" },
+  healthRecovery: { short: "HP Recovery", full: "Health Recovery Bonus" },
   memoryRecovery: { short: "Spell Rec", full: "Spell Recovery Bonus" },
   magicalHealing: { short: "Mag Heal", full: "Magical Healing" },
+  physicalHealing: { short: "Phys Heal", full: "Physical Healing" },
   manualDexterity: { short: "Man Dex", full: "Manual Dexterity" },
   equipSpeed: { short: "Equip Spd", full: "Equip Speed" },
   persuasiveness: { short: "Luck/Pers", full: "Persuasiveness" },
@@ -494,7 +494,6 @@ function derivedLabel(id, useAcronyms) {
   return d ? (useAcronyms ? d.short : d.full) : id;
 }
 
-// Sorted stat options for dropdowns, grouped by category
 const STAT_OPTIONS = (() => {
   const cats = { attr: "— Attributes —", offense: "— Offensive —", defense: "— Defensive —", utility: "— Utility —" };
   const groups = {};
@@ -546,7 +545,7 @@ const RARITY_CONFIG = {
 const RARITY_ORDER = ["poor", "common", "uncommon", "rare", "epic", "legendary", "unique"];
 
 // ============================================================
-// DEFAULT GEAR STATE — current Warlock build (preserves all test data)
+// DEFAULT GEAR STATE
 // ============================================================
 
 function makeDefaultGear() {
@@ -774,7 +773,7 @@ const RELIGION_BLESSINGS = [
 ];
 
 // ============================================================
-// CORE ENGINE — copied exactly from Phase 2
+// CORE ENGINE
 // ============================================================
 
 function evaluateCurve(curveDef, inputValue) {
@@ -792,7 +791,119 @@ function evaluateCurve(curveDef, inputValue) {
 }
 
 // ============================================================
-// GEAR AGGREGATOR — copied exactly from Phase 2
+// CURVE ANALYSIS — marginal slope & context for visualization
+// v0.4.3: getMarginalSlope, getCurveContext, DERIVED_CURVE_MAP
+// ============================================================
+
+function getMarginalSlope(curveDef, inputValue) {
+  const { segments } = curveDef;
+  const v = Math.max(segments[0].start, Math.min(segments[segments.length - 1].end, inputValue));
+  for (let i = 0; i < segments.length; i++) {
+    if (v >= segments[i].start && v < segments[i].end) return segments[i].slope;
+    if (i === segments.length - 1 && v === segments[i].end) return segments[i].slope;
+  }
+  return segments[segments.length - 1].slope;
+}
+
+function getCurveContext(curveDef, inputValue) {
+  const { segments } = curveDef;
+  const v = Math.max(segments[0].start, Math.min(segments[segments.length - 1].end, inputValue));
+  let segIdx = segments.length - 1;
+  for (let i = 0; i < segments.length; i++) {
+    if (v >= segments[i].start && v < segments[i].end) { segIdx = i; break; }
+    if (i === segments.length - 1 && v === segments[i].end) segIdx = i;
+  }
+  const seg = segments[segIdx];
+  const slope = seg.slope;
+  const absSlope = Math.abs(slope);
+
+  // Find the max absolute slope among "playable" segments (start >= 10)
+  // to exclude extreme early catch-up zones from the baseline
+  let maxPlayableSlope = 0;
+  for (const s of segments) {
+    if (s.start >= 10 && Math.abs(s.slope) > maxPlayableSlope) maxPlayableSlope = Math.abs(s.slope);
+  }
+  // Fallback: if no segments start >= 10, use global max
+  if (maxPlayableSlope === 0) {
+    for (const s of segments) {
+      if (Math.abs(s.slope) > maxPlayableSlope) maxPlayableSlope = Math.abs(s.slope);
+    }
+  }
+
+  const slopeRatio = maxPlayableSlope > 0 ? absSlope / maxPlayableSlope : 0;
+
+  // Check if next segment has higher absolute slope (acceleration zone ahead)
+  const nextSeg = segIdx < segments.length - 1 ? segments[segIdx + 1] : null;
+  const isAccelerating = nextSeg && Math.abs(nextSeg.slope) > absSlope * 1.2;
+  const distToNextSeg = nextSeg ? nextSeg.start - v : null;
+
+  return {
+    slope,
+    absSlope,
+    maxPlayableSlope,
+    slopeRatio,
+    segmentStart: seg.start,
+    segmentEnd: seg.end,
+    isGoldenZone: slopeRatio >= 0.95,
+    isAccelerating,
+    distToNextSeg,
+    nextSegmentSlope: nextSeg ? nextSeg.slope : null,
+    // Color tier: gold = peak, green = good, amber = tapering, gray = diminishing
+    tier: slopeRatio >= 0.95 ? "gold" : slopeRatio >= 0.5 ? "green" : slopeRatio >= 0.2 ? "amber" : "gray",
+  };
+}
+
+// Mapping: derived stat ID → { curveKey, getInput(ds, attrs), unit, inputLabel }
+const DERIVED_CURVE_MAP = {
+  hp:          { curveKey: "health",               getInput: (ds, a) => ds.healthRating,        unit: "flat",
+                 formula: "STR × 0.25 + VIG × 0.75", attrs: [{ attr: "STR", weight: 0.25 }, { attr: "VIG", weight: 0.75 }] },
+  ppb:         { curveKey: "physicalPowerBonus",    getInput: (ds, a) => ds.physicalPower,       unit: "percent",
+                 formula: "STR + Physical Power gear", attrs: [{ attr: "STR", weight: 1 }] },
+  mpb:         { curveKey: "magicPowerBonus",       getInput: (ds, a) => ds.magicalPower,        unit: "percent",
+                 formula: "WIL + Magical Power gear", attrs: [{ attr: "WIL", weight: 1 }] },
+  pdr:         { curveKey: "armorRatingToPDR",      getInput: (ds, a) => ds.armorRating,         unit: "percent", inputLabel: "AR",
+                 formula: "Armor Rating (gear only)", attrs: [] },
+  mdr:         { curveKey: "magicResistanceToMDR",  getInput: (ds, a) => ds.magicResistance,     unit: "percent", inputLabel: "MR",
+                 formula: "WIL → base MR + gear MR", attrs: [] },
+  moveSpeed:   { curveKey: "moveSpeed",             getInput: (ds, a) => a.agi,                  unit: "flat",
+                 formula: "AGI", attrs: [{ attr: "AGI", weight: 1 }] },
+  actionSpeed: { curveKey: "actionSpeed",           getInput: (ds, a) => ds.actionSpeedRating,   unit: "percent",
+                 formula: "AGI × 0.25 + DEX × 0.75", attrs: [{ attr: "AGI", weight: 0.25 }, { attr: "DEX", weight: 0.75 }] },
+  spellCastingSpeed:       { curveKey: "spellCastingSpeed",       getInput: (ds, a) => a.kno, unit: "percent",
+                 formula: "KNO", attrs: [{ attr: "KNO", weight: 1 }] },
+  regularInteractionSpeed: { curveKey: "regularInteractionSpeed", getInput: (ds, a) => a.dex * 0.25 + a.res * 0.75, unit: "percent",
+                 formula: "DEX × 0.25 + RES × 0.75", attrs: [{ attr: "DEX", weight: 0.25 }, { attr: "RES", weight: 0.75 }] },
+  magicalInteractionSpeed: { curveKey: "magicalInteractionSpeed", getInput: (ds, a) => a.wil, unit: "percent",
+                 formula: "WIL", attrs: [{ attr: "WIL", weight: 1 }] },
+  cdr:              { curveKey: "cooldownReduction",  getInput: (ds, a) => a.res, unit: "percent",
+                 formula: "RES", attrs: [{ attr: "RES", weight: 1 }] },
+  buffDuration:     { curveKey: "buffDuration",       getInput: (ds, a) => a.wil, unit: "percent",
+                 formula: "WIL", attrs: [{ attr: "WIL", weight: 1 }] },
+  debuffDuration:   { curveKey: "debuffDuration",     getInput: (ds, a) => a.wil, unit: "percent",
+                 formula: "WIL", attrs: [{ attr: "WIL", weight: 1 }] },
+  memoryCapacity:   { curveKey: "memoryCapacity",     getInput: (ds, a) => a.kno, unit: "flat",
+                 formula: "KNO", attrs: [{ attr: "KNO", weight: 1 }] },
+  healthRecovery:   { curveKey: "healthRecovery",     getInput: (ds, a) => a.vig, unit: "percent",
+                 formula: "VIG", attrs: [{ attr: "VIG", weight: 1 }] },
+  memoryRecovery:   { curveKey: "memoryRecovery",     getInput: (ds, a) => a.kno, unit: "percent",
+                 formula: "KNO", attrs: [{ attr: "KNO", weight: 1 }] },
+  manualDexterity:  { curveKey: "manualDexterity",    getInput: (ds, a) => a.dex, unit: "percent",
+                 formula: "DEX", attrs: [{ attr: "DEX", weight: 1 }] },
+  equipSpeed:       { curveKey: "itemEquipSpeed",     getInput: (ds, a) => a.dex, unit: "percent",
+                 formula: "DEX", attrs: [{ attr: "DEX", weight: 1 }] },
+  persuasiveness:   { curveKey: "persuasiveness",     getInput: (ds, a) => a.res, unit: "flat",
+                 formula: "RES", attrs: [{ attr: "RES", weight: 1 }] },
+};
+
+const TIER_COLORS = {
+  gold:  "#fbbf24",
+  green: "#4ade80",
+  amber: "#f97316",
+  gray:  "#555",
+};
+
+// ============================================================
+// GEAR AGGREGATOR
 // ============================================================
 
 const ARMOR_SLOTS = ["head", "chest", "back", "hands", "legs", "feet", "ring1", "ring2", "necklace"];
@@ -825,7 +936,7 @@ function aggregateGear(classData, gear, weaponHeldState) {
 }
 
 // ============================================================
-// DERIVED STAT PIPELINE — copied exactly from Phase 2
+// DERIVED STAT PIPELINE
 // ============================================================
 
 function computeDerivedStats(attrs, bonuses, perkEffects) {
@@ -894,7 +1005,7 @@ function computeDerivedStats(attrs, bonuses, perkEffects) {
 }
 
 // ============================================================
-// DAMAGE CALCULATORS — copied exactly from Phase 2
+// DAMAGE CALCULATORS
 // ============================================================
 
 function calcPhysicalMeleeDamage({ baseWeaponDmg, buffWeaponDmg = 0, comboMultiplier = 1.0,
@@ -922,7 +1033,36 @@ function calcSpellDamage({ baseDamage, scaling, mpb, hitLocation = "body", affec
 }
 
 // ============================================================
-// ATTRIBUTE BREAKDOWN — display-only, computed from sources
+// HEALING CALCULATOR — wiki-sourced formula (spellsandguns.com/Healing)
+// Instant: (BaseHeal + HealingAdd × Scaling) × (1 + MPB × Scaling) × (1 + HealingMod)
+// HoT:     ... × (floor(BaseDuration × (1 + BuffDuration)) / BaseDuration)
+// Lifesteal (Life Drain): heal = outgoing damage dealt × (1 + HealingMod)
+// Shadow Touch: 0% scaling, so HealingAdd and MPB have no effect
+// ============================================================
+
+function calcHealing({ baseHeal, scaling, mpb = 0, healingAdd = 0, healingMod = 0,
+  isHoT = false, baseDuration = 0, buffDuration = 0 }) {
+  const base = baseHeal + healingAdd * scaling;
+  const powerMult = 1 + mpb * scaling;
+  const modMult = 1 + healingMod;
+  let total = base * powerMult * modMult;
+  if (isHoT && baseDuration > 0) {
+    const effectiveTicks = Math.floor(baseDuration * (1 + buffDuration));
+    total = total * effectiveTicks / baseDuration;
+  }
+  return total;
+}
+
+// Reference healing items for display
+const HEALING_ITEMS = [
+  { id: "potion_healing", name: "Healing Potion", baseHeal: 20, scaling: 0.50,
+    healType: "magical", isHoT: true, baseDuration: 20, label: "over duration" },
+  { id: "trolls_blood", name: "Troll's Blood", baseHeal: 30, scaling: 0.50,
+    healType: "magical", isHoT: true, baseDuration: 12, label: "over duration" },
+];
+
+// ============================================================
+// ATTRIBUTE BREAKDOWN
 // ============================================================
 
 function computeAttrBreakdown(classData, gear, weaponHeldState, activeBuffs, availableBuffs) {
@@ -961,7 +1101,7 @@ function computeAttrBreakdown(classData, gear, weaponHeldState, activeBuffs, ava
 }
 
 // ============================================================
-// TESTS — copied exactly from Phase 2
+// TESTS
 // ============================================================
 
 function runTests() {
@@ -1034,6 +1174,17 @@ function runTests() {
   v = calcPhysicalMeleeDamage({ baseWeaponDmg: 40, buffWeaponDmg: 5, gearWeaponDmg: 2, ppb: 0.351, targetPDR: -0.22, attackerPen: 0.105 });
   v === 77 ? pass("Spectral+BSB=77") : fail("Spectral+BSB", 77, v);
 
+  // Curve analysis tests (v0.4.3)
+  v = getMarginalSlope(STAT_CURVES.physicalPowerBonus, 30);
+  eq(v, 0.01, 0.001) ? pass("Slope PPB@30=1%/pt") : fail("Slope PPB@30", 0.01, v);
+  v = getMarginalSlope(STAT_CURVES.regularInteractionSpeed, 16);
+  eq(v, 0.056, 0.001) ? pass("Slope RIS@16=5.6%/pt") : fail("Slope RIS@16", 0.056, v);
+  const ctx = getCurveContext(STAT_CURVES.healthRecovery, 14);
+  ctx.tier === "amber" ? pass("HRec@14 tier=amber") : fail("HRec@14 tier", "amber", ctx.tier);
+  ctx.isAccelerating === true ? pass("HRec@14 accel=true") : fail("HRec@14 accel", true, ctx.isAccelerating);
+  const ctx2 = getCurveContext(STAT_CURVES.regularInteractionSpeed, 16);
+  ctx2.tier === "gold" ? pass("RIS@16 tier=gold") : fail("RIS@16 tier", "gold", ctx2.tier);
+
   return R;
 }
 
@@ -1102,7 +1253,7 @@ const styles = {
 };
 
 // ============================================================
-// GEAR EDITOR COMPONENTS — copied exactly from Phase 2
+// GEAR EDITOR COMPONENTS
 // ============================================================
 
 function StatRowEditor({ stat, value, onChange, onRemove }) {
@@ -1274,7 +1425,7 @@ function GearSlot({ slotDef, gear, onGearChange }) {
 }
 
 // ============================================================
-// NEW LAYOUT COMPONENTS — v0.4.0
+// LAYOUT COMPONENTS
 // ============================================================
 
 function AttrTooltip({ children, breakdown, attrKey, className }) {
@@ -1323,6 +1474,38 @@ function Collapsible({ title, color, defaultOpen, badge, children }) {
 // DISPLAY COMPONENTS — SR, SubSR, CapSR, StatDivider, Panel
 // ============================================================
 
+// ============================================================
+// INFO TIP — contextual ⓘ micro-tips, hover for explanation
+// ============================================================
+
+function InfoTip({ text, color }) {
+  const [show, setShow] = useState(false);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const handleEnter = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    setPos({ x: Math.min(r.left, window.innerWidth - 260), y: r.bottom + 4 });
+    setShow(true);
+  };
+  return (
+    <span onMouseEnter={handleEnter} onMouseLeave={() => setShow(false)}
+      style={{ cursor: "help", fontSize: 10, color: color || "#4a4a6e", marginLeft: 4, userSelect: "none" }}>
+      ⓘ
+      {show && (
+        <span style={{
+          position: "fixed", left: pos.x, top: pos.y, zIndex: 999,
+          background: "#1a1a30", border: "1px solid #4a4a6e", borderRadius: 5,
+          padding: "6px 10px", maxWidth: 240, fontSize: 10, color: "#c8c8d4",
+          boxShadow: "0 6px 20px rgba(0,0,0,0.5)", pointerEvents: "none",
+          fontWeight: 400, lineHeight: 1.5, fontStyle: "normal",
+          display: "block", whiteSpace: "normal",
+        }}>
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
+
 function Panel({ title, color, children }) {
   return (
     <div style={{ background: "#0d0d14", border: "1px solid #1a1a28", borderRadius: 6, padding: 12, marginBottom: 8 }}>
@@ -1332,15 +1515,340 @@ function Panel({ title, color, children }) {
   );
 }
 
-function Sec({ title, children }) {
-  return <div style={{ marginBottom: 12 }}><div style={{ fontSize: 11, color: "#555", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, fontWeight: 600 }}>{title}</div><div style={{ background: "#0d0d14", border: "1px solid #1a1a28", borderRadius: 6, padding: 12 }}>{children}</div></div>;
+// ============================================================
+// MARGINAL VALUE BADGE — v0.4.3
+// Shows slope per input point with color tier
+// ============================================================
+
+function fmtSlope(slope, unit) {
+  if (unit === "percent") {
+    const v = Math.abs(slope) * 100;
+    // Use 2 decimal places below 0.1, 1 above — but always strip trailing zeros for consistency
+    const raw = v < 0.1 ? v.toFixed(2) : v.toFixed(1);
+    return raw.replace(/\.?0+$/, '') + "%";
+  }
+  const v = Math.abs(slope);
+  const raw = v < 0.1 ? v.toFixed(2) : v.toFixed(1);
+  return raw.replace(/\.?0+$/, '');
 }
-function SG({ children }) {
-  return <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "2px 16px" }}>{children}</div>;
+
+const TIER_LABELS = {
+  gold: "Peak efficiency",
+  green: "Good returns",
+  amber: "Tapering off",
+  gray: "Diminishing returns",
+};
+
+// ============================================================
+// CURVE CHART — expandable inline SVG showing full piecewise curve
+// ============================================================
+
+function CurveChart({ statId, ds, attrs }) {
+  const mapping = DERIVED_CURVE_MAP[statId];
+  if (!mapping) return null;
+  const curveDef = STAT_CURVES[mapping.curveKey];
+  if (!curveDef) return null;
+  const { segments } = curveDef;
+  const inputVal = mapping.getInput(ds, attrs);
+  const currentOutput = evaluateCurve(curveDef, inputVal);
+  const isPct = mapping.unit === "percent";
+  const inputLabel = mapping.inputLabel || "Rating";
+
+  // Determine visible range — center on current value with context
+  const allStart = segments[0].start;
+  const allEnd = segments[segments.length - 1].end;
+  // Show a useful window: from first segment to a bit past current, or full range if small
+  const range = allEnd - allStart;
+  let viewStart, viewEnd;
+  if (range <= 120) {
+    viewStart = allStart;
+    viewEnd = allEnd;
+  } else {
+    // For large ranges (like AR -300 to 600), show a useful window
+    viewStart = Math.max(allStart, Math.min(inputVal - 50, segments.find(s => s.start >= 0)?.start || 0) - 20);
+    viewEnd = Math.min(allEnd, Math.max(inputVal + 80, inputVal * 1.5 + 50));
+  }
+
+  // SVG dimensions
+  const W = 480, H = 130;
+  const pad = { top: 12, right: 16, bottom: 28, left: 48 };
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+
+  // Sample the curve for the visible range
+  const steps = 200;
+  const points = [];
+  let minY = Infinity, maxY = -Infinity;
+  for (let i = 0; i <= steps; i++) {
+    const x = viewStart + (viewEnd - viewStart) * i / steps;
+    const y = evaluateCurve(curveDef, x);
+    points.push({ x, y });
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  // Add padding to Y range
+  const yPad = (maxY - minY) * 0.1 || 0.01;
+  minY -= yPad;
+  maxY += yPad;
+
+  const toSvgX = (v) => pad.left + ((v - viewStart) / (viewEnd - viewStart)) * cw;
+  const toSvgY = (v) => pad.top + (1 - (v - minY) / (maxY - minY)) * ch;
+
+  // Build polyline segments colored by tier
+  const segPaths = [];
+  for (let si = 0; si < segments.length; si++) {
+    const seg = segments[si];
+    if (seg.end <= viewStart || seg.start >= viewEnd) continue;
+    const s = Math.max(seg.start, viewStart);
+    const e = Math.min(seg.end, viewEnd);
+    const ctx = getCurveContext(curveDef, (s + e) / 2);
+    const color = TIER_COLORS[ctx.tier];
+    // Sample this segment
+    const pts = [];
+    const segSteps = Math.max(2, Math.round((e - s) / (viewEnd - viewStart) * 60));
+    for (let i = 0; i <= segSteps; i++) {
+      const x = s + (e - s) * i / segSteps;
+      const y = evaluateCurve(curveDef, x);
+      pts.push(`${toSvgX(x).toFixed(1)},${toSvgY(y).toFixed(1)}`);
+    }
+    segPaths.push({ points: pts.join(" "), color, start: s, end: e });
+  }
+
+  // Segment boundary lines
+  const boundaries = segments
+    .map(s => s.start)
+    .filter(v => v > viewStart && v < viewEnd);
+
+  // Y axis labels
+  const yTicks = 5;
+  const yLabels = [];
+  for (let i = 0; i <= yTicks; i++) {
+    const v = minY + (maxY - minY) * i / yTicks;
+    yLabels.push({ v, y: toSvgY(v), label: isPct ? `${(v * 100).toFixed(0)}%` : v.toFixed(0) });
+  }
+
+  // X axis labels
+  const xTicks = 6;
+  const xLabels = [];
+  for (let i = 0; i <= xTicks; i++) {
+    const v = viewStart + (viewEnd - viewStart) * i / xTicks;
+    xLabels.push({ v, x: toSvgX(v), label: v.toFixed(0) });
+  }
+
+  // Current position
+  const curX = toSvgX(inputVal);
+  const curY = toSvgY(currentOutput);
+  const curLabel = isPct ? fmtPct(currentOutput) : currentOutput.toFixed(1);
+
+  // Zero line
+  const zeroInRange = minY <= 0 && maxY >= 0;
+  const zeroY = zeroInRange ? toSvgY(0) : null;
+
+  return (
+    <div style={{ margin: "6px 0 8px 0", background: "#0a0a12", border: "1px solid #1e1e2e", borderRadius: 6, padding: "8px 4px 4px 4px" }}>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: "block" }}>
+        {/* Grid */}
+        {yLabels.map((t, i) => (
+          <g key={`y${i}`}>
+            <line x1={pad.left} y1={t.y} x2={W - pad.right} y2={t.y} stroke="#1a1a28" strokeWidth="0.5" />
+            <text x={pad.left - 4} y={t.y + 3} textAnchor="end" fill="#444" fontSize="8" fontFamily="monospace">{t.label}</text>
+          </g>
+        ))}
+        {xLabels.map((t, i) => (
+          <text key={`x${i}`} x={t.x} y={H - 4} textAnchor="middle" fill="#444" fontSize="8" fontFamily="monospace">{t.label}</text>
+        ))}
+
+        {/* Zero line */}
+        {zeroY != null && <line x1={pad.left} y1={zeroY} x2={W - pad.right} y2={zeroY} stroke="#333" strokeWidth="1" strokeDasharray="4,3" />}
+
+        {/* Segment boundaries */}
+        {boundaries.map((v, i) => (
+          <line key={`b${i}`} x1={toSvgX(v)} y1={pad.top} x2={toSvgX(v)} y2={H - pad.bottom} stroke="#1e1e2e" strokeWidth="1" strokeDasharray="2,2" />
+        ))}
+
+        {/* Curve segments */}
+        {segPaths.map((sp, i) => (
+          <polyline key={i} points={sp.points} fill="none" stroke={sp.color} strokeWidth="2" strokeLinecap="round" />
+        ))}
+
+        {/* Current position marker */}
+        <line x1={curX} y1={pad.top} x2={curX} y2={H - pad.bottom} stroke="#e0e0ec" strokeWidth="1" strokeDasharray="3,3" opacity="0.4" />
+        <circle cx={curX} cy={curY} r="4" fill="#e0e0ec" stroke="#0a0a12" strokeWidth="1.5" />
+        <text x={curX + 6} y={curY - 6} fill="#e0e0ec" fontSize="9" fontFamily="monospace" fontWeight="600">{curLabel}</text>
+        <text x={curX} y={H - pad.bottom + 12} textAnchor="middle" fill="#e0e0ec" fontSize="8" fontFamily="monospace" fontWeight="600">
+          {Number.isInteger(inputVal) ? inputVal : inputVal.toFixed(1)}
+        </text>
+      </svg>
+      {/* Formula and per-attribute breakdown */}
+      <div style={{ padding: "6px 10px 4px 10px", borderTop: "1px solid #1a1a28" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: 10, marginBottom: 4 }}>
+          <span style={{ color: "#888" }}>
+            Input = <span style={{ color: "#e0e0ec", fontWeight: 600 }}>{mapping.formula}</span>
+            <span style={{ color: "#555", marginLeft: 6 }}>= {Number.isInteger(inputVal) ? inputVal : inputVal.toFixed(1)}</span>
+          </span>
+          <span style={{ color: "#444", fontSize: 9 }}>{segments.length} segments</span>
+        </div>
+        {mapping.attrs && mapping.attrs.length > 0 && (() => {
+          const slope = getMarginalSlope(curveDef, inputVal);
+          const unitLabel = isPct ? "" : (statId === "hp" ? " HP" : statId === "moveSpeed" ? " spd" : "");
+          return (
+            <div style={{ display: "flex", gap: 16, fontSize: 10 }}>
+              {mapping.attrs.map(({ attr, weight }) => {
+                const perAttr = slope * weight;
+                const display = isPct
+                  ? `${(Math.abs(perAttr) * 100).toFixed(2)}%`
+                  : `${Math.abs(perAttr).toFixed(2)}${unitLabel}`;
+                const ctx = getCurveContext(curveDef, inputVal);
+                const color = TIER_COLORS[ctx.tier];
+                return (
+                  <span key={attr} style={{ color }}>
+                    <span style={{ color: "#888" }}>+1 {attr} →</span> {perAttr < 0 ? "-" : "+"}{display}
+                  </span>
+                );
+              })}
+              {mapping.attrs.length > 1 && (
+                <span style={{ color: "#444", fontSize: 9, fontStyle: "italic" }}>
+                  (slope {isPct ? `${(Math.abs(slope)*100).toFixed(1)}%` : slope.toFixed(2)}/{mapping.inputLabel || "pt"}, split by weight)
+                </span>
+              )}
+            </div>
+          );
+        })()}
+      </div>
+    </div>
+  );
 }
-function SR({ label, value, base, detail }) {
+
+function MarginalBadge({ statId, ds, attrs, isExpanded, onToggle }) {
+  const [show, setShow] = useState(false);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const mapping = DERIVED_CURVE_MAP[statId];
+  if (!mapping) return null;
+  const curveDef = STAT_CURVES[mapping.curveKey];
+  if (!curveDef) return null;
+  const inputVal = mapping.getInput(ds, attrs);
+  const ctx = getCurveContext(curveDef, inputVal);
+  const color = TIER_COLORS[ctx.tier];
+  const perLabel = mapping.inputLabel ? `/${mapping.inputLabel}` : "/pt";
+  const slopeDisplay = fmtSlope(ctx.slope, mapping.unit);
+
+  // Segment position info
+  const segWidth = ctx.segmentEnd - ctx.segmentStart;
+  const posInSeg = inputVal - ctx.segmentStart;
+  const pctThrough = segWidth > 0 ? Math.min(1, Math.max(0, posInSeg / segWidth)) : 0;
+  const remaining = Math.max(0, ctx.segmentEnd - inputVal);
+
+  // Next segment info
+  const { segments } = curveDef;
+  let segIdx = segments.findIndex(s => inputVal >= s.start && inputVal < s.end);
+  if (segIdx === -1) segIdx = segments.length - 1;
+  const nextSeg = segIdx < segments.length - 1 ? segments[segIdx + 1] : null;
+  const prevSeg = segIdx > 0 ? segments[segIdx - 1] : null;
+
+  const handleEnter = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    setPos({ x: r.left, y: r.bottom + 6 });
+    setShow(true);
+  };
+
+  return (
+    <span style={{ position: "relative", display: "inline-flex" }}
+      onMouseEnter={handleEnter} onMouseLeave={() => setShow(false)}>
+      <span onClick={(e) => { e.stopPropagation(); onToggle && onToggle(); }} style={{
+        display: "inline-flex", alignItems: "center", gap: 2,
+        fontSize: 9, fontWeight: 600, color,
+        background: isExpanded ? `${color}30` : `${color}15`,
+        border: `1px solid ${isExpanded ? color : `${color}30`}`,
+        padding: "1px 5px", borderRadius: 8, marginLeft: 6,
+        cursor: "pointer", whiteSpace: "nowrap", lineHeight: 1.4,
+      }}>
+        {ctx.isGoldenZone && <span style={{ fontSize: 8 }}>★</span>}
+        {ctx.isAccelerating && !ctx.isGoldenZone && <span style={{ fontSize: 8 }}>↑</span>}
+        {ctx.slope < 0 ? "-" : "+"}{slopeDisplay}{perLabel}
+        <span style={{ fontSize: 8, marginLeft: 2, opacity: 0.6 }}>{isExpanded ? "▾" : "▸"}</span>
+      </span>
+      {show && (
+        <div style={{
+          position: "fixed", left: Math.min(pos.x, window.innerWidth - 290), top: pos.y, zIndex: 999,
+          background: "#16162a", border: "1px solid #4a4a6e", borderRadius: 6,
+          padding: "10px 14px", width: 270, boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
+          pointerEvents: "none", fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+        }}>
+          {/* Header with tier */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, paddingBottom: 4, borderBottom: "1px solid #1e1e2e" }}>
+            <span style={{ fontWeight: 700, color }}>
+              {ctx.isGoldenZone ? "★ " : ""}{TIER_LABELS[ctx.tier]}
+            </span>
+            <span style={{ fontSize: 10, color: "#555" }}>{(ctx.slopeRatio * 100).toFixed(0)}% of peak</span>
+          </div>
+
+          {/* Current position */}
+          <div style={{ marginBottom: 6 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#888", marginBottom: 3 }}>
+              <span>Input: <span style={{ color: "#e0e0ec" }}>{Number.isInteger(inputVal) ? inputVal : inputVal.toFixed(1)}</span></span>
+              <span style={{ color: "#555" }}>{remaining.toFixed(remaining % 1 === 0 ? 0 : 1)} pts left in zone</span>
+            </div>
+            {/* Segment position bar */}
+            <div style={{ height: 6, background: "#1a1a2e", borderRadius: 3, overflow: "hidden", position: "relative" }}>
+              <div style={{ height: "100%", borderRadius: 3, width: `${pctThrough * 100}%`, background: color, opacity: 0.7, transition: "width 0.2s" }} />
+              <div style={{ position: "absolute", top: -1, left: `${pctThrough * 100}%`, width: 2, height: 8, background: "#fff", borderRadius: 1, transform: "translateX(-1px)" }} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "#444", marginTop: 2 }}>
+              <span>{ctx.segmentStart}</span>
+              <span>{ctx.segmentEnd}</span>
+            </div>
+          </div>
+
+          {/* Current slope */}
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontSize: 10 }}>
+            <span style={{ color: "#888" }}>Current gain</span>
+            <span style={{ color, fontWeight: 600 }}>{ctx.slope < 0 ? "-" : "+"}{slopeDisplay}{perLabel}</span>
+          </div>
+
+          {/* Next segment preview */}
+          {nextSeg && (
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontSize: 10 }}>
+              <span style={{ color: "#888" }}>Next zone <span style={{ color: "#555" }}>({nextSeg.start}–{nextSeg.end})</span></span>
+              <span style={{
+                color: Math.abs(nextSeg.slope) > ctx.absSlope * 1.05 ? TIER_COLORS.gold :
+                       Math.abs(nextSeg.slope) < ctx.absSlope * 0.8 ? TIER_COLORS.amber : "#888",
+                fontWeight: 500,
+              }}>
+                {Math.abs(nextSeg.slope) > ctx.absSlope * 1.05 ? "↑ " : Math.abs(nextSeg.slope) < ctx.absSlope * 0.8 ? "↓ " : ""}
+                {nextSeg.slope < 0 ? "-" : "+"}{fmtSlope(nextSeg.slope, mapping.unit)}{perLabel}
+              </span>
+            </div>
+          )}
+
+          {/* Previous segment for context */}
+          {prevSeg && (
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontSize: 10 }}>
+              <span style={{ color: "#555" }}>Prev zone <span style={{ color: "#444" }}>({prevSeg.start}–{prevSeg.end})</span></span>
+              <span style={{ color: "#555" }}>
+                {prevSeg.slope < 0 ? "-" : "+"}{fmtSlope(prevSeg.slope, mapping.unit)}{perLabel}
+              </span>
+            </div>
+          )}
+
+          {/* Acceleration callout */}
+          {ctx.isAccelerating && ctx.distToNextSeg != null && (
+            <div style={{ marginTop: 4, padding: "4px 6px", background: `${TIER_COLORS.gold}15`, border: `1px solid ${TIER_COLORS.gold}30`, borderRadius: 4, fontSize: 10, color: TIER_COLORS.gold }}>
+              ↑ Slope jumps {(Math.abs(ctx.nextSegmentSlope) / ctx.absSlope).toFixed(1)}× in {Math.round(ctx.distToNextSeg)} pts
+            </div>
+          )}
+
+          {segIdx === segments.length - 1 && (
+            <div style={{ marginTop: 4, fontSize: 9, color: "#555", fontStyle: "italic" }}>Final segment — no further changes</div>
+          )}
+        </div>
+      )}
+    </span>
+  );
+}
+
+function SR({ label, value, base, detail, badge }) {
   return <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "4px 0", borderBottom: "1px solid #111118" }}>
-    <span style={{ color: "#888", fontSize: 12 }}>{label}{base != null && <span style={{ color: "#444", fontSize: 10 }}> ({base})</span>}</span>
+    <span style={{ color: "#888", fontSize: 12, display: "flex", alignItems: "baseline", gap: 0 }}>{label}{badge}{base != null && <span style={{ color: "#444", fontSize: 10 }}> ({base})</span>}</span>
     <span style={{ color: "#e0e0ec", fontSize: 12, fontWeight: 500 }}>
       {value}
       {detail && (() => {
@@ -1351,7 +1859,7 @@ function SR({ label, value, base, detail }) {
     </span>
   </div>;
 }
-function CapSR({ label, value, cap, curve, bonus }) {
+function CapSR({ label, value, cap, curve, bonus, badge }) {
   const capped = value >= cap - 0.0001;
   const parts = [];
   if (capped) {
@@ -1362,11 +1870,11 @@ function CapSR({ label, value, cap, curve, bonus }) {
       if (bonus - eff > 0.0001) parts.push(`${fmtPct(bonus - eff)} over cap`);
     }
   } else if (bonus > 0.0001) parts.push(`${fmtPct(bonus)} from bonuses`);
-  return <SR label={label} value={fmtPct(value)} detail={parts.length ? parts.join(" · ") : null} />;
+  return <SR label={label} value={fmtPct(value)} detail={parts.length ? parts.join(" · ") : null} badge={badge} />;
 }
-function SubSR({ label, value }) {
+function SubSR({ label, value, info }) {
   return <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "2px 0 2px 12px", borderBottom: "1px solid #111118" }}>
-    <span style={{ color: "#555", fontSize: 11 }}>{label}</span>
+    <span style={{ color: "#555", fontSize: 11 }}>{label}{info && <InfoTip text={info} />}</span>
     <span style={{ color: "#999", fontSize: 11 }}>{value}</span>
   </div>;
 }
@@ -1375,7 +1883,7 @@ function StatDivider() {
 }
 
 // ============================================================
-// MAIN APP — v0.4.0 Layout Restructure
+// MAIN APP — v0.4.3
 // ============================================================
 
 function App() {
@@ -1387,6 +1895,7 @@ function App() {
   const [activeBuffs, setActiveBuffs] = useState({});
   const [religion, setReligion] = useState("none");
   const [useAcronyms, setUseAcronyms] = useState(true);
+  const [expandedCurve, setExpandedCurve] = useState(null);
 
   const [selectedClass, setSelectedClass] = useState("warlock");
   const [selectedPerks, setSelectedPerks] = useState(["demon_armor", "shadow_touch", "dark_reflection"]);
@@ -1504,6 +2013,11 @@ function App() {
 
     ds.typeDamageBonuses = typeDmgBonuses;
 
+    // Healing stats
+    ds.healingMod = pe.healingMod || 0;
+    ds.magicalHealingAdd = bonuses.magicalHealing || 0;
+    ds.physicalHealingAdd = bonuses.physicalHealing || 0;
+
     ds.religionBonuses = {};
     const blessing = RELIGION_BLESSINGS.find(b => b.id === religion);
     if (blessing) {
@@ -1526,10 +2040,22 @@ function App() {
   );
 
   const majorStatIds = classData.majorDerivedStats || FALLBACK_MAJOR_STATS;
-  const targetMDR = 0.075; // Dummy — VERIFIED 7.5%
+  const targetMDR = 0.075;
   const magDmg = computed.activeWeapon?.magicalDamage || 0;
 
-  // Helper: render a spell/skill damage line
+  // Helper: marginal badge for a stat — clickable to toggle curve chart
+  const badge = (id) => <MarginalBadge statId={id} ds={ds} attrs={computed.attrs}
+    isExpanded={expandedCurve === id}
+    onToggle={() => setExpandedCurve(expandedCurve === id ? null : id)} />;
+
+  // Helper: wrap a stat block with optional curve chart
+  const withCurve = (id, content) => (
+    <div key={id}>
+      {content}
+      {expandedCurve === id && <CurveChart statId={id} ds={ds} attrs={computed.attrs} />}
+    </div>
+  );
+
   const renderDmgLine = (source, d, di) => {
     const effBase = d.base + (d.type !== "physical" ? magDmg : 0);
     const typeBonus = ds.typeDamageBonuses?.[d.type] || 0;
@@ -1546,7 +2072,6 @@ function App() {
     );
   };
 
-  // Collect all equipped damage sources
   const allDmgLines = [];
   selectedSkills.forEach(skId => {
     const skDef = classData.skills.find(s => s.id === skId);
@@ -1557,32 +2082,101 @@ function App() {
     if (spDef?.dmg) spDef.dmg.forEach((d, di) => allDmgLines.push(renderDmgLine(spDef.name, d, di)));
   });
 
-  // Render a derived stat block by ID
+  // Collect healing sources from equipped perks
+  const allHealLines = [];
+  selectedPerks.forEach(perkId => {
+    const perkDef = classData.perks.find(p => p.id === perkId);
+    if (!perkDef?.healEffects) return;
+    perkDef.healEffects.forEach((h, hi) => {
+      const heal = calcHealing({
+        baseHeal: h.baseHeal, scaling: h.scaling,
+        mpb: ds.mpb, healingAdd: ds.magicalHealingAdd,
+        healingMod: ds.healingMod,
+      });
+      const healNoMod = calcHealing({
+        baseHeal: h.baseHeal, scaling: h.scaling,
+        mpb: ds.mpb, healingAdd: ds.magicalHealingAdd,
+        healingMod: 0,
+      });
+      allHealLines.push(
+        <div key={`perk-${perkId}-${hi}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "4px 8px", background: "#0d0d14", borderRadius: 4, marginBottom: 2 }}>
+          <span style={{ fontSize: 10, color: "#888" }}>
+            {perkDef.name} · {h.label} · {h.baseHeal}({h.scaling})
+            {h.scaling > 0 && ds.magicalHealingAdd > 0 ? ` +${ds.magicalHealingAdd}mh` : ""}
+            {ds.healingMod > 0 ? ` ×${(1 + ds.healingMod).toFixed(1)}` : ""}
+          </span>
+          <span style={{ fontSize: 11, color: "#4ade80", fontWeight: 500 }}>
+            +{heal.toFixed(1)} HP
+          </span>
+        </div>
+      );
+    });
+  });
+  // Reference healing items (potions etc.)
+  HEALING_ITEMS.forEach((item, ii) => {
+    const heal = calcHealing({
+      baseHeal: item.baseHeal, scaling: item.scaling,
+      mpb: ds.mpb, healingAdd: ds.magicalHealingAdd,
+      healingMod: ds.healingMod,
+      isHoT: item.isHoT, baseDuration: item.baseDuration,
+      buffDuration: ds.buffDuration,
+    });
+    const ticks = item.isHoT ? Math.floor(item.baseDuration * (1 + ds.buffDuration)) : 0;
+    allHealLines.push(
+      <div key={`item-${ii}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "4px 8px", background: "#0d0d14", borderRadius: 4, marginBottom: 2 }}>
+        <span style={{ fontSize: 10, color: "#888" }}>
+          {item.name} · {item.baseHeal}({item.scaling}) {item.label}
+          {ds.magicalHealingAdd > 0 ? ` +${ds.magicalHealingAdd}mh` : ""}
+          {item.isHoT ? ` · ${ticks}s` : ""}
+          {ds.healingMod > 0 ? ` ×${(1 + ds.healingMod).toFixed(1)}` : ""}
+        </span>
+        <span style={{ fontSize: 11, color: "#4ade80", fontWeight: 500 }}>
+          +{heal.toFixed(1)} HP
+        </span>
+      </div>
+    );
+  });
+
   const renderDerivedStat = (id) => {
     const L = (k) => derivedLabel(k, useAcronyms);
     switch (id) {
-      case "hp": return <SR key={id} label={L("hp")} value={ds.health} detail={`rating ${ds.healthRating.toFixed(1)}`} />;
-      case "ppb": return <div key={id}><SR label={L("ppb")} value={fmtPct(ds.ppb)} /><SubSR label={`From Power`} value={`${ds.physicalPower} (${fmtPct(ds.ppbFromCurve)})`} /><SubSR label="From Bonuses" value={ds.ppbFromBonuses > 0 ? fmtPct(ds.ppbFromBonuses) : "0"} /></div>;
-      case "mpb": return <div key={id}><SR label={L("mpb")} value={fmtPct(ds.mpb)} /><SubSR label={`From Power`} value={`${ds.magicalPower} (${fmtPct(ds.mpbFromCurve)})`} /><SubSR label="From Bonuses" value={ds.mpbFromBonuses > 0 ? fmtPct(ds.mpbFromBonuses) : "0"} /></div>;
-      case "pdr": return <div key={id}><CapSR label={L("pdr")} value={ds.pdr} cap={ds.pdrCap} curve={ds.pdrFromCurve} bonus={ds.pdrFromBonuses} /><SubSR label="From AR" value={`${ds.armorRating} (${fmtPct(ds.pdrFromCurve)})`} /><SubSR label="From Bonuses" value={ds.pdrFromBonuses > 0 ? fmtPct(ds.pdrFromBonuses) : "0"} /></div>;
-      case "mdr": return <div key={id}><CapSR label={L("mdr")} value={ds.mdr} cap={ds.mdrCap} curve={ds.mdrFromCurve} bonus={ds.mdrFromBonuses} /><SubSR label="From MR" value={`${Math.round(ds.magicResistance)} (${fmtPct(ds.mdrFromCurve)})`} /><SubSR label="From Bonuses" value={ds.mdrFromBonuses > 0 ? fmtPct(ds.mdrFromBonuses) : "0"} />{ds.hasAntimagic && <SubSR label="Antimagic (×0.80)" value={fmtPct(1 - ds.effectiveMagicDmgTaken)} />}</div>;
-      case "moveSpeed": return <SR key={id} label={L("moveSpeed")} value={ds.moveSpeed} />;
-      case "actionSpeed": return <SR key={id} label={L("actionSpeed")} value={fmtPct(ds.actionSpeed)} detail={`rating ${ds.actionSpeedRating.toFixed(1)}`} />;
-      case "spellCastingSpeed": return <SR key={id} label={L("spellCastingSpeed")} value={fmtPct(ds.spellCastingSpeed)} detail={ds.buffPostCurve?.spellCastingSpeed ? `+${fmtPct(ds.buffPostCurve.spellCastingSpeed)} from ES break` : null} />;
-      case "regularInteractionSpeed": return <SR key={id} label={L("regularInteractionSpeed")} value={fmtPct(ds.regularInteractionSpeed)} detail={ds.religionBonuses?.regularInteractionSpeed ? `+${fmtPct(ds.religionBonuses.regularInteractionSpeed)} religion` : null} />;
-      case "magicalInteractionSpeed": return <SR key={id} label={L("magicalInteractionSpeed")} value={fmtPct(ds.magicalInteractionSpeed)} />;
-      case "cdr": return <SR key={id} label={L("cdr")} value={fmtPct(ds.cdr)} detail={ds.religionBonuses?.cdr ? `+${fmtPct(ds.religionBonuses.cdr)} religion` : null} />;
-      case "buffDuration": return <SR key={id} label={L("buffDuration")} value={fmtPct(ds.buffDuration)} />;
-      case "debuffDuration": return <SR key={id} label={L("debuffDuration")} value={fmtPct(ds.debuffDuration)} />;
-      case "memoryCapacity": return <SR key={id} label={L("memoryCapacity")} value={ds.memoryCapacity} />;
-      case "healthRecovery": return <SR key={id} label={L("healthRecovery")} value={fmtPct(ds.healthRecovery)} />;
-      case "memoryRecovery": return <SR key={id} label={L("memoryRecovery")} value={fmtPct(ds.memoryRecovery)} />;
-      case "magicalHealing": return <SR key={id} label={L("magicalHealing")} value={fmtPct(ds.magicalInteractionSpeed)} />;
-      case "manualDexterity": return <SR key={id} label={L("manualDexterity")} value={fmtPct(ds.manualDexterity)} />;
-      case "equipSpeed": return <SR key={id} label={L("equipSpeed")} value={fmtPct(ds.equipSpeed)} />;
-      case "persuasiveness": return <SR key={id} label={L("persuasiveness")} value={Math.round(ds.persuasiveness)} detail={ds.religionBonuses?.persuasiveness ? `+${ds.religionBonuses.persuasiveness} religion` : null} />;
-      case "armorPenetration": return <SR key={id} label={L("armorPenetration")} value={fmtPct(ds.armorPenetration)} />;
-      case "magicPenetration": return <SR key={id} label={L("magicPenetration")} value={fmtPct(ds.magicPenetration)} detail={ds.religionBonuses?.magicPenetration ? `+${fmtPct(ds.religionBonuses.magicPenetration)} religion` : null} />;
+      case "hp": return withCurve(id, <SR label={L("hp")} value={ds.health} detail={`rating ${ds.healthRating.toFixed(1)}`} badge={badge("hp")} />);
+      case "ppb": return withCurve(id, <><SR label={L("ppb")} value={fmtPct(ds.ppb)} badge={badge("ppb")} />
+        <SubSR label={`From Power`} value={`${ds.physicalPower} (${fmtPct(ds.ppbFromCurve)})`} />
+        <SubSR label="From Bonuses" value={ds.ppbFromBonuses > 0 ? fmtPct(ds.ppbFromBonuses) : "0"}
+          info="Flat addition to curve output — not a multiplier. Gear % bonuses add directly to the curve value." /></>);
+      case "mpb": return withCurve(id, <><SR label={L("mpb")} value={fmtPct(ds.mpb)} badge={badge("mpb")} />
+        <SubSR label={`From Power`} value={`${ds.magicalPower} (${fmtPct(ds.mpbFromCurve)})`} />
+        <SubSR label="From Bonuses" value={ds.mpbFromBonuses > 0 ? fmtPct(ds.mpbFromBonuses) : "0"}
+          info="Flat addition to curve output. MPB also scales magical healing (potions, spells) — not just damage." /></>);
+      case "pdr": return withCurve(id, <><CapSR label={L("pdr")} value={ds.pdr} cap={ds.pdrCap} curve={ds.pdrFromCurve} bonus={ds.pdrFromBonuses} badge={badge("pdr")} />
+        <SubSR label="From AR" value={`${ds.armorRating} (${fmtPct(ds.pdrFromCurve)})`} />
+        <SubSR label="From Bonuses" value={ds.pdrFromBonuses > 0 ? fmtPct(ds.pdrFromBonuses) : "0"}
+          info={`Added flat after the AR→PDR curve, before ${Math.round(ds.pdrCap*100)}% cap${ds.pdrCap > CONSTANTS.PDR_CAP ? " (raised by Defense Mastery)" : ""}. Not a multiplier on existing PDR.`} /></>);
+      case "mdr": return withCurve(id, <><CapSR label={L("mdr")} value={ds.mdr} cap={ds.mdrCap} curve={ds.mdrFromCurve} bonus={ds.mdrFromBonuses} badge={badge("mdr")} />
+        <SubSR label="From MR" value={`${Math.round(ds.magicResistance)} (${fmtPct(ds.mdrFromCurve)})`} />
+        <SubSR label="From Bonuses" value={ds.mdrFromBonuses > 0 ? fmtPct(ds.mdrFromBonuses) : "0"}
+          info={`Added flat after the MR→MDR curve, before ${Math.round(ds.mdrCap*100)}% cap${ds.mdrCap > CONSTANTS.MDR_CAP ? " (raised by Iron Will)" : ""}. Not a multiplier on existing MDR.`} />
+        {ds.hasAntimagic && <SubSR label="Antimagic (×0.80)" value={fmtPct(1 - ds.effectiveMagicDmgTaken)}
+          info="Separate multiplicative layer AFTER the MDR cap — not added to stat-screen MDR. Does not apply vs divine magic." />}</>);
+      case "moveSpeed": return withCurve(id, <SR label={L("moveSpeed")} value={ds.moveSpeed} badge={badge("moveSpeed")} />);
+      case "actionSpeed": return withCurve(id, <SR label={L("actionSpeed")} value={fmtPct(ds.actionSpeed)} detail={`rating ${ds.actionSpeedRating.toFixed(1)}`} badge={badge("actionSpeed")} />);
+      case "spellCastingSpeed": return withCurve(id, <SR label={L("spellCastingSpeed")} value={fmtPct(ds.spellCastingSpeed)} detail={ds.buffPostCurve?.spellCastingSpeed ? `+${fmtPct(ds.buffPostCurve.spellCastingSpeed)} from ES break` : null} badge={badge("spellCastingSpeed")} />);
+      case "regularInteractionSpeed": return withCurve(id, <SR label={L("regularInteractionSpeed")} value={fmtPct(ds.regularInteractionSpeed)} detail={ds.religionBonuses?.regularInteractionSpeed ? `+${fmtPct(ds.religionBonuses.regularInteractionSpeed)} religion` : null} badge={badge("regularInteractionSpeed")} />);
+      case "magicalInteractionSpeed": return withCurve(id, <SR label={L("magicalInteractionSpeed")} value={fmtPct(ds.magicalInteractionSpeed)} badge={badge("magicalInteractionSpeed")} />);
+      case "cdr": return withCurve(id, <SR label={L("cdr")} value={fmtPct(ds.cdr)} detail={ds.religionBonuses?.cdr ? `+${fmtPct(ds.religionBonuses.cdr)} religion` : null} badge={badge("cdr")} />);
+      case "buffDuration": return withCurve(id, <SR label={<>{L("buffDuration")}<InfoTip text="Extends potion/HoT duration — you get MORE total healing, not just slower. Each extra tick = more HP." /></>} value={fmtPct(ds.buffDuration)} badge={badge("buffDuration")} />);
+      case "debuffDuration": return withCurve(id, <SR label={L("debuffDuration")} value={fmtPct(ds.debuffDuration)} badge={badge("debuffDuration")} />);
+      case "memoryCapacity": return withCurve(id, <SR label={<>{L("memoryCapacity")}<InfoTip text="Formula: ceil(curve(KNO) × (1 + bonus%)) + flat. Percentage and flat bonuses stack differently." /></>} value={ds.memoryCapacity} badge={badge("memoryCapacity")} />);
+      case "healthRecovery": return withCurve(id, <SR label={<>{L("healthRecovery")}<InfoTip text="HP recovered per 2s while sitting/resting. Converts recoverable (dark red) health back to real HP." /></>} value={fmtPct(ds.healthRecovery)} badge={badge("healthRecovery")} />);
+      case "memoryRecovery": return withCurve(id, <SR label={L("memoryRecovery")} value={fmtPct(ds.memoryRecovery)} badge={badge("memoryRecovery")} />);
+      case "magicalHealing": return <SR key={id} label={<>{L("magicalHealing")}<InfoTip text="Flat bonus added to magical heals (potions, spells) before MPB multiplier. Effectiveness depends on ability scaling — e.g., potions use 50%, so +4 MH = +2 base heal." /></>} value={computed.bonuses.magicalHealing || 0} />;
+      case "physicalHealing": return <SR key={id} label={<>{L("physicalHealing")}<InfoTip text="Flat bonus to physical heals (bandages, campfires, field rations). NOT affected by Physical Power Bonus." /></>} value={computed.bonuses.physicalHealing || 0} />;
+      case "manualDexterity": return withCurve(id, <SR label={L("manualDexterity")} value={fmtPct(ds.manualDexterity)} badge={badge("manualDexterity")} />);
+      case "equipSpeed": return withCurve(id, <SR label={L("equipSpeed")} value={fmtPct(ds.equipSpeed)} badge={badge("equipSpeed")} />);
+      case "persuasiveness": return withCurve(id, <SR label={L("persuasiveness")} value={Math.round(ds.persuasiveness)} detail={ds.religionBonuses?.persuasiveness ? `+${ds.religionBonuses.persuasiveness} religion` : null} badge={badge("persuasiveness")} />);
+      case "armorPenetration": return <SR key={id} label={<>{L("armorPenetration")}<InfoTip text="Reduces target's PDR. Has NO effect when target PDR is negative (e.g., training dummies at -22%)." /></>} value={fmtPct(ds.armorPenetration)} />;
+      case "magicPenetration": return <SR key={id} label={<>{L("magicPenetration")}<InfoTip text="Reduces target's MDR. Formula: max(1 - MDR×(1-Pen), 1-MDR) — only helps when target has positive MDR." /></>} value={fmtPct(ds.magicPenetration)} detail={ds.religionBonuses?.magicPenetration ? `+${fmtPct(ds.religionBonuses.magicPenetration)} religion` : null} />;
       case "headshotDamageBonus": return <SR key={id} label={L("headshotDamageBonus")} value={fmtPct(ds.headshotDamageBonus)} />;
       case "headshotDamageReduction": return <SR key={id} label={L("headshotDamageReduction")} value={fmtPct(ds.headshotDamageReduction)} />;
       case "projectileDamageReduction": return <SR key={id} label={L("projectileDamageReduction")} value={fmtPct(ds.projectileDamageReduction)} />;
@@ -1592,7 +2186,7 @@ function App() {
 
   const ALL_DERIVED_IDS = ["hp", "ppb", "mpb", "pdr", "mdr", "moveSpeed", "actionSpeed", "spellCastingSpeed",
     "regularInteractionSpeed", "magicalInteractionSpeed", "cdr", "buffDuration", "debuffDuration",
-    "memoryCapacity", "healthRecovery", "memoryRecovery", "manualDexterity", "equipSpeed", "persuasiveness",
+    "memoryCapacity", "healthRecovery", "memoryRecovery", "physicalHealing", "manualDexterity", "equipSpeed", "persuasiveness",
     "armorPenetration", "magicPenetration", "headshotDamageBonus", "headshotDamageReduction", "projectileDamageReduction"];
   const minorStatIds = ALL_DERIVED_IDS.filter(id => !majorStatIds.includes(id));
 
@@ -1608,10 +2202,9 @@ function App() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #1e1e2e", paddingBottom: 16, marginBottom: 16 }}>
         <div>
           <h1 style={{ fontSize: 18, fontWeight: 600, color: "#e0e0ec", letterSpacing: "0.05em", textTransform: "uppercase" }}>D&D Simulator</h1>
-          <div style={{ fontSize: 11, color: "#666", marginTop: 4 }}>Patch 6.10 · Season 8 · v0.4.0</div>
+          <div style={{ fontSize: 11, color: "#666", marginTop: 4 }}>Patch 6.10 · Season 8 · v0.4.3</div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {/* Acronym toggle */}
           <div onClick={() => setUseAcronyms(!useAcronyms)} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", background: "#10101c", border: "1px solid #1e1e2e", borderRadius: 20, padding: "4px 12px" }}>
             <span style={{ fontSize: 10, color: "#555" }}>Labels:</span>
             <div style={{ width: 32, height: 16, borderRadius: 8, background: useAcronyms ? "#6366f1" : "#2a2a3e", position: "relative", transition: "background 0.2s" }}>
@@ -1619,12 +2212,21 @@ function App() {
             </div>
             <span style={{ fontSize: 10, color: useAcronyms ? "#6366f1" : "#555", fontWeight: 600, minWidth: 36 }}>{useAcronyms ? "Short" : "Full"}</span>
           </div>
-          {/* Class selector */}
           <select value={selectedClass} onChange={(e) => handleClassChange(e.target.value)}
             style={{ ...styles.select, fontSize: 12, minWidth: 120 }}>
             {Object.values(CLASSES).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
+      </div>
+
+      {/* Legend for marginal badges */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 12, padding: "4px 8px", fontSize: 9, color: "#555", alignItems: "center" }}>
+        <span style={{ color: "#777" }}>Curve efficiency:</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 3 }}><span style={{ width: 8, height: 8, borderRadius: 4, background: TIER_COLORS.gold, display: "inline-block" }} /> <span style={{ color: TIER_COLORS.gold }}>★ Peak</span></span>
+        <span style={{ display: "flex", alignItems: "center", gap: 3 }}><span style={{ width: 8, height: 8, borderRadius: 4, background: TIER_COLORS.green, display: "inline-block" }} /> <span style={{ color: TIER_COLORS.green }}>Good</span></span>
+        <span style={{ display: "flex", alignItems: "center", gap: 3 }}><span style={{ width: 8, height: 8, borderRadius: 4, background: TIER_COLORS.amber, display: "inline-block" }} /> <span style={{ color: TIER_COLORS.amber }}>Tapering</span></span>
+        <span style={{ display: "flex", alignItems: "center", gap: 3 }}><span style={{ width: 8, height: 8, borderRadius: 4, background: TIER_COLORS.gray, display: "inline-block" }} /> <span style={{ color: TIER_COLORS.gray }}>Dim</span></span>
+        <span style={{ display: "flex", alignItems: "center", gap: 3 }}><span style={{ color: TIER_COLORS.amber }}>↑</span> = acceleration ahead</span>
       </div>
 
       {/* ========== TWO-COLUMN LAYOUT ========== */}
@@ -1633,7 +2235,6 @@ function App() {
         {/* ═══ LEFT PANEL: COMBAT ═══ */}
         <div>
 
-          {/* Weapon Held */}
           <Panel title="Weapon Held" color="#60a5fa">
             <div style={{ display: "flex", gap: 6 }}>
               {[["none", "Bare Hands"], ["weaponSlot1", gear.weaponSlot1?.primary?.name || "Weapon 1"], ["weaponSlot2", gear.weaponSlot2?.primary?.name || "Weapon 2"]].map(([k, l]) => (
@@ -1647,7 +2248,6 @@ function App() {
             </div>
           </Panel>
 
-          {/* Active Buffs */}
           {availableBuffs.length > 0 && (
             <Panel title="Active Buffs" color="#a78bfa">
               {availableBuffs.map(buff => {
@@ -1681,18 +2281,15 @@ function App() {
             </Panel>
           )}
 
-          {/* Physical Damage — always shown (unarmed base 8, VERIFIED) */}
           <Panel title={`Physical Damage — ${computed.activeWeapon ? computed.activeWeapon.name : "Bare Hands"} vs Dummy`} color="#f59e0b">
             {(() => {
-              const UNARMED_BASE = 8; // VERIFIED: 4 test points (body/head ± gauntlets)
+              const UNARMED_BASE = 8;
               const baseWpnDmg = computed.activeWeapon ? computed.activeWeapon.weaponDamage : UNARMED_BASE;
               const gearWpnDmg = computed.bonuses.additionalWeaponDamage || 0;
               const buffWpnDmg = computed.bonuses.buffWeaponDamage || 0;
               const pen = ds.armorPenetration;
               const hsBonus = ds.headshotDamageBonus;
-              // Unarmed: single hit, no combo. Weapons: use combo multipliers.
               const combos = computed.activeWeapon ? [1.0, 1.05, 1.1] : [1.0];
-              // On-hit true physical damage from gear (e.g., Spiked Gauntlet +1)
               const truePhysDmg = (() => {
                 let total = 0;
                 for (const slot of ARMOR_SLOTS) {
@@ -1732,15 +2329,27 @@ function App() {
             {!computed.activeWeapon && <div style={{ fontSize: 9, color: "#444", marginTop: 4 }}>Unarmed base damage: 8 (verified)</div>}
           </Panel>
 
-          {/* Spell & Skill Damage */}
           {allDmgLines.length > 0 && (
             <Panel title="Spell & Skill Damage vs Dummy" color="#f59e0b">
-              <div style={{ fontSize: 9, color: "#444", marginBottom: 6 }}>MDR 7.5%{magDmg > 0 ? ` · +${magDmg} Magical Damage from ${computed.activeWeapon?.name || "weapon"}` : ""}</div>
+              <div style={{ fontSize: 9, color: "#444", marginBottom: 6 }}>MDR 7.5%{magDmg > 0 ? ` · +${magDmg} Magical Damage from ${computed.activeWeapon?.name || "weapon"}` : ""}
+                <InfoTip text={"Dmg = Base × (1 + MPB × Scaling + TypeBonus) × HitLoc × DR. The (1.0) is Scaling — at 1.0 you get full MPB benefit, at 0.5 only half. Type bonuses (e.g., Dark Enhancement) only apply to matching damage types."} color="#6a6a4e" />
+              </div>
               {allDmgLines}
             </Panel>
           )}
 
-          {/* Target Properties */}
+          {allHealLines.length > 0 && (
+            <Panel title="Healing" color="#4ade80">
+              <div style={{ fontSize: 9, color: "#444", marginBottom: 6 }}>
+                Mag Heal: {ds.magicalHealingAdd || 0}
+                {ds.healingMod > 0 ? ` · Healing Mod: +${Math.round(ds.healingMod * 100)}%` : ""}
+                {ds.mpb > 0 ? ` · MPB: ${fmtPct(ds.mpb)}` : ""}
+                <InfoTip text={"Heal = (Base + MagHeal × Scaling) × (1 + MPB × Scaling) × (1 + HealMod). The (0.5) after an ability is its Scaling — controls how much your stats contribute. MPB boosts magical healing (potions, spells), not just damage."} color="#4a6a4e" />
+              </div>
+              {allHealLines}
+            </Panel>
+          )}
+
           <Panel title="Target Properties" color="#a78bfa">
             <div style={{ display: "flex", gap: 8 }}>
               {[{ label: "PDR", value: "-22%" }, { label: "MDR", value: "7.5%" }, { label: "HS DR", value: "0%" }].map(t => (
@@ -1753,9 +2362,7 @@ function App() {
             <div style={{ fontSize: 9, color: "#444", marginTop: 4 }}>Ruins Training Dummy — editable for custom targets (coming soon)</div>
           </Panel>
 
-          {/* ── Class & Build Setup ── */}
           <Panel title={`Build — ${classData.name}`} color="#6366f1">
-            {/* Perks */}
             <Collapsible title="Perks" color="#6366f1" badge={`${selectedPerks.length}/${classData.maxPerks}`} defaultOpen>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2px 12px", padding: "4px 0" }}>
                 {classData.perks.map(perk => {
@@ -1777,7 +2384,6 @@ function App() {
               </div>
             </Collapsible>
 
-            {/* Skills */}
             {classData.skills.length > 0 && (
               <Collapsible title="Skills" color="#6366f1" badge={`${selectedSkills.length} slots`} defaultOpen>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "4px 0" }}>
@@ -1793,7 +2399,6 @@ function App() {
               </Collapsible>
             )}
 
-            {/* Spells */}
             {classData.spells.length > 0 && spellMemorySlots > 0 && (
               <Collapsible title="Spells" color="#6366f1"
                 badge={`${totalMemoryCost}/${ds.memoryCapacity} memory${totalMemoryCost > ds.memoryCapacity ? " ⚠" : ""}`} defaultOpen>
@@ -1820,7 +2425,6 @@ function App() {
                     );
                   })}
                 </div>
-                {/* Memory bar */}
                 <div style={{ marginTop: 6, background: "#0b0b12", border: `1px solid ${totalMemoryCost > ds.memoryCapacity ? "#f87171" : "#1e1e2e"}`, borderRadius: 5, padding: "6px 10px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                     <span style={{ fontSize: 11, fontWeight: 600, color: totalMemoryCost > ds.memoryCapacity ? "#f87171" : "#4ade80" }}>
@@ -1837,7 +2441,6 @@ function App() {
               </Collapsible>
             )}
 
-            {/* Religion */}
             <Collapsible title="Religion" color="#6366f1" badge={religion !== "none" ? RELIGION_BLESSINGS.find(b => b.id === religion)?.name.replace("Blessing of ", "") : "None"}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "4px 0" }}>
                 <select value={religion} onChange={(e) => setReligion(e.target.value)} style={{ ...styles.select, minWidth: 200, fontSize: 11 }}>
@@ -1854,7 +2457,6 @@ function App() {
             </Collapsible>
           </Panel>
 
-          {/* Tests + Debug */}
           <div style={{ marginTop: 8 }}>
             <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
               <span style={{ fontSize: 10, color: fc > 0 ? "#f66" : "#4a8", fontWeight: 600 }}>{fc > 0 ? "⚠" : "✓"} {pc}/{tests.length} tests</span>
@@ -1873,7 +2475,6 @@ function App() {
         {/* ═══ RIGHT PANEL: STATS + EQUIPMENT ═══ */}
         <div>
 
-          {/* Attributes with hover breakdowns */}
           <Panel title="Attributes" color="#4ade80">
             <div style={{ fontSize: 9, color: "#444", marginBottom: 6 }}>Hover for source breakdown</div>
             <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
@@ -1889,19 +2490,16 @@ function App() {
             </div>
           </Panel>
 
-          {/* Major Derived Stats */}
           <Panel title={`${classData.name} — Key Stats`} color="#4ade80">
             {majorStatIds.map(id => renderDerivedStat(id))}
           </Panel>
 
-          {/* Minor Derived Stats */}
           <Panel>
             <Collapsible title="Other Stats" color="#555" badge={`${minorStatIds.length} stats`}>
               {minorStatIds.map(id => renderDerivedStat(id))}
             </Collapsible>
           </Panel>
 
-          {/* Equipment */}
           <Panel title={
             <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: "#555", textTransform: "uppercase", letterSpacing: "0.15em" }}>Equipment</span>
@@ -1916,7 +2514,7 @@ function App() {
         </div>
       </div>
 
-      <div style={{ marginTop: 20, padding: "12px 0", borderTop: "1px solid #1e1e2e", fontSize: 10, color: "#444" }}>v0.4.0 · {tests.length} tests · Layout restructure</div>
+      <div style={{ marginTop: 20, padding: "12px 0", borderTop: "1px solid #1e1e2e", fontSize: 10, color: "#444" }}>v0.4.3 · {tests.length} tests · Curve indicators + Healing calc</div>
     </div>
   );
 }
