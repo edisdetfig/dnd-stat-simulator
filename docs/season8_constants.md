@@ -1,6 +1,6 @@
 # Season 8 Constants & Global Rules
 
-Patch 6.10, Hotfix 112, Season 8.
+Season 8, Hotfix 112-1 (2026-04-09), game version 0.15.134.8480.
 
 ---
 
@@ -82,3 +82,21 @@ How attributes feed into intermediate values before entering stat curves (curve 
 - Torture Mastery now only restores regenerable health
 - Void Blade changed to Legendary rarity (not Arena-legal)
 - Spectral Blade headshot damage bonus reduced from 10% to 5%
+
+---
+
+## Hotfix 112-1 Changes (2026-04-09)
+
+**Cleric**
+- Lesser Heal and Holy Light scaling reduced from 1.0 to 0.8
+
+**Fighter**
+- Weapon Guard: Impact Resistance removed, +5% Action Speed added
+
+**Bard**
+- Shriek of Weakness: Armor Rating removed, Physical Damage Reduction -3/-6/-9% added
+- Harmonic Shield: Armor Rating and Magic Resistance removed, Physical and Magical Damage Reduction +3/4/5% added respectively
+
+**Weapons**
+- Longsword riposte second hit animation sped up
+- Icefang riposte second hit added

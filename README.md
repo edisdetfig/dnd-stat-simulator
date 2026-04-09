@@ -2,7 +2,7 @@
 
 Dark and Darker character build simulator — stat curves, damage calculator, gear planning.
 
-**Patch 6.10 · Hotfix 112 · Season 8**
+**Season 8 · Hotfix 112-1**
 
 ## What it does
 

@@ -1,9 +1,8 @@
 {
   "_meta": {
-    "patch": "6.10",
-    "hotfix": 112,
+    "hotfix": "112-1",
     "season": 8,
-    "lastUpdated": "2026-04-07",
+    "lastUpdated": "2026-04-09",
     "notes": "All curves from wiki LaTeX. Segment 7 PPB/MPB: using LaTeX (0.2%/pt, 48% end) over wiki text (0.25%/pt, 50% end). 2026-04-07: debuffDuration upgraded from 8-point keypoint interpolation to full 59-segment wiki LaTeX curve (verified WIL 38 = -18.7%). armorRatingToPDR segment [275,295) slope corrected from 0.00105 to 0.001 based on in-game testing at AR 265, 294, 295, 297, 300, 303 — wiki text claimed 0.105%/pt but actual is 0.1%/pt. Health postCurve clarified: uses ceil(), not round()."
   },
 

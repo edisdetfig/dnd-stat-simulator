@@ -1,6 +1,6 @@
 # Damage Formulas
 
-Patch 6.10, Hotfix 112, Season 8. All formulas VERIFIED unless noted.
+Season 8, Hotfix 112-1. All formulas VERIFIED unless noted.
 
 ---
 

@@ -1,6 +1,6 @@
 # Unresolved Questions & Testing Protocols
 
-Patch 6.10, Hotfix 112, Season 8.
+Season 8, Hotfix 112-1 (2026-04-09), game version 0.15.134.8480.
 
 ---
 
@@ -63,8 +63,8 @@ All tests: Poor Healing Potion (20 HP over 20s, 0.50 scaling)
 | Campfire Kit | 3/s | 1.00 | Physical | NOT affected by Buff Duration |
 | Surgical Kit | ? | 0 | Physical | 0% scaling confirmed |
 | Shrine of Health | ? | 1.00 | Magical | Instant, one-time |
-| Cleric Lesser Heal | 15 | 1.00 | Magical | Instant |
-| Cleric Holy Light | 25 | 1.00 | Magical | Instant |
+| Cleric Lesser Heal | 15 | 0.80 | Magical | Instant (nerfed 112-1) |
+| Cleric Holy Light | 25 | 0.80 | Magical | Instant (nerfed 112-1) |
 | Cleric Sanctuary | ?/s | 0.50 | Magical | Channel, per second |
 
 ---

@@ -1,7 +1,7 @@
 # Simulator Architecture
 
 Design and implementation plan for the Dark and Darker character builder and damage simulator.
-Patch 6.10, Hotfix 112, Season 8.
+Season 8, Hotfix 112-1.
 
 ---
 
