@@ -287,6 +287,17 @@ function App() {
     }, 0);
   }, [classData, selectedSkills]);
 
+  // Shapeshift memory: how many form slots are available from equipped shapeshift_memory skills
+  const shapeshiftSlots = useMemo(() => {
+    return selectedSkills.filter(sk => {
+      const skDef = (classData?.skills || []).find(s => s.id === sk);
+      return skDef?.type === "shapeshift_memory";
+    }).reduce((sum, sk) => {
+      const skDef = (classData?.skills || []).find(s => s.id === sk);
+      return sum + (skDef?.shapeshiftSlots || 0);
+    }, 0);
+  }, [classData, selectedSkills]);
+
   const totalMemoryCost = useMemo(() => {
     return selectedSpells.reduce((sum, spId) => {
       const spDef = (classData?.spells || []).find(s => s.id === spId);
@@ -674,6 +685,67 @@ function App() {
             <TargetEditor target={target} onChange={setTarget} />
           </Panel>
 
+          {/* Active Form — shown when transformations are memorized */}
+          {selectedTransformations.length > 0 && (
+            <Panel title="Shapeshift Form" color="var(--sim-accent-verdant-life)">
+              <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                {/* Human (always available) */}
+                <button onClick={() => setActiveForm(null)}
+                  style={{
+                    flex: "1 1 0", minWidth: 0, padding: "8px 6px", borderRadius: 4,
+                    cursor: "pointer", fontFamily: "inherit", fontSize: 11, fontWeight: !activeForm ? 600 : 400,
+                    background: !activeForm ? "var(--sim-surface-ink-raised)" : "transparent",
+                    border: `1.5px solid ${!activeForm ? "var(--sim-accent-verdant-life)" : "var(--sim-border-hairline)"}`,
+                    color: !activeForm ? "var(--sim-text-primary)" : "var(--sim-text-dim)",
+                    transition: "all 0.15s",
+                    position: "relative", overflow: "hidden",
+                  }}>
+                  {!activeForm && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "var(--sim-accent-verdant-life)" }} />}
+                  Human
+                </button>
+                {selectedTransformations.map(formId => {
+                  const form = classData.transformations.find(t => t.id === formId);
+                  if (!form) return null;
+                  const isActive = activeForm === formId;
+                  return (
+                    <button key={formId} onClick={() => handleSetActiveForm(formId)}
+                      style={{
+                        flex: "1 1 0", minWidth: 0, padding: "8px 6px", borderRadius: 4,
+                        cursor: "pointer", fontFamily: "inherit", fontSize: 11, fontWeight: isActive ? 600 : 400,
+                        background: isActive ? "var(--sim-surface-ink-raised)" : "transparent",
+                        border: `1.5px solid ${isActive ? "var(--sim-accent-verdant-life)" : "var(--sim-border-hairline)"}`,
+                        color: isActive ? "var(--sim-text-primary)" : "var(--sim-text-dim)",
+                        transition: "all 0.15s",
+                        position: "relative", overflow: "hidden",
+                      }}>
+                      {isActive && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "var(--sim-accent-verdant-life)" }} />}
+                      {form.name}
+                    </button>
+                  );
+                })}
+              </div>
+              {activeForm && ds.activeFormDef && (
+                <div style={{ marginTop: 8, padding: "6px 8px", background: "var(--sim-surface-ink)", borderRadius: 4, border: "1px solid var(--sim-border-hairline)" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "2px 12px", fontSize: 10 }}>
+                    {ds.activeFormDef.statModifiers.map((mod, i) => (
+                      <span key={i} style={{ color: mod.value > 0 ? "var(--sim-accent-verdant-life)" : "var(--sim-accent-blood-ember)" }}>
+                        {mod.value > 0 ? "+" : ""}{typeof mod.value === "number" && Math.abs(mod.value) < 1 ? `${Math.round(mod.value * 100)}%` : mod.value} {mod.stat.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                      </span>
+                    ))}
+                  </div>
+                  {ds.activeFormDef.fixedAttackSpeed && (
+                    <div style={{ fontSize: 9, color: "var(--sim-accent-flame-rust)", marginTop: 4 }}>Fixed attack speed (ignores Action Speed)</div>
+                  )}
+                  {ds.activeFormDef.wildSkill && (
+                    <div style={{ fontSize: 9, color: "var(--sim-text-ghost)", marginTop: 4 }}>
+                      Wild Skill: {ds.activeFormDef.wildSkill.name} — {ds.activeFormDef.wildSkill.desc}
+                    </div>
+                  )}
+                </div>
+              )}
+            </Panel>
+          )}
+
           {availableBuffs.length > 0 && (
             <Panel title="Active Buffs" color="var(--sim-stat-magical)">
               {availableBuffs.map(buff => {
@@ -811,7 +883,7 @@ function App() {
                       style={{ ...styles.select, minWidth: 180, fontSize: 11 }}>
                       <option value="">— empty —</option>
                       {(classData.skills || []).filter(sk => !selectedSkills.includes(sk.id) || selectedSkills[slot] === sk.id)
-                        .map(sk => <option key={sk.id} value={sk.id}>{sk.name}{sk.type === "spell_memory" ? ` (${sk.spellSlots} slots)` : ""}</option>)}
+                        .map(sk => <option key={sk.id} value={sk.id}>{sk.name}{sk.type === "spell_memory" ? ` (${sk.spellSlots} slots)` : sk.type === "shapeshift_memory" ? ` (${sk.shapeshiftSlots} forms)` : ""}</option>)}
                     </select>
                   ))}
                 </div>
@@ -856,6 +928,47 @@ function App() {
                     <div style={{ height: "100%", borderRadius: 3, width: `${Math.min(100, (totalMemoryCost / ds.memoryCapacity) * 100)}%`,
                       background: totalMemoryCost > ds.memoryCapacity ? "var(--sim-accent-blood-wound)" : totalMemoryCost === ds.memoryCapacity ? "var(--sim-accent-flame-hot)" : "var(--sim-accent-verdant-life)", transition: "width 0.2s" }} />
                   </div>
+                </div>
+              </Collapsible>
+            )}
+
+            {/* Transformation memory — shown when class has transformations and shapeshift_memory is equipped */}
+            {(classData.transformations || []).length > 0 && shapeshiftSlots > 0 && (
+              <Collapsible title="Shapeshift Forms" color="var(--sim-stat-build)" badgeBg="var(--sim-stat-build-badge)"
+                badge={`${selectedTransformations.length}/${shapeshiftSlots} forms`} defaultOpen>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 4, padding: "4px 0" }}>
+                  {classData.transformations.filter(t => t.id !== "human").map(form => {
+                    const memorized = selectedTransformations.includes(form.id);
+                    const atMax = !memorized && selectedTransformations.length >= shapeshiftSlots;
+                    return (
+                      <div key={form.id} onClick={() => !atMax && toggleTransformation(form.id)}
+                        style={{
+                          padding: "6px 8px", borderRadius: 4,
+                          cursor: atMax ? "not-allowed" : "pointer",
+                          background: memorized ? "var(--sim-surface-ink-raised)" : "transparent",
+                          border: `1px solid ${memorized ? "var(--sim-border-edge)" : "transparent"}`,
+                          opacity: atMax ? 0.4 : 1,
+                          transition: "background 0.15s, border-color 0.15s",
+                        }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <div style={{
+                            width: 14, height: 14, borderRadius: 3, flexShrink: 0,
+                            border: `1px solid ${memorized ? "var(--sim-accent-verdant-life)" : "var(--sim-text-ghost)"}`,
+                            background: memorized ? "var(--sim-accent-verdant-life)" : "transparent",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: 10, color: "var(--sim-surface-void)", fontWeight: 700,
+                          }}>{memorized ? "✓" : ""}</div>
+                          <span style={{
+                            fontSize: 11, fontWeight: memorized ? 500 : 400,
+                            color: memorized ? "var(--sim-text-primary)" : "var(--sim-text-muted)",
+                          }}>{form.name}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop: 4, fontSize: 9, color: "var(--sim-text-ghost)", padding: "2px 0" }}>
+                  {selectedTransformations.length}/{shapeshiftSlots} forms memorized · Human form always available
                 </div>
               </Collapsible>
             )}
