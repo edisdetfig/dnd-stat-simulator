@@ -166,8 +166,186 @@ export const druid = {
   ],
 
   // ── Spells ──
-  // TODO: Transcribe from screenshots (10 spells)
-  spells: [],
+  // spellCostType: "charges" — each spell has maxCasts instead of a health/mana cost.
+  // Spirit spells: natures_touch, orb_of_nature, dreamfire, restore.
+  // Non-spirit: barkskin_armor, entangling_vines, thorn_barrier, summon_treant, mending_grove, tree_of_life.
+  spells: [
+    // Tier 1
+    {
+      id: "natures_touch",
+      name: "Nature's Touch",
+      tier: 1,
+      memoryCost: 1,
+      maxCasts: 4,
+      isSpirit: true,
+      targeting: ALLY_OR_SELF,
+      duration: 12,
+      tooltip: "The target gains 15 additional recoverable health. Also heals 15(0.25) health over 12 seconds. Casts instantly and casts on yourself if no target is found.",
+      effects: [
+        { phase: POST_CURVE, stat: "recoverableHealth", value: 15 },
+      ],
+      healEffects: [
+        { label: "HoT (12s)", baseHeal: 15, scaling: 0.25, isHoT: true, baseDuration: 12 },
+      ],
+    },
+
+    // Tier 2
+    {
+      id: "barkskin_armor",
+      name: "Barkskin Armor",
+      tier: 2,
+      memoryCost: 2,
+      maxCasts: 4,
+      isSpirit: false,
+      targeting: ALLY_OR_SELF,
+      duration: 10,
+      tooltip: "Encloses the target in protective bark for 10 seconds, increasing armor rating by 50, headshot damage reduction by 10%.",
+      effects: [
+        { phase: PRE_CURVE_FLAT, stat: "armorRating", value: 50 },
+        { phase: POST_CURVE, stat: "headshotDamageReduction", value: 0.10 },
+      ],
+    },
+    {
+      id: "orb_of_nature",
+      name: "Orb of Nature",
+      tier: 2,
+      memoryCost: 2,
+      maxCasts: 4,
+      isSpirit: true,
+      targeting: ENEMY_ONLY,  // Projectile — hits first target (enemy = damage, ally = Nature's Touch)
+      tooltip: "Fires an orb that deals 15(1.0) spirit magical damage on contact with an enemy, or grants Nature's Touch on contact with an ally.",
+      damage: [
+        { base: 15, scaling: 1.0, damageType: "spirit_magical", label: "Orb hit" },
+      ],
+      // On ally hit: casts Nature's Touch (15 recoverable HP + 15(0.25) HoT 12s)
+      allyEffect: "natures_touch",
+      // Show Nature's Touch heal in sim even when Nature's Touch itself isn't equipped
+      impliedHealEffects: [
+        { label: "Nature's Touch HoT (12s)", baseHeal: 15, scaling: 0.25, isHoT: true, baseDuration: 12, source: "natures_touch" },
+      ],
+    },
+
+    // Tier 3
+    {
+      id: "dreamfire",
+      name: "Dreamfire",
+      tier: 3,
+      memoryCost: 3,
+      maxCasts: 4,
+      isSpirit: true,
+      targeting: ENEMY_ONLY,
+      tooltip: "Deals 15(1.0) spirit magical damage to all enemies in area. Instantly heals caster and allies currently affected by Nature's Touch for 10(1.0) health per target damaged. Heal applies within a 7m radius of the caster.",
+      damage: [
+        { base: 15, scaling: 1.0, damageType: "spirit_magical", label: "AoE hit" },
+      ],
+      healOnDamage: {
+        label: "Per enemy hit (Nature's Touch required)",
+        baseHeal: 10,
+        scaling: 1.0,
+        requiresBuff: "natures_touch",
+        healRadius: 7,
+      },
+    },
+    {
+      id: "restore",
+      name: "Restore",
+      tier: 3,
+      memoryCost: 3,
+      maxCasts: 3,
+      isSpirit: true,
+      targeting: ALLY_OR_SELF,
+      duration: 12,
+      tooltip: "Restore the health of all allies (including self) within 3m radius by 20(0.25) health for 12 seconds.",
+      healEffects: [
+        { label: "HoT (12s, 3m AoE)", baseHeal: 20, scaling: 0.25, isHoT: true, baseDuration: 12 },
+      ],
+    },
+
+    // Tier 4
+    {
+      id: "entangling_vines",
+      name: "Entangling Vines",
+      tier: 4,
+      memoryCost: 4,
+      maxCasts: 2,
+      isSpirit: false,
+      targeting: ENEMY_ONLY,
+      tooltip: "Spreads roots across the floor in a 1m radius that last for 3 seconds. Any targets that pass through the area of effect are frozen in place for 1 second. After the effect removed, the target gets immunity to the entangling effects for 1 second.",
+      // CC only — no damage, no stat effects for the simulator
+      cc: { type: "root", duration: 1, areaRadius: 1, areaDuration: 3, immunityAfter: 1 },
+    },
+    {
+      id: "thorn_barrier",
+      name: "Thorn Barrier",
+      tier: 4,
+      memoryCost: 4,
+      maxCasts: 2,
+      isSpirit: false,
+      targeting: ENEMY_ONLY,
+      duration: 4,
+      tooltip: "Creates a thorn barrier that lasts for 4 seconds. Any character standing near the thorn barrier will take 4 physical damage per second.",
+      damage: [
+        { base: 4, scaling: 0, damageType: "physical", label: "Per second (4s)", isDot: true },
+      ],
+    },
+
+    // Tier 5
+    {
+      id: "summon_treant",
+      name: "Summon Treant",
+      tier: 5,
+      memoryCost: 5,
+      maxCasts: 2,
+      isSpirit: false,
+      targeting: SELF_ONLY,
+      duration: 24,
+      tooltip: "Summons a treant to fight with you for 24 seconds. Treants become more powerful when summoned underwater.",
+      summon: {
+        type: "treant",
+        duration: 24,
+        underwaterBonus: true,
+      },
+    },
+
+    // Tier 6
+    {
+      id: "mending_grove",
+      name: "Mending Grove",
+      tier: 6,
+      memoryCost: 6,
+      maxCasts: 2,
+      isSpirit: false,
+      targeting: SELF_ONLY,
+      duration: 5,  // UNVERIFIED — approximate, needs in-game testing
+      tooltip: "While standing on the ground, create a forest area centered around you within a 3m radius. Targets in the area gain 10% max health bonus and are healed for 10 health per second.",
+      effects: [
+        { phase: POST_CURVE, stat: "maxHealthBonus", value: 0.10 },
+      ],
+      healEffects: [
+        { label: "Per second (3m AoE)", baseHeal: 10, scaling: 0, isHoT: true },
+      ],
+      _unverified: "Duration not specified in tooltip — estimated 5s, needs in-game testing.",
+    },
+    {
+      id: "tree_of_life",
+      name: "Tree of Life",
+      tier: 6,
+      memoryCost: 6,
+      maxCasts: 2,
+      isSpirit: false,
+      targeting: ALLY_OR_SELF,  // Cannot cast on self per tooltip
+      canTargetSelf: false,
+      duration: 8,
+      tooltip: "Sprout a tree of life, granting 3 all attributes and granting 20 additional recoverable health over 8 seconds. Also heals for 15(0.5) health over 8 seconds. Cannot cast on self.",
+      effects: [
+        { phase: PRE_CURVE_FLAT, stat: "all_attributes", value: 3 },
+        { phase: POST_CURVE, stat: "recoverableHealth", value: 20 },
+      ],
+      healEffects: [
+        { label: "HoT (8s)", baseHeal: 15, scaling: 0.5, isHoT: true, baseDuration: 8 },
+      ],
+    },
+  ],
 
   // ── Transformations ──
   // Forms equipped into Shapeshift Memory. Each form has stat modifiers,

@@ -202,6 +202,18 @@ Noxulon VERIFIED. Zorin, Solaris, Blythar NOT TESTED.
 
 ---
 
+## UNRESOLVED: Mending Grove Duration
+
+**Status: UNKNOWN**
+
+Tooltip does not specify duration. Estimated 5s in class data. Needs in-game measurement.
+
+### Testing Protocol
+1. Cast Mending Grove, time how long the forest area persists
+2. Check if Buff Duration affects it
+
+---
+
 ## UNRESOLVED: Druid Form Attack Damage Formula
 
 **Status: WIKI-SOURCED, not independently verified**
