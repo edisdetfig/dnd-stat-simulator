@@ -53,6 +53,7 @@ import { Panel } from './components/ui/Panel.jsx';
 import { Collapsible } from './components/ui/Collapsible.jsx';
 import { InfoTip } from './components/ui/InfoTip.jsx';
 import { AttrTooltip } from './components/ui/AttrTooltip.jsx';
+import { HoverTip } from './components/ui/HoverTip.jsx';
 import { SR, CapSR, SubSR } from './components/stats/StatRows.jsx';
 import { CurveChart } from './components/charts/CurveChart.jsx';
 import { MarginalBadge } from './components/charts/MarginalBadge.jsx';
@@ -679,7 +680,7 @@ function App() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
 
         {/* ═══ LEFT PANEL: COMBAT ═══ */}
-        <div>
+        <div style={{ minWidth: 0 }}>
 
           <Panel title="Weapon Held" color="var(--sim-stat-weapon)">
             <div style={{ display: "flex", gap: 6 }}>
@@ -925,16 +926,18 @@ function App() {
                   const active = selectedPerks.includes(perk.id);
                   const atMax = !active && selectedPerks.length >= classData.maxPerks;
                   return (
-                    <div key={perk.id} onClick={() => !atMax && togglePerk(perk.id)}
-                      style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 6px", borderRadius: 4, cursor: atMax ? "not-allowed" : "pointer",
-                        background: active ? "var(--sim-surface-ink-raised)" : "transparent", border: `1px solid ${active ? "var(--sim-border-edge)" : "transparent"}`, opacity: atMax ? 0.4 : 1 }}>
-                      <div style={{ width: 14, height: 14, borderRadius: 3, border: `1px solid ${active ? "var(--sim-accent-azure-pulse)" : "var(--sim-text-ghost)"}`,
-                        background: active ? "var(--sim-accent-azure-pulse)" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--sim-text-primary)", fontWeight: 700 }}>{active ? "✓" : ""}</div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 11, color: active ? "var(--sim-text-primary)" : "var(--sim-text-muted)", fontWeight: active ? 500 : 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{perk.name}</div>
-                        <div style={{ fontSize: 9, color: "var(--sim-text-ghost)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{perk.desc}</div>
+                    <HoverTip key={perk.id} title={perk.name} text={perk.desc}>
+                      <div onClick={() => !atMax && togglePerk(perk.id)}
+                        style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 6px", borderRadius: 4, cursor: atMax ? "not-allowed" : "pointer",
+                          background: active ? "var(--sim-surface-ink-raised)" : "transparent", border: `1px solid ${active ? "var(--sim-border-edge)" : "transparent"}`, opacity: atMax ? 0.4 : 1 }}>
+                        <div style={{ width: 14, height: 14, borderRadius: 3, border: `1px solid ${active ? "var(--sim-accent-azure-pulse)" : "var(--sim-text-ghost)"}`,
+                          background: active ? "var(--sim-accent-azure-pulse)" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--sim-text-primary)", fontWeight: 700 }}>{active ? "✓" : ""}</div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 11, color: active ? "var(--sim-text-primary)" : "var(--sim-text-muted)", fontWeight: active ? 500 : 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{perk.name}</div>
+                          <div style={{ fontSize: 9, color: "var(--sim-text-ghost)", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{perk.desc}</div>
+                        </div>
                       </div>
-                    </div>
+                    </HoverTip>
                   );
                 })}
               </div>
@@ -965,23 +968,25 @@ function App() {
                     const spiritDisabled = hasDisablesSpiritSpells && spell.isSpirit;
                     const disabled = atSlotMax || spiritDisabled;
                     return (
-                      <div key={spell.id} onClick={() => !disabled && toggleSpell(spell.id)}
-                        style={{ padding: "4px 6px", borderRadius: 4, cursor: disabled ? "not-allowed" : "pointer",
-                          background: equipped ? "var(--sim-surface-ink-raised)" : "transparent", border: `1px solid ${equipped ? "var(--sim-border-edge)" : "transparent"}`, opacity: disabled ? 0.4 : 1 }}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <div style={{ width: 14, height: 14, borderRadius: 3, border: `1px solid ${equipped ? "var(--sim-accent-arcane-core)" : "var(--sim-text-ghost)"}`,
-                              background: equipped ? "var(--sim-accent-arcane-core)" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--sim-text-primary)", fontWeight: 700 }}>{equipped ? "✓" : ""}</div>
-                            <span style={{ fontSize: 11, color: equipped ? "var(--sim-text-primary)" : "var(--sim-text-muted)" }}>{spell.name}</span>
-                            {spell.isSpirit && <span style={{ fontSize: 8, color: "var(--sim-accent-arcane-muted)", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", marginLeft: 4 }}>spirit</span>}
-                          </div>
-                          <div style={{ fontSize: 9, color: "var(--sim-text-whisper)", display: "flex", gap: 6 }}>
-                            <span>T{spell.tier}</span><span>M{spell.memoryCost}</span>
-                            {classData.spellCostType === "health" && <span style={{ color: "var(--sim-accent-blood-murmur)" }}>-{spell.healthCost}HP</span>}
-                            {classData.spellCostType === "charges" && spell.maxCasts && <span style={{ color: "var(--sim-text-muted)" }}>×{spell.maxCasts}</span>}
+                      <HoverTip key={spell.id} title={spell.name} text={spell.tooltip}>
+                        <div onClick={() => !disabled && toggleSpell(spell.id)}
+                          style={{ padding: "4px 6px", borderRadius: 4, cursor: disabled ? "not-allowed" : "pointer",
+                            background: equipped ? "var(--sim-surface-ink-raised)" : "transparent", border: `1px solid ${equipped ? "var(--sim-border-edge)" : "transparent"}`, opacity: disabled ? 0.4 : 1 }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              <div style={{ width: 14, height: 14, borderRadius: 3, border: `1px solid ${equipped ? "var(--sim-accent-arcane-core)" : "var(--sim-text-ghost)"}`,
+                                background: equipped ? "var(--sim-accent-arcane-core)" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--sim-text-primary)", fontWeight: 700 }}>{equipped ? "✓" : ""}</div>
+                              <span style={{ fontSize: 11, color: equipped ? "var(--sim-text-primary)" : "var(--sim-text-muted)" }}>{spell.name}</span>
+                              {spell.isSpirit && <span style={{ fontSize: 8, color: "var(--sim-accent-arcane-muted)", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", marginLeft: 4 }}>spirit</span>}
+                            </div>
+                            <div style={{ fontSize: 9, color: "var(--sim-text-whisper)", display: "flex", gap: 6 }}>
+                              <span>T{spell.tier}</span><span>M{spell.memoryCost}</span>
+                              {classData.spellCostType === "health" && <span style={{ color: "var(--sim-accent-blood-murmur)" }}>-{spell.healthCost}HP</span>}
+                              {classData.spellCostType === "charges" && spell.maxCasts && <span style={{ color: "var(--sim-text-muted)" }}>×{spell.maxCasts}</span>}
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      </HoverTip>
                     );
                   })}
                 </div>
@@ -1105,7 +1110,7 @@ function App() {
         </div>
 
         {/* ═══ RIGHT PANEL: STATS + EQUIPMENT ═══ */}
-        <div>
+        <div style={{ minWidth: 0 }}>
 
           <Panel title="Attributes" color="var(--sim-stat-healing)">
             <div style={{ fontSize: 9, color: "var(--sim-text-ghost)", marginBottom: 6 }}>Hover for source breakdown</div>
