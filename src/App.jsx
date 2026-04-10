@@ -37,8 +37,10 @@ import {
 } from './engine/damage.js';
 import { runTests } from './engine/tests.js';
 
-// Styles
-import { styles } from './styles/theme.js';
+// Styles & Themes
+import { styles, defaultTheme } from './styles/theme.js';
+import { ThemeProvider } from './styles/ThemeProvider.jsx';
+import { THEMES } from './styles/themes/index.js';
 
 // Format helpers
 import { fmtPct } from './utils/format.js';
@@ -84,6 +86,7 @@ function App() {
   // Tracks which example preset is currently loaded so the picker trigger
   // can display its name + subtitle. Cleared on class change / reset.
   const [loadedExampleId, setLoadedExampleId] = useState(null);
+  const [currentTheme, setCurrentTheme] = useState(defaultTheme);
 
   // Stub fallback lets the hooks below run unconditionally before the
   // ClassPicker early-return.
@@ -125,6 +128,7 @@ function App() {
     setSelectedSpells([]);
     setActiveBuffs({});
     setLoadedExampleId(null);
+    setCurrentTheme(defaultTheme);
   }, []);
 
   // Does the current build have anything worth warning about before reset?
@@ -176,6 +180,7 @@ function App() {
     setSelectedSpells(built.selectedSpells);
     setActiveBuffs(built.activeBuffs);
     setLoadedExampleId(exampleId);
+    setCurrentTheme(ex.theme ? (THEMES[ex.theme] || defaultTheme) : defaultTheme);
   }, [selectedClass, isBuildDirty, loadedExampleId]);
 
   const handleSkillChange = useCallback((slotIndex, skillId) => {
@@ -482,13 +487,13 @@ function App() {
   const classExamples = selectedClass ? getExampleBuildsForClass(selectedClass) : [];
   const loadedExample = loadedExampleId ? classExamples.find((b) => b.id === loadedExampleId) : null;
 
-  // ═══ Early return: show the class picker when no class is selected ═══
-  // All hooks above run unconditionally; this guard only affects rendering.
+  // ═══ Render: ThemeProvider wraps both ClassPicker and simulator ═══
   if (!selectedClass) {
-    return <ClassPicker onSelect={handlePickClass} />;
+    return <ThemeProvider theme={currentTheme}><ClassPicker onSelect={handlePickClass} /></ThemeProvider>;
   }
 
   return (
+    <ThemeProvider theme={currentTheme}>
     <div style={{ fontFamily: "'JetBrains Mono', monospace", background: "var(--sim-surface-void)", color: "var(--sim-text-body)", minHeight: "100vh", padding: 20, maxWidth: 1200, margin: "0 auto" }}>
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; } body { background: var(--sim-surface-void); }
@@ -852,6 +857,7 @@ function App() {
 
       <div style={{ marginTop: 20, padding: "12px 0", borderTop: "1px solid var(--sim-border-hairline)", fontSize: 10, color: "var(--sim-text-ghost)" }}>v0.5.0 · {tests.length} tests · Target property editor</div>
     </div>
+    </ThemeProvider>
   );
 }
 

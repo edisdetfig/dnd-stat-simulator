@@ -195,6 +195,7 @@ export const EXAMPLE_BUILDS = [
     name: "Blood Tithe",
     subtitle: "Sacrificial Blade Lock",
     classId: "warlock",
+    theme: "blood-tithe",
     description:
       "Spectral Blade + dark plate setup used to verify damage formulas. " +
       "With PoS + Bloodstained Blade active, Hit 1 body ≈ 85, head ≈ 131 vs Training Dummy.",

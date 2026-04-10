@@ -1,0 +1,201 @@
+// Blood Tithe — Warlock UI theme
+//
+// Warm near-black backgrounds, dusty blood red primary accent, true gold
+// trim, hot magenta power highlights. Inspired by the warlock's crimson
+// battle-skirt, dark plate armor, and glowing helmet gem.
+//
+// Design motifs: riveted steel borders with gold at seams, amber/torch
+// warmth throughout, visual hierarchy reads like the character itself —
+// gold-grounded base, dark armored middle, crimson accents, single
+// magenta jewel as focal point.
+
+import { buildTheme } from '../theme.js';
+
+const base = {
+  // Surfaces — warm near-black dungeon stone, torchlit
+  surface: {
+    abyss:    "#0e0c0a",
+    void:     "#141210",   // warm near-black
+    ink:      "#1E1C1A",   // dark warm grey
+    inkRaised: "#232120",
+    shadow:   "#2A2A2E",   // gunmetal steel
+    stone:    "#4A2828",   // burgundy-brown (worn leather)
+    iron:     "#5C5C64",   // mid silver (plate armor highlight)
+  },
+
+  border: {
+    whisper:  "#1E1C1A",
+    hairline: "#2A2A2E",   // gunmetal
+    seam:     "#3A3838",   // steel seam
+    edge:     "#5C5C64",   // mid silver
+    info:     "#5C5C64",
+    focus:    "#8B2028",   // dusty blood red
+  },
+
+  text: {
+    primary: "#E0D8CC",    // warm parchment
+    body:    "#C0B8C0",    // lavender-grey (ashen warlock skin)
+    muted:   "#908888",
+    dim:     "#686064",
+    whisper: "#484244",
+    aside:   "#787074",
+    ghost:   "#383234",
+  },
+
+  state: {
+    active: { bg: "#1A2818", fg: "#4ade80", border: "rgba(74, 222, 128, 0.25)" },
+    wip:    { bg: "#2A2014", fg: "#B8942C", border: "rgba(184, 148, 44, 0.25)" },
+    locked: { bg: "#1E1C1A", fg: "#484244", border: "#3A3838" },
+  },
+
+  // Tier — gold warms to true gold, gray warms
+  tier: {
+    peak:     { fill: "#B8942C" },  // true gold
+    good:     { fill: "#4ade80" },
+    tapering: { fill: "#f97316" },
+    dim:      { fill: "#484244" },  // warm gray
+  },
+
+  stat: {
+    physical:       "#B8942C",   // true gold
+    physicalSoft:   "rgba(184, 148, 44, 0.5)",
+    magical:        "#8B2028",   // dusty blood red
+    magicalSoft:    "rgba(139, 32, 40, 0.5)",
+    healing:        "#4ade80",
+    build:          "#B8942C",   // true gold
+    buildBadge:     "rgba(184, 148, 44, 0.145)",
+    weapon:         "#5C5C64",   // steel silver
+    spellcraft:     "#8B2028",   // blood red
+    headshot:       "#D42268",   // hot magenta
+    headshotSoft:   "rgba(212, 34, 104, 0.5)",
+  },
+
+  damageType: {
+    physical: {
+      body:       "#B8942C",
+      head:       "#D42268",   // hot magenta
+      bodyLabel:  "#8A7020",
+      headLabel:  "#6A2040",
+      bodyWell:   "#1A1810",
+      headWell:   "#1A0E14",
+      wellFrame:  "#1A1510",
+      wellBorder: "#3A3020",
+    },
+    magical: { value: "#A83040" },   // lighter blood
+    heal:    { value: "#4ade80" },
+  },
+
+  accent: {
+    arcane: {
+      core:  "#8B2028",   // dusty blood red (primary accent)
+      soft:  "#A83040",
+      pale:  "#C04858",
+      frost: "#D06068",
+      muted: "#6B1820",
+      glow:  "#501018",
+    },
+    flame: {
+      hot:    "#B8942C",   // true gold
+      glow:   "#D4AC38",
+      rust:   "#8A7020",
+      dim:    "#5C5030",
+      scorch: "#3A3020",
+      ember:  "#1A1510",
+    },
+    verdant: {
+      life:     "#4ade80",
+      bright:   "#6bff6b",
+      moss:     "#4a6a4a",
+      loam:     "#2A3A1A",
+      forest:   "#0a1a10",
+      jade:     "#22c55e",
+      pass:     "#4a8",
+      uncommon: "#56b455",
+    },
+    blood: {
+      wound:   "#D42268",   // hot magenta (danger focal point)
+      peril:   "#D42268",
+      crimson: "#8B2028",
+      bruise:  "#6A2040",
+      scab:    "#4A2828",
+      clotted: "#1A0E14",
+      murmur:  "#8B2028",
+      whisper: "#6B1820",
+      ember:   "#D42268",
+    },
+    azure: {
+      steel:  "#5C5C64",   // steel silver (no blue in this theme)
+      cobalt: "#5C5C64",
+      pulse:  "#B8942C",   // gold for active states
+      ice:    "#908888",
+    },
+    arcanum: {
+      core: "#B8942C",     // gold
+    },
+  },
+
+  classIdentity: {
+    warlock:   "#8B2028",  // blood red in this theme
+    fighter:   "#94a3b8",
+    barbarian: "#dc2626",
+    bard:      "#ec4899",
+    cleric:    "#fbbf24",
+    druid:     "#84cc16",
+    ranger:    "#22c55e",
+    rogue:     "#6b7280",
+    sorcerer:  "#8b5cf6",
+    wizard:    "#3b82f6",
+  },
+
+  // Rarity — keep game-canonical for recognition
+  rarity: {
+    poor:      "#808080",
+    common:    "#c8c8c8",
+    uncommon:  "#56b455",
+    rare:      "#3b82f6",
+    epic:      "#a855f7",
+    legendary: "#f59e0b",
+    unique:    "#ef4444",
+  },
+
+  // Atmosphere — warm amber/blood glows instead of cool violet
+  glow: {
+    torch: {
+      inner: "rgba(184, 148, 44, 0.16)",
+      mid:   "rgba(184, 148, 44, 0.07)",
+      outer: "rgba(184, 148, 44, 0.03)",
+      edge:  "rgba(20, 18, 16, 0)",
+    },
+    torchText: {
+      near: "rgba(184, 148, 44, 0.55)",
+      far:  "rgba(184, 148, 44, 0.22)",
+    },
+    arcane: {
+      corner:  "rgba(139, 32, 40, 0.07)",   // blood red ambient
+      hover:   "rgba(139, 32, 40, 0.08)",
+      ring:    "rgba(139, 32, 40, 0.06)",
+      ambient: "rgba(139, 32, 40, 0.05)",
+    },
+    blood: {
+      corner: "rgba(212, 34, 104, 0.06)",   // magenta corner hint
+    },
+  },
+
+  veil: {
+    transparent: "rgba(0, 0, 0, 0)",
+    dim:         "rgba(0, 0, 0, 0.45)",
+    deep:        "rgba(0, 0, 0, 0.82)",
+    voidEdge:    "rgba(20, 18, 16, 0)",
+  },
+
+  shadow: {
+    card:          "0 2px 8px rgba(10, 8, 6, 0.5)",
+    cardHover:     "0 6px 18px rgba(10, 8, 6, 0.6)",
+    tooltip:       "0 8px 24px rgba(10, 8, 6, 0.7)",
+    tooltipSoft:   "0 6px 20px rgba(10, 8, 6, 0.6)",
+    panel:         "0 12px 32px rgba(10, 8, 6, 0.75)",
+    exPickerPanel: "0 12px 32px rgba(10, 8, 6, 0.75), 0 0 0 1px rgba(139, 32, 40, 0.06), 0 0 24px rgba(139, 32, 40, 0.05)",
+  },
+};
+
+export const bloodTitheTheme = buildTheme(base);

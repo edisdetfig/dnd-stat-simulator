@@ -244,7 +244,7 @@ const baseTheme = {
 // buildTheme — derive pre-computed alpha variants for tier badges
 // ---------------------------------------------------------------------------
 
-function buildTheme(base) {
+export function buildTheme(base) {
   const theme = structuredClone(base);
   for (const tier of Object.keys(theme.tier)) {
     const fill = theme.tier[tier].fill;
