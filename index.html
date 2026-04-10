@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>D&D Stat Simulator — Dark and Darker</title>
+  <!-- Fonts are self-hosted via @fontsource and imported in src/main.jsx.
+       Bundled with the app, no external CDN, no FOUT swap on cold load. -->
+  <style>
+    /* Global reset so every page (main simulator AND class picker) starts
+       from zero margin/padding and inherits the dark theme, instead of the
+       browser default body margin showing as a white frame. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #07070c; min-height: 100vh; color: #c8c8d4; }
+    body { font-family: 'JetBrains Mono', monospace; }
+  </style>
 </head>
 <body>
   <div id="root"></div>
