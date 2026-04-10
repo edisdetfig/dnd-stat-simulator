@@ -4,3 +4,4 @@ dist/
 index.old.html
 *.log
 .DS_Store
+backups/
