@@ -232,6 +232,7 @@ const baseTheme = {
     tooltip:     "0 8px 24px rgba(0, 0, 0, 0.6)",
     tooltipSoft: "0 6px 20px rgba(0, 0, 0, 0.5)",
     panel:       "0 12px 32px rgba(0, 0, 0, 0.65)",
+    exPickerPanel: "0 12px 32px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(168, 85, 247, 0.06), 0 0 24px rgba(168, 85, 247, 0.05)",
   },
 };
 

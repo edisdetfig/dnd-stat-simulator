@@ -40,11 +40,11 @@ export function ExampleBuildPicker({ examples, loaded, onLoad }) {
           display: flex;
           align-items: center;
           gap: 8px;
-          background: #10101c;
-          border: 1px solid #1e1e2e;
+          background: var(--sim-surface-ink-raised);
+          border: 1px solid var(--sim-border-hairline);
           border-radius: 4px;
           padding: 5px 12px;
-          color: #c8c8d4;
+          color: var(--sim-text-body);
           font-family: inherit;
           font-size: 10px;
           letter-spacing: 0.04em;
@@ -54,19 +54,19 @@ export function ExampleBuildPicker({ examples, loaded, onLoad }) {
         .ex-picker-trigger:hover,
         .ex-picker-trigger:focus-visible,
         .ex-picker-trigger.open {
-          border-color: #2e2342;
-          color: #c8b4ff;
+          border-color: var(--sim-border-seam);
+          color: var(--sim-accent-arcane-pale);
           outline: none;
         }
         .ex-picker-trigger-label {
           font-size: 9px;
-          color: #555;
+          color: var(--sim-text-whisper);
           text-transform: uppercase;
           letter-spacing: 0.08em;
         }
         .ex-picker-trigger.loaded {
           padding: 4px 12px;
-          border-color: #2e2342;
+          border-color: var(--sim-border-seam);
         }
         .ex-picker-trigger-loaded {
           display: flex;
@@ -78,25 +78,25 @@ export function ExampleBuildPicker({ examples, loaded, onLoad }) {
           font-family: 'Cinzel', serif;
           font-size: 12px;
           font-weight: 700;
-          color: #d4baff;
+          color: var(--sim-accent-arcane-frost);
           letter-spacing: 0.05em;
         }
         .ex-picker-trigger-subtitle {
           font-size: 8px;
-          color: #6e6e84;
+          color: var(--sim-text-aside);
           font-style: italic;
           letter-spacing: 0.03em;
           margin-top: 1px;
         }
         .ex-picker-chevron {
           font-size: 8px;
-          color: #666;
+          color: var(--sim-text-dim);
           transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.2);
           display: inline-block;
         }
         .ex-picker-trigger.open .ex-picker-chevron {
           transform: rotate(180deg);
-          color: #c8b4ff;
+          color: var(--sim-accent-arcane-pale);
         }
 
         @keyframes ex-picker-fade-in {
@@ -108,13 +108,10 @@ export function ExampleBuildPicker({ examples, loaded, onLoad }) {
           top: calc(100% + 6px);
           right: 0;
           min-width: 260px;
-          background: linear-gradient(180deg, #0d0d18 0%, #0a0a12 100%);
-          border: 1px solid #2a2a3e;
+          background: linear-gradient(180deg, var(--sim-surface-ink) 0%, var(--sim-surface-void) 100%);
+          border: 1px solid var(--sim-border-seam);
           border-radius: 5px;
-          box-shadow:
-            0 12px 32px rgba(0, 0, 0, 0.65),
-            0 0 0 1px rgba(168, 85, 247, 0.06),
-            0 0 24px rgba(168, 85, 247, 0.05);
+          box-shadow: var(--sim-shadow-ex-picker-panel);
           padding: 5px;
           z-index: 100;
           animation: ex-picker-fade-in 0.16s ease-out;
@@ -123,7 +120,7 @@ export function ExampleBuildPicker({ examples, loaded, onLoad }) {
         .ex-picker-empty {
           padding: 10px 14px;
           font-size: 10px;
-          color: #555;
+          color: var(--sim-text-whisper);
           font-style: italic;
         }
 
@@ -133,7 +130,7 @@ export function ExampleBuildPicker({ examples, loaded, onLoad }) {
           background: transparent;
           border: none;
           border-left: 2px solid transparent;
-          color: #c8c8d4;
+          color: var(--sim-text-body);
           padding: 9px 12px 9px 14px;
           text-align: left;
           cursor: pointer;
@@ -143,25 +140,25 @@ export function ExampleBuildPicker({ examples, loaded, onLoad }) {
         }
         .ex-picker-item:hover,
         .ex-picker-item:focus-visible {
-          background: rgba(168, 85, 247, 0.08);
-          border-left-color: #a855f7;
+          background: var(--sim-glow-arcane-hover);
+          border-left-color: var(--sim-accent-arcane-core);
           outline: none;
         }
         .ex-picker-item-title {
           font-family: 'Cinzel', serif;
           font-size: 14px;
           font-weight: 700;
-          color: #e0e0ec;
+          color: var(--sim-text-primary);
           letter-spacing: 0.05em;
           line-height: 1.2;
         }
         .ex-picker-item:hover .ex-picker-item-title,
         .ex-picker-item:focus-visible .ex-picker-item-title {
-          color: #d4baff;
+          color: var(--sim-accent-arcane-frost);
         }
         .ex-picker-item-subtitle {
           font-size: 9px;
-          color: #6e6e84;
+          color: var(--sim-text-aside);
           font-style: italic;
           letter-spacing: 0.03em;
           margin-top: 3px;
