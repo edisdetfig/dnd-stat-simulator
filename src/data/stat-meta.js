@@ -1,48 +1,70 @@
-// Stat metadata for display and formatting
+// Stat metadata for display and formatting.
+//
+// Every stat ID used anywhere in the app (gear modifiers, class effects,
+// derived stats, transformation modifiers) should have an entry here for
+// label/unit lookups.
+//
+// The `gearStat` flag controls whether a stat appears in the gear modifier
+// dropdown (STAT_OPTIONS). Stats without gearStat are display-only — they
+// get labels and unit formatting but don't appear in the gear editor.
 
 export const STAT_META = {
-  str: { label: "STR", unit: "flat", cat: "attr" },
-  vig: { label: "VIG", unit: "flat", cat: "attr" },
-  agi: { label: "AGI", unit: "flat", cat: "attr" },
-  dex: { label: "DEX", unit: "flat", cat: "attr" },
-  wil: { label: "WIL", unit: "flat", cat: "attr" },
-  kno: { label: "KNO", unit: "flat", cat: "attr" },
-  res: { label: "RES", unit: "flat", cat: "attr" },
-  physicalPower: { label: "Physical Power", unit: "flat", cat: "offense" },
-  magicalPower: { label: "Magical Power", unit: "flat", cat: "offense" },
-  physicalDamageBonus: { label: "Physical Damage Bonus", unit: "percent", cat: "offense" },
-  magicalDamageBonus: { label: "Magical Damage Bonus", unit: "percent", cat: "offense" },
-  armorPenetration: { label: "Armor Penetration", unit: "percent", cat: "offense" },
-  magicPenetration: { label: "Magic Penetration", unit: "percent", cat: "offense" },
-  headshotDamageBonus: { label: "Headshot Damage Bonus", unit: "percent", cat: "offense" },
-  additionalWeaponDamage: { label: "Add. Weapon Damage", unit: "flat", cat: "offense" },
-  additionalPhysicalDamage: { label: "Add. Physical Damage", unit: "flat", cat: "offense" },
-  additionalMagicalDamage: { label: "Add. Magical Damage", unit: "flat", cat: "offense" },
-  demonDamageBonus: { label: "Demon Damage Bonus", unit: "percent", cat: "offense" },
-  undeadDamageBonus: { label: "Undead Damage Bonus", unit: "percent", cat: "offense" },
-  armorRating: { label: "Armor Rating", unit: "flat", cat: "defense" },
-  additionalArmorRating: { label: "Add. Armor Rating", unit: "flat", cat: "defense" },
-  magicResistance: { label: "Magic Resistance", unit: "flat", cat: "defense" },
-  physicalDamageReduction: { label: "Phys. Damage Reduction", unit: "percent", cat: "defense" },
-  magicalDamageReduction: { label: "Magic Damage Reduction", unit: "percent", cat: "defense" },
-  projectileDamageReduction: { label: "Projectile DR", unit: "percent", cat: "defense" },
-  headshotDamageReduction: { label: "Headshot DR", unit: "percent", cat: "defense" },
-  demonDamageReduction: { label: "Demon Damage Reduction", unit: "percent", cat: "defense" },
-  undeadDamageReduction: { label: "Undead Damage Reduction", unit: "percent", cat: "defense" },
-  moveSpeed: { label: "Move Speed", unit: "flat", cat: "utility" },
-  actionSpeed: { label: "Action Speed", unit: "percent", cat: "utility" },
-  spellCastingSpeed: { label: "Spell Casting Speed", unit: "percent", cat: "utility" },
-  regularInteractionSpeed: { label: "Regular Interaction Spd", unit: "percent", cat: "utility" },
-  magicalInteractionSpeed: { label: "Magical Interaction Spd", unit: "percent", cat: "utility" },
-  cooldownReductionBonus: { label: "Cooldown Reduction", unit: "percent", cat: "utility" },
-  buffDurationBonus: { label: "Buff Duration", unit: "percent", cat: "utility" },
-  debuffDurationBonus: { label: "Debuff Duration", unit: "percent", cat: "utility" },
-  memoryCapacityBonus: { label: "Memory Capacity Bonus", unit: "percent", cat: "utility" },
-  additionalMemoryCapacity: { label: "Add. Memory Capacity", unit: "flat", cat: "utility" },
-  physicalHealing: { label: "Physical Healing", unit: "flat", cat: "utility" },
-  magicalHealing: { label: "Magical Healing", unit: "flat", cat: "utility" },
-  luck: { label: "Luck", unit: "flat", cat: "utility" },
-  maxHealth: { label: "Max Health", unit: "flat", cat: "utility" },
+  // ── Attributes ──
+  str: { label: "STR", unit: "flat", cat: "attr", gearStat: true },
+  vig: { label: "VIG", unit: "flat", cat: "attr", gearStat: true },
+  agi: { label: "AGI", unit: "flat", cat: "attr", gearStat: true },
+  dex: { label: "DEX", unit: "flat", cat: "attr", gearStat: true },
+  wil: { label: "WIL", unit: "flat", cat: "attr", gearStat: true },
+  kno: { label: "KNO", unit: "flat", cat: "attr", gearStat: true },
+  res: { label: "RES", unit: "flat", cat: "attr", gearStat: true },
+
+  // ── Offensive ──
+  physicalPower: { label: "Physical Power", unit: "flat", cat: "offense", gearStat: true },
+  magicalPower: { label: "Magical Power", unit: "flat", cat: "offense", gearStat: true },
+  physicalDamageBonus: { label: "Physical Damage Bonus", unit: "percent", cat: "offense", gearStat: true },
+  magicalDamageBonus: { label: "Magical Damage Bonus", unit: "percent", cat: "offense", gearStat: true },
+  armorPenetration: { label: "Armor Penetration", unit: "percent", cat: "offense", gearStat: true },
+  magicPenetration: { label: "Magic Penetration", unit: "percent", cat: "offense", gearStat: true },
+  headshotDamageBonus: { label: "Headshot Damage Bonus", unit: "percent", cat: "offense", gearStat: true },
+  additionalWeaponDamage: { label: "Add. Weapon Damage", unit: "flat", cat: "offense", gearStat: true },
+  additionalPhysicalDamage: { label: "Add. Physical Damage", unit: "flat", cat: "offense", gearStat: true },
+  additionalMagicalDamage: { label: "Add. Magical Damage", unit: "flat", cat: "offense", gearStat: true },
+  demonDamageBonus: { label: "Demon Damage Bonus", unit: "percent", cat: "offense", gearStat: true },
+  undeadDamageBonus: { label: "Undead Damage Bonus", unit: "percent", cat: "offense", gearStat: true },
+
+  // ── Defensive ──
+  armorRating: { label: "Armor Rating", unit: "flat", cat: "defense", gearStat: true },
+  additionalArmorRating: { label: "Add. Armor Rating", unit: "flat", cat: "defense", gearStat: true },
+  magicResistance: { label: "Magic Resistance", unit: "flat", cat: "defense", gearStat: true },
+  physicalDamageReduction: { label: "Phys. Damage Reduction", unit: "percent", cat: "defense", gearStat: true },
+  magicalDamageReduction: { label: "Magic Damage Reduction", unit: "percent", cat: "defense", gearStat: true },
+  projectileDamageReduction: { label: "Projectile DR", unit: "percent", cat: "defense", gearStat: true },
+  headshotDamageReduction: { label: "Headshot DR", unit: "percent", cat: "defense", gearStat: true },
+  demonDamageReduction: { label: "Demon Damage Reduction", unit: "percent", cat: "defense", gearStat: true },
+  undeadDamageReduction: { label: "Undead Damage Reduction", unit: "percent", cat: "defense", gearStat: true },
+  maxHealthBonus: { label: "Max Health Bonus", unit: "percent", cat: "defense" },
+
+  // ── Utility ──
+  moveSpeed: { label: "Move Speed", unit: "flat", cat: "utility", gearStat: true },
+  actionSpeed: { label: "Action Speed", unit: "percent", cat: "utility", gearStat: true },
+  spellCastingSpeed: { label: "Spell Casting Speed", unit: "percent", cat: "utility", gearStat: true },
+  regularInteractionSpeed: { label: "Regular Interaction Spd", unit: "percent", cat: "utility", gearStat: true },
+  magicalInteractionSpeed: { label: "Magical Interaction Spd", unit: "percent", cat: "utility", gearStat: true },
+  cooldownReductionBonus: { label: "Cooldown Reduction", unit: "percent", cat: "utility", gearStat: true },
+  buffDurationBonus: { label: "Buff Duration", unit: "percent", cat: "utility", gearStat: true },
+  debuffDurationBonus: { label: "Debuff Duration", unit: "percent", cat: "utility", gearStat: true },
+  memoryCapacityBonus: { label: "Memory Capacity Bonus", unit: "percent", cat: "utility", gearStat: true },
+  additionalMemoryCapacity: { label: "Add. Memory Capacity", unit: "flat", cat: "utility", gearStat: true },
+  physicalHealing: { label: "Physical Healing", unit: "flat", cat: "utility", gearStat: true },
+  magicalHealing: { label: "Magical Healing", unit: "flat", cat: "utility", gearStat: true },
+  luck: { label: "Luck", unit: "flat", cat: "utility", gearStat: true },
+  maxHealth: { label: "Max Health", unit: "flat", cat: "utility", gearStat: true },
+  moveSpeedBonus: { label: "Move Speed Bonus", unit: "percent", cat: "utility" },
+  jumpHeight: { label: "Jump Height", unit: "percent", cat: "utility" },
+  incomingPhysicalHealing: { label: "Incoming Physical Healing", unit: "percent", cat: "utility" },
+  incomingMagicalHealing: { label: "Incoming Magical Healing", unit: "percent", cat: "utility" },
+
+  // ── Weapon (never in gear dropdowns, inherent to weapon items) ──
   weaponDamage: { label: "Weapon Damage", unit: "flat", cat: "weapon" },
   magicalDamage: { label: "Magical Damage", unit: "flat", cat: "weapon" },
   magicWeaponDamage: { label: "Magic Weapon Damage", unit: "flat", cat: "weapon" },
@@ -83,11 +105,12 @@ export function derivedLabel(id, useAcronyms) {
   return d ? (useAcronyms ? d.short : d.full) : id;
 }
 
+// Gear modifier dropdown options — only includes stats with gearStat: true.
 export const STAT_OPTIONS = (() => {
   const cats = { attr: "— Attributes —", offense: "— Offensive —", defense: "— Defensive —", utility: "— Utility —" };
   const groups = {};
   for (const [id, meta] of Object.entries(STAT_META)) {
-    if (meta.cat === "weapon") continue;
+    if (!meta.gearStat) continue;
     if (!groups[meta.cat]) groups[meta.cat] = [];
     groups[meta.cat].push({ id, label: meta.label });
   }

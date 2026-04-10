@@ -72,6 +72,8 @@ const base = {
     spellcraft:     "#8B2028",   // blood red
     headshot:       "#D42268",   // hot magenta
     headshotSoft:   "rgba(212, 34, 104, 0.5)",
+    shapeshift:     "#8A7020",   // aged rust-gold
+    shapeshiftSoft: "rgba(138, 112, 32, 0.5)",
   },
 
   damageType: {
@@ -87,6 +89,13 @@ const base = {
     },
     magical: { value: "#A83040" },   // lighter blood
     heal:    { value: "#D4AC38" },   // bright gold
+    formAttack: {
+      body:       "#8A7020",
+      bodyLabel:  "#6A5818",
+      bodyWell:   "#1A1810",
+      wellFrame:  "#1A1510",
+      wellBorder: "#3A3020",
+    },
   },
 
   accent: {

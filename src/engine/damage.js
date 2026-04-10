@@ -79,6 +79,30 @@ export function calcHealing({
   return total;
 }
 
+// Form (shapeshift) attack damage — primitive curve formula.
+// baseDamage is pre-computed by the caller: primitiveCurve(attr) × multiplier + add.
+// Status: WIKI-SOURCED, not yet verified in-game.
+export function calcFormAttackDamage({
+  baseDamage,
+  scaling = 1.0,
+  damageType = "physical",
+  ppb = 0,
+  mpb = 0,
+  targetPDR = 0,
+  targetMDR = 0,
+  attackerArmorPen = 0,
+  attackerMagicPen = 0,
+}) {
+  const isPhysical = damageType === "physical";
+  const powerBonus = isPhysical ? ppb : mpb;
+  const rawDmg = baseDamage * (1 + powerBonus * scaling);
+
+  const targetDR = isPhysical ? targetPDR : targetMDR;
+  const pen = isPhysical ? attackerArmorPen : attackerMagicPen;
+  const dr = Math.max(1 - targetDR * (1 - pen), 1 - targetDR);
+  return Math.floor(rawDmg * dr);
+}
+
 // Reference healing items for display
 export const HEALING_ITEMS = [
   {

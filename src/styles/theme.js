@@ -113,6 +113,8 @@ const baseTheme = {
     spellcraft: "#a855f7",
     headshot:       "#f87171",
     headshotSoft:   "rgba(248, 113, 113, 0.5)",
+    shapeshift:     "#84cc16",
+    shapeshiftSoft: "rgba(132, 204, 22, 0.5)",
   },
 
   damageType: {
@@ -128,6 +130,13 @@ const baseTheme = {
     },
     magical: { value: "#c8a8ff" },
     heal:    { value: "#4ade80" },
+    formAttack: {
+      body:       "#84cc16",
+      bodyLabel:  "#5a8a10",
+      bodyWell:   "#0e1a06",
+      wellFrame:  "#121e08",
+      wellBorder: "#2a3a14",
+    },
   },
 
   accent: {
