@@ -19,7 +19,7 @@ import {
   GAME_VERSION,
   APP_VERSION,
 } from './data/constants.js';
-import { derivedLabel } from './data/stat-meta.js';
+import { derivedLabel, STAT_META } from './data/stat-meta.js';
 import { CLASSES, EMPTY_CLASS_STUB } from './data/classes/index.js';
 import { RELIGION_BLESSINGS } from './data/religions.js';
 import { makeEmptyGear } from './data/gear-defaults.js';
@@ -34,9 +34,9 @@ import {
   calcSpellDamage,
   calcHealing,
   HEALING_ITEMS,
+  calcFormAttackDamage,
 } from './engine/damage.js';
 import { runTests } from './engine/tests.js';
-
 import { STAT_CURVES, evaluateCurve } from './engine/curves.js';
 
 // Styles & Themes
@@ -66,8 +66,8 @@ import { ALL_SLOTS } from './components/gear/slots.js';
 // in ALL_SLOTS minus the weapon slots.
 const ARMOR_SLOT_KEYS = ["head", "chest", "back", "hands", "legs", "feet", "ring1", "ring2", "necklace"];
 
-// Decode URL hash once at module load to seed initial state (avoids flash).
-// Discard if the class ID doesn't exist in CLASSES — prevents broken sim state.
+// Decode URL hash at module load to seed initial state (avoids flash).
+// Discard if the class ID doesn't exist in CLASSES.
 const _rawBuild = decodeBuild(window.location.hash.replace(/^#/, ''));
 const _initBuild = _rawBuild && CLASSES[_rawBuild.class] ? _rawBuild : null;
 const _initTheme = _initBuild ? (resolveTheme(_initBuild.theme) || defaultTheme) : defaultTheme;
@@ -76,15 +76,9 @@ function App() {
   const [showTests, setShowTests] = useState(null);
   const [weapon, setWeapon] = useState(_initBuild?.weapon ?? "none");
   const [showDebug, setShowDebug] = useState(false);
-  const [linkCopied, setLinkCopied] = useState(false);
   const [gear, setGear] = useState(() => _initBuild?.gear ?? makeEmptyGear());
   const [gearCollapsed, setGearCollapsed] = useState(false);
-  const [activeBuffs, setActiveBuffs] = useState(() => {
-    if (!_initBuild) return {};
-    const buffs = {};
-    for (const id of _initBuild.buffs) buffs[id] = true;
-    return buffs;
-  });
+  const [activeBuffs, setActiveBuffs] = useState(() => { if (!_initBuild) return {}; const buffs = {}; for (const id of _initBuild.buffs) buffs[id] = true; return buffs; });
   const [religion, setReligion] = useState(_initBuild?.religion ?? "none");
   const [useAcronyms, setUseAcronyms] = useState(true);
   const [expandedCurve, setExpandedCurve] = useState(null);
@@ -95,21 +89,13 @@ function App() {
   // selectedClass === null means the picker takeover is shown. All other
   // build state stays empty until a class is chosen.
   const [selectedClass, setSelectedClass] = useState(_initBuild?.class ?? null);
-  const [selectedPerks, setSelectedPerks] = useState(() => {
-    if (!_initBuild) return [];
-    const cd = CLASSES[_initBuild.class];
-    return _initBuild.perks.filter(id => cd.perks.some(p => p.id === id));
-  });
-  const [selectedSkills, setSelectedSkills] = useState(() => {
-    if (!_initBuild) return [];
-    const cd = CLASSES[_initBuild.class];
-    return _initBuild.skills.filter(id => cd.skills.some(s => s.id === id));
-  });
-  const [selectedSpells, setSelectedSpells] = useState(() => {
-    if (!_initBuild) return [];
-    const cd = CLASSES[_initBuild.class];
-    return _initBuild.spells.filter(id => cd.spells.some(s => s.id === id));
-  });
+  const [selectedPerks, setSelectedPerks] = useState(() => { if (!_initBuild) return []; const cd = CLASSES[_initBuild.class]; return _initBuild.perks.filter(id => cd.perks.some(p => p.id === id)); });
+  const [selectedSkills, setSelectedSkills] = useState(() => { if (!_initBuild) return []; const cd = CLASSES[_initBuild.class]; return _initBuild.skills.filter(id => cd.skills.some(s => s.id === id)); });
+  const [selectedSpells, setSelectedSpells] = useState(() => { if (!_initBuild) return []; const cd = CLASSES[_initBuild.class]; return _initBuild.spells.filter(id => cd.spells.some(s => s.id === id)); });
+  // Tracks which example preset is currently loaded so the picker trigger
+  // can display its name + subtitle. Cleared on class change / reset.
+  const [loadedExampleId, setLoadedExampleId] = useState(null);
+  const [currentTheme, setCurrentTheme] = useState(_initTheme);
   const [selectedTransformations, setSelectedTransformations] = useState(() => {
     if (!_initBuild) return [];
     const cd = CLASSES[_initBuild.class];
@@ -122,20 +108,16 @@ function App() {
     if (!cd.transformations?.some(t => t.id === _initBuild.activeForm)) return null;
     return _initBuild.activeForm;
   });
-  // Tracks which example preset is currently loaded so the picker trigger
-  // can display its name + subtitle. Cleared on class change / reset.
-  const [loadedExampleId, setLoadedExampleId] = useState(null);
-  const [currentTheme, setCurrentTheme] = useState(_initTheme);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Stub fallback lets the hooks below run unconditionally before the
   // ClassPicker early-return.
   const classData = CLASSES[selectedClass] || EMPTY_CLASS_STUB;
 
-  // ── URL sync: debounced replaceState keeps the hash in sync with state ──
+  // URL sync: debounced replaceState keeps the hash in sync with build state
   const urlTimer = useRef(null);
   useEffect(() => {
     if (!selectedClass) {
-      // No build loaded — clear the hash
       if (window.location.hash) history.replaceState(null, '', window.location.pathname);
       return;
     }
@@ -160,7 +142,6 @@ function App() {
   const toggleTransformation = useCallback((formId) => {
     setSelectedTransformations(prev => {
       if (prev.includes(formId)) {
-        // Deselecting a form — also deactivate it if it's the active one
         if (activeForm === formId) setActiveForm(null);
         return prev.filter(f => f !== formId);
       }
@@ -176,6 +157,16 @@ function App() {
     setSelectedPerks(prev => {
       if (prev.includes(perkId)) return prev.filter(p => p !== perkId);
       if (prev.length >= (classData?.maxPerks || 4)) return prev;
+      // Enforce perk constraints when selecting
+      const perkDef = classData.perks.find(p => p.id === perkId);
+      if (perkDef?.disablesShapeshift) {
+        setSelectedTransformations([]);
+        setActiveForm(null);
+      }
+      if (perkDef?.disablesSpiritSpells) {
+        const spiritIds = new Set((classData.spells || []).filter(s => s.isSpirit).map(s => s.id));
+        setSelectedSpells(prev2 => prev2.filter(id => !spiritIds.has(id)));
+      }
       return [...prev, perkId];
     });
   }, [classData]);
@@ -289,7 +280,6 @@ function App() {
     }, 0);
   }, [classData, selectedSkills]);
 
-  // Shapeshift memory: how many form slots are available from equipped shapeshift_memory skills
   const shapeshiftSlots = useMemo(() => {
     return selectedSkills.filter(sk => {
       const skDef = (classData?.skills || []).find(s => s.id === sk);
@@ -299,6 +289,15 @@ function App() {
       return sum + (skDef?.shapeshiftSlots || 0);
     }, 0);
   }, [classData, selectedSkills]);
+
+  const hasDisablesShapeshift = useMemo(() =>
+    selectedPerks.some(id => classData.perks.find(p => p.id === id)?.disablesShapeshift),
+    [selectedPerks, classData]
+  );
+  const hasDisablesSpiritSpells = useMemo(() =>
+    selectedPerks.some(id => classData.perks.find(p => p.id === id)?.disablesSpiritSpells),
+    [selectedPerks, classData]
+  );
 
   const totalMemoryCost = useMemo(() => {
     return selectedSpells.reduce((sum, spId) => {
@@ -392,26 +391,39 @@ function App() {
 
     ds.typeDamageBonuses = typeDmgBonuses;
 
-    // Active transformation form — apply stat modifiers
-    ds.activeFormDef = null;
+    // Active transformation form — apply stat modifiers with cap awareness
+    let activeFormDef = null;
     if (activeForm && classData.transformations) {
       const formDef = classData.transformations.find(t => t.id === activeForm);
       if (formDef) {
-        ds.activeFormDef = formDef;
+        activeFormDef = formDef;
         for (const mod of formDef.statModifiers) {
-          ds[mod.stat] = (ds[mod.stat] || 0) + mod.value;
+          if (mod.stat === "maxHealthBonus") {
+            // Multiplicative: scale existing health
+            ds.health = Math.ceil(ds.health * (1 + mod.value));
+          } else if (mod.stat === "physicalDamageReduction") {
+            ds.pdr = Math.min(ds.pdrCap, ds.pdr + mod.value);
+          } else if (mod.stat === "magicalDamageReduction") {
+            ds.mdr = Math.min(ds.mdrCap, ds.mdr + mod.value);
+          } else {
+            // Flat additive or display-only stats
+            ds[mod.stat] = (ds[mod.stat] || 0) + mod.value;
+          }
         }
       }
     }
 
-    // Shapeshift-only perk effects (e.g., Enhanced Wildness) — apply only when a form is active
+    // Shapeshift-only perk effects (e.g., Enhanced Wildness) — only when a form is active
     if (activeForm) {
       for (const perkId of selectedPerks) {
         const perkDef = classData.perks.find(p => p.id === perkId);
         if (!perkDef?.shapeshiftOnly) continue;
         for (const eff of (perkDef.statEffects || [])) {
-          if (CORE_ATTRS.has(eff.stat)) attrs[eff.stat] = (attrs[eff.stat] || 0) + eff.value;
-          else ds[eff.stat] = (ds[eff.stat] || 0) + eff.value;
+          if (eff.stat === "armorRating") {
+            // AR affects PDR through the curve — for now add directly as it's post-curve
+            ds.armorRating = (ds.armorRating || 0) + eff.value;
+          }
+          ds[eff.stat] = (ds[eff.stat] || 0) + eff.value;
         }
       }
     }
@@ -433,7 +445,7 @@ function App() {
 
     ds._perkFlags = pe;
 
-    return { attrs, bonuses, ds, activeWeapon };
+    return { attrs, bonuses, ds, activeWeapon, activeFormDef };
   }, [weapon, gear, activeBuffs, religion, selectedPerks, selectedClass, classData, availableBuffs, activeForm]);
 
   const { ds } = computed;
@@ -688,21 +700,19 @@ function App() {
           </Panel>
 
           {/* Active Form — shown when transformations are memorized */}
-          {selectedTransformations.length > 0 && (
-            <Panel title="Shapeshift Form" color="var(--sim-accent-verdant-life)">
+          {selectedTransformations.length > 0 && !hasDisablesShapeshift && (
+            <Panel title="Shapeshift Form" color="var(--sim-stat-shapeshift)">
               <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                {/* Human (always available) */}
                 <button onClick={() => setActiveForm(null)}
                   style={{
                     flex: "1 1 0", minWidth: 0, padding: "8px 6px", borderRadius: 4,
                     cursor: "pointer", fontFamily: "inherit", fontSize: 11, fontWeight: !activeForm ? 600 : 400,
                     background: !activeForm ? "var(--sim-surface-ink-raised)" : "transparent",
-                    border: `1.5px solid ${!activeForm ? "var(--sim-accent-verdant-life)" : "var(--sim-border-hairline)"}`,
+                    border: `1.5px solid ${!activeForm ? "var(--sim-stat-shapeshift)" : "var(--sim-border-hairline)"}`,
                     color: !activeForm ? "var(--sim-text-primary)" : "var(--sim-text-dim)",
-                    transition: "all 0.15s",
-                    position: "relative", overflow: "hidden",
+                    transition: "all 0.15s", position: "relative", overflow: "hidden",
                   }}>
-                  {!activeForm && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "var(--sim-accent-verdant-life)" }} />}
+                  {!activeForm && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "var(--sim-stat-shapeshift)" }} />}
                   Human
                 </button>
                 {selectedTransformations.map(formId => {
@@ -715,32 +725,31 @@ function App() {
                         flex: "1 1 0", minWidth: 0, padding: "8px 6px", borderRadius: 4,
                         cursor: "pointer", fontFamily: "inherit", fontSize: 11, fontWeight: isActive ? 600 : 400,
                         background: isActive ? "var(--sim-surface-ink-raised)" : "transparent",
-                        border: `1.5px solid ${isActive ? "var(--sim-accent-verdant-life)" : "var(--sim-border-hairline)"}`,
+                        border: `1.5px solid ${isActive ? "var(--sim-stat-shapeshift)" : "var(--sim-border-hairline)"}`,
                         color: isActive ? "var(--sim-text-primary)" : "var(--sim-text-dim)",
-                        transition: "all 0.15s",
-                        position: "relative", overflow: "hidden",
+                        transition: "all 0.15s", position: "relative", overflow: "hidden",
                       }}>
-                      {isActive && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "var(--sim-accent-verdant-life)" }} />}
+                      {isActive && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "var(--sim-stat-shapeshift)" }} />}
                       {form.name}
                     </button>
                   );
                 })}
               </div>
-              {activeForm && ds.activeFormDef && (
+              {activeForm && computed.activeFormDef && (
                 <div style={{ marginTop: 8, padding: "6px 8px", background: "var(--sim-surface-ink)", borderRadius: 4, border: "1px solid var(--sim-border-hairline)" }}>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "2px 12px", fontSize: 10 }}>
-                    {ds.activeFormDef.statModifiers.map((mod, i) => (
+                    {computed.activeFormDef.statModifiers.map((mod, i) => (
                       <span key={i} style={{ color: mod.value > 0 ? "var(--sim-accent-verdant-life)" : "var(--sim-accent-blood-ember)" }}>
-                        {mod.value > 0 ? "+" : ""}{typeof mod.value === "number" && Math.abs(mod.value) < 1 ? `${Math.round(mod.value * 100)}%` : mod.value} {mod.stat.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                        {mod.value > 0 ? "+" : ""}{STAT_META[mod.stat]?.unit === "percent" ? `${Math.round(mod.value * 100)}%` : mod.value} {STAT_META[mod.stat]?.label || mod.stat}
                       </span>
                     ))}
                   </div>
-                  {ds.activeFormDef.fixedAttackSpeed && (
+                  {computed.activeFormDef.fixedAttackSpeed && (
                     <div style={{ fontSize: 9, color: "var(--sim-accent-flame-rust)", marginTop: 4 }}>Fixed attack speed (ignores Action Speed)</div>
                   )}
-                  {ds.activeFormDef.wildSkill && (
+                  {computed.activeFormDef.wildSkill && (
                     <div style={{ fontSize: 9, color: "var(--sim-text-ghost)", marginTop: 4 }}>
-                      Wild Skill: {ds.activeFormDef.wildSkill.name} — {ds.activeFormDef.wildSkill.desc}
+                      Wild Skill: {computed.activeFormDef.wildSkill.name} — {computed.activeFormDef.wildSkill.desc}
                     </div>
                   )}
                 </div>
@@ -835,39 +844,36 @@ function App() {
           </Panel>
 
           {/* Form attack damage — shown when a transformation is active */}
-          {activeForm && ds.activeFormDef && ds.activeFormDef.attacks.length > 0 && (
-            <Panel title={`${ds.activeFormDef.name} Form Attacks vs ${targetLabel}`} color="var(--sim-accent-verdant-life)">
+          {activeForm && computed.activeFormDef && computed.activeFormDef.attacks.length > 0 && (
+            <Panel title={`${computed.activeFormDef.name} Form Attacks vs ${targetLabel}`} color="var(--sim-stat-shapeshift)">
               <div style={{ fontSize: 9, color: "var(--sim-text-ghost)", marginBottom: 6 }}>
-                Primitive curve ({ds.activeFormDef.primitiveAttr ? ds.activeFormDef.primitiveAttr.toUpperCase() : "—"}{ds.activeFormDef.primitiveAttr ? ` ${computed.attrs[ds.activeFormDef.primitiveAttr] || 0}` : ""}) · PPB {fmtPct(ds.ppb)}
-                <InfoTip text={"Form damage = (primitiveCurve(attr) × mult + add) × (1 + PowerBonus). WIKI-SOURCED — damage formula not yet verified in-game."} color="var(--sim-accent-flame-dim)" />
+                Primitive curve ({computed.activeFormDef.primitiveAttr ? computed.activeFormDef.primitiveAttr.toUpperCase() : "—"}{computed.activeFormDef.primitiveAttr ? ` ${computed.attrs[computed.activeFormDef.primitiveAttr] || 0}` : ""}) · PPB {fmtPct(ds.ppb)}
+                <InfoTip text={"Form damage = (primitiveCurve(attr) × mult + add) × (1 + PowerBonus). WIKI-SOURCED — not yet verified in-game."} color="var(--sim-accent-flame-dim)" />
                 <span style={{ color: "var(--sim-accent-flame-rust)", marginLeft: 6, fontSize: 8, fontWeight: 600 }}>UNVERIFIED</span>
               </div>
               <div style={{ display: "flex", gap: 8 }}>
-                {ds.activeFormDef.attacks.map(attack => {
-                  const attr = ds.activeFormDef.primitiveAttr;
+                {computed.activeFormDef.attacks.map(attack => {
+                  const attr = computed.activeFormDef.primitiveAttr;
                   const attrVal = attr ? (computed.attrs[attr] || 0) : 0;
                   const primitiveCalc = attr ? evaluateCurve(STAT_CURVES.shapeshiftPrimitive, attrVal) : 0;
                   const baseDmg = primitiveCalc * attack.primitiveMultiplier + attack.primitiveAdd;
                   const isPhysical = attack.damageType === "physical";
-                  const powerBonus = isPhysical ? ds.ppb : ds.mpb;
-
-                  // Apply power bonus and target DR
-                  const rawDmg = baseDmg * (1 + powerBonus * attack.scaling);
-                  const targetDR = isPhysical ? target.pdr : target.mdr;
-                  const pen = isPhysical ? ds.armorPenetration : ds.magicPenetration;
-                  const effectiveDR = targetDR > 0 ? targetDR * (1 - pen) : targetDR;
-                  const bodyDmg = Math.floor(rawDmg * (1 - effectiveDR));
-
+                  const bodyDmg = calcFormAttackDamage({
+                    baseDamage: baseDmg, scaling: attack.scaling, damageType: attack.damageType,
+                    ppb: ds.ppb, mpb: ds.mpb,
+                    targetPDR: target.pdr, targetMDR: target.mdr,
+                    attackerArmorPen: ds.armorPenetration, attackerMagicPen: ds.magicPenetration,
+                  });
                   return (
-                    <div key={attack.id} style={{ flex: 1, background: "var(--sim-surface-ink)", border: "1px solid var(--sim-border-hairline)", borderRadius: 4, padding: "8px" }}>
+                    <div key={attack.id} style={{ flex: 1, background: "var(--sim-damage-type-form-attack-body-well)", border: "1px solid var(--sim-damage-type-form-attack-well-border)", borderRadius: 4, padding: "8px" }}>
                       <div style={{ fontSize: 10, color: "var(--sim-text-dim)", marginBottom: 2, fontWeight: 500 }}>{attack.name}</div>
                       <div style={{ fontSize: 9, color: "var(--sim-text-ghost)", marginBottom: 6 }}>
                         {attr ? `${attr.toUpperCase()} curve` : ""} ×{attack.primitiveMultiplier * 100}% + {attack.primitiveAdd}({attack.scaling})
                         {!isPhysical && <span style={{ marginLeft: 4, color: "var(--sim-damage-type-magical-value)" }}>{attack.damageType.replace("_magical", "")}</span>}
                       </div>
-                      <div style={{ background: isPhysical ? "var(--sim-damage-type-physical-body-well)" : "var(--sim-surface-shadow)", borderRadius: 3, padding: "6px 0", textAlign: "center" }}>
-                        <div style={{ fontSize: 9, color: "var(--sim-text-whisper)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Body</div>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: isPhysical ? "var(--sim-damage-type-physical-body)" : "var(--sim-damage-type-magical-value)" }}>{bodyDmg}</div>
+                      <div style={{ background: "var(--sim-damage-type-form-attack-body-well)", borderRadius: 3, padding: "6px 0", textAlign: "center" }}>
+                        <div style={{ fontSize: 9, color: "var(--sim-damage-type-form-attack-body-label)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Body</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: "var(--sim-damage-type-form-attack-body)" }}>{bodyDmg}</div>
                       </div>
                       {attack.bleed && (
                         <div style={{ marginTop: 4, fontSize: 9, color: "var(--sim-accent-blood-murmur)" }}>
@@ -887,9 +893,6 @@ function App() {
                     </div>
                   );
                 })}
-              </div>
-              <div style={{ marginTop: 6, fontSize: 9, color: "var(--sim-text-ghost)" }}>
-                Primitive value: {ds.activeFormDef.primitiveAttr ? evaluateCurve(STAT_CURVES.shapeshiftPrimitive, computed.attrs[ds.activeFormDef.primitiveAttr] || 0).toFixed(2) : "N/A"}
               </div>
             </Panel>
           )}
@@ -959,19 +962,23 @@ function App() {
                   {(classData.spells || []).map(spell => {
                     const equipped = selectedSpells.includes(spell.id);
                     const atSlotMax = !equipped && selectedSpells.length >= spellMemorySlots;
+                    const spiritDisabled = hasDisablesSpiritSpells && spell.isSpirit;
+                    const disabled = atSlotMax || spiritDisabled;
                     return (
-                      <div key={spell.id} onClick={() => !atSlotMax && toggleSpell(spell.id)}
-                        style={{ padding: "4px 6px", borderRadius: 4, cursor: atSlotMax ? "not-allowed" : "pointer",
-                          background: equipped ? "var(--sim-surface-ink-raised)" : "transparent", border: `1px solid ${equipped ? "var(--sim-border-edge)" : "transparent"}`, opacity: atSlotMax ? 0.4 : 1 }}>
+                      <div key={spell.id} onClick={() => !disabled && toggleSpell(spell.id)}
+                        style={{ padding: "4px 6px", borderRadius: 4, cursor: disabled ? "not-allowed" : "pointer",
+                          background: equipped ? "var(--sim-surface-ink-raised)" : "transparent", border: `1px solid ${equipped ? "var(--sim-border-edge)" : "transparent"}`, opacity: disabled ? 0.4 : 1 }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                             <div style={{ width: 14, height: 14, borderRadius: 3, border: `1px solid ${equipped ? "var(--sim-accent-arcane-core)" : "var(--sim-text-ghost)"}`,
                               background: equipped ? "var(--sim-accent-arcane-core)" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--sim-text-primary)", fontWeight: 700 }}>{equipped ? "✓" : ""}</div>
                             <span style={{ fontSize: 11, color: equipped ? "var(--sim-text-primary)" : "var(--sim-text-muted)" }}>{spell.name}</span>
+                            {spell.isSpirit && <span style={{ fontSize: 8, color: "var(--sim-accent-arcane-muted)", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", marginLeft: 4 }}>spirit</span>}
                           </div>
                           <div style={{ fontSize: 9, color: "var(--sim-text-whisper)", display: "flex", gap: 6 }}>
                             <span>T{spell.tier}</span><span>M{spell.memoryCost}</span>
                             {classData.spellCostType === "health" && <span style={{ color: "var(--sim-accent-blood-murmur)" }}>-{spell.healthCost}HP</span>}
+                            {classData.spellCostType === "charges" && spell.maxCasts && <span style={{ color: "var(--sim-text-muted)" }}>×{spell.maxCasts}</span>}
                           </div>
                         </div>
                       </div>
@@ -995,7 +1002,7 @@ function App() {
             )}
 
             {/* Transformation memory — shown when class has transformations and shapeshift_memory is equipped */}
-            {(classData.transformations || []).length > 0 && shapeshiftSlots > 0 && (
+            {(classData.transformations || []).length > 0 && shapeshiftSlots > 0 && !hasDisablesShapeshift && (
               <Collapsible title="Shapeshift Forms" color="var(--sim-stat-build)" badgeBg="var(--sim-stat-build-badge)"
                 badge={`${selectedTransformations.length}/${shapeshiftSlots} forms`} defaultOpen>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 4, padding: "4px 0" }}>
@@ -1015,8 +1022,8 @@ function App() {
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           <div style={{
                             width: 14, height: 14, borderRadius: 3, flexShrink: 0,
-                            border: `1px solid ${memorized ? "var(--sim-accent-verdant-life)" : "var(--sim-text-ghost)"}`,
-                            background: memorized ? "var(--sim-accent-verdant-life)" : "transparent",
+                            border: `1px solid ${memorized ? "var(--sim-stat-shapeshift)" : "var(--sim-text-ghost)"}`,
+                            background: memorized ? "var(--sim-stat-shapeshift)" : "transparent",
                             display: "flex", alignItems: "center", justifyContent: "center",
                             fontSize: 10, color: "var(--sim-surface-void)", fontWeight: 700,
                           }}>{memorized ? "✓" : ""}</div>
