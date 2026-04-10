@@ -37,6 +37,8 @@ import {
 } from './engine/damage.js';
 import { runTests } from './engine/tests.js';
 
+import { STAT_CURVES, evaluateCurve } from './engine/curves.js';
+
 // Styles & Themes
 import { styles, defaultTheme } from './styles/theme.js';
 import { ThemeProvider } from './styles/ThemeProvider.jsx';
@@ -831,6 +833,66 @@ function App() {
               </div>
             )}
           </Panel>
+
+          {/* Form attack damage — shown when a transformation is active */}
+          {activeForm && ds.activeFormDef && ds.activeFormDef.attacks.length > 0 && (
+            <Panel title={`${ds.activeFormDef.name} Form Attacks vs ${targetLabel}`} color="var(--sim-accent-verdant-life)">
+              <div style={{ fontSize: 9, color: "var(--sim-text-ghost)", marginBottom: 6 }}>
+                Primitive curve ({ds.activeFormDef.primitiveAttr ? ds.activeFormDef.primitiveAttr.toUpperCase() : "—"}{ds.activeFormDef.primitiveAttr ? ` ${computed.attrs[ds.activeFormDef.primitiveAttr] || 0}` : ""}) · PPB {fmtPct(ds.ppb)}
+                <InfoTip text={"Form damage = (primitiveCurve(attr) × mult + add) × (1 + PowerBonus). WIKI-SOURCED — damage formula not yet verified in-game."} color="var(--sim-accent-flame-dim)" />
+                <span style={{ color: "var(--sim-accent-flame-rust)", marginLeft: 6, fontSize: 8, fontWeight: 600 }}>UNVERIFIED</span>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {ds.activeFormDef.attacks.map(attack => {
+                  const attr = ds.activeFormDef.primitiveAttr;
+                  const attrVal = attr ? (computed.attrs[attr] || 0) : 0;
+                  const primitiveCalc = attr ? evaluateCurve(STAT_CURVES.shapeshiftPrimitive, attrVal) : 0;
+                  const baseDmg = primitiveCalc * attack.primitiveMultiplier + attack.primitiveAdd;
+                  const isPhysical = attack.damageType === "physical";
+                  const powerBonus = isPhysical ? ds.ppb : ds.mpb;
+
+                  // Apply power bonus and target DR
+                  const rawDmg = baseDmg * (1 + powerBonus * attack.scaling);
+                  const targetDR = isPhysical ? target.pdr : target.mdr;
+                  const pen = isPhysical ? ds.armorPenetration : ds.magicPenetration;
+                  const effectiveDR = targetDR > 0 ? targetDR * (1 - pen) : targetDR;
+                  const bodyDmg = Math.floor(rawDmg * (1 - effectiveDR));
+
+                  return (
+                    <div key={attack.id} style={{ flex: 1, background: "var(--sim-surface-ink)", border: "1px solid var(--sim-border-hairline)", borderRadius: 4, padding: "8px" }}>
+                      <div style={{ fontSize: 10, color: "var(--sim-text-dim)", marginBottom: 2, fontWeight: 500 }}>{attack.name}</div>
+                      <div style={{ fontSize: 9, color: "var(--sim-text-ghost)", marginBottom: 6 }}>
+                        {attr ? `${attr.toUpperCase()} curve` : ""} ×{attack.primitiveMultiplier * 100}% + {attack.primitiveAdd}({attack.scaling})
+                        {!isPhysical && <span style={{ marginLeft: 4, color: "var(--sim-damage-type-magical-value)" }}>{attack.damageType.replace("_magical", "")}</span>}
+                      </div>
+                      <div style={{ background: isPhysical ? "var(--sim-damage-type-physical-body-well)" : "var(--sim-surface-shadow)", borderRadius: 3, padding: "6px 0", textAlign: "center" }}>
+                        <div style={{ fontSize: 9, color: "var(--sim-text-whisper)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Body</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: isPhysical ? "var(--sim-damage-type-physical-body)" : "var(--sim-damage-type-magical-value)" }}>{bodyDmg}</div>
+                      </div>
+                      {attack.bleed && (
+                        <div style={{ marginTop: 4, fontSize: 9, color: "var(--sim-accent-blood-murmur)" }}>
+                          + {attack.bleed.damage}({attack.bleed.scaling}) bleed / {attack.bleed.duration}s
+                        </div>
+                      )}
+                      {attack.plague && (
+                        <div style={{ marginTop: 4, fontSize: 9, color: "var(--sim-accent-arcane-core)" }}>
+                          + {attack.plague.damage}({attack.plague.scaling}) plague / {attack.plague.duration}s
+                        </div>
+                      )}
+                      {attack.armorPenetration && (
+                        <div style={{ marginTop: 4, fontSize: 9, color: "var(--sim-text-whisper)" }}>
+                          {Math.round(attack.armorPenetration.base * 100)}% armor pen
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ marginTop: 6, fontSize: 9, color: "var(--sim-text-ghost)" }}>
+                Primitive value: {ds.activeFormDef.primitiveAttr ? evaluateCurve(STAT_CURVES.shapeshiftPrimitive, computed.attrs[ds.activeFormDef.primitiveAttr] || 0).toFixed(2) : "N/A"}
+              </div>
+            </Panel>
+          )}
 
           {allDmgLines.length > 0 && (
             <Panel title={`Spell & Skill Damage vs ${targetLabel}`} color="var(--sim-stat-physical)">
