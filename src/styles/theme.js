@@ -70,6 +70,7 @@ const baseTheme = {
     hairline: "#1e1e2e",   // Default panel/input border
     seam:     "#2a2a3e",   // Expanded/raised border
     edge:     "#3a3a5e",   // Active/selected border
+    info:     "#4a4a6e",   // Tooltip borders, ⓘ icon color
     focus:    "#6366f1",   // Focused input, accent emphasis
   },
 
