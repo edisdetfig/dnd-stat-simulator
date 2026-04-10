@@ -43,16 +43,16 @@ const base = {
   },
 
   state: {
-    active: { bg: "#1A2818", fg: "#4ade80", border: "rgba(74, 222, 128, 0.25)" },
+    active: { bg: "#201A14", fg: "#B8942C", border: "rgba(184, 148, 44, 0.25)" },
     wip:    { bg: "#2A2014", fg: "#B8942C", border: "rgba(184, 148, 44, 0.25)" },
     locked: { bg: "#1E1C1A", fg: "#484244", border: "#3A3838" },
   },
 
-  // Tier — gold warms to true gold, gray warms
+  // Tier — full warm palette: gold peak, silver good, rust tapering
   tier: {
     peak:     { fill: "#B8942C" },  // true gold
-    good:     { fill: "#4ade80" },
-    tapering: { fill: "#f97316" },
+    good:     { fill: "#C0B8C0" },  // silver (warm "good" — distinct from gold)
+    tapering: { fill: "#8A7020" },  // aged rust-gold
     dim:      { fill: "#484244" },  // warm gray
   },
 
@@ -61,7 +61,7 @@ const base = {
     physicalSoft:   "rgba(184, 148, 44, 0.5)",
     magical:        "#8B2028",   // dusty blood red
     magicalSoft:    "rgba(139, 32, 40, 0.5)",
-    healing:        "#4ade80",
+    healing:        "#D4AC38",   // bright gold (warlock heals through sacrifice)
     build:          "#B8942C",   // true gold
     buildBadge:     "rgba(184, 148, 44, 0.145)",
     weapon:         "#5C5C64",   // steel silver
@@ -82,7 +82,7 @@ const base = {
       wellBorder: "#3A3020",
     },
     magical: { value: "#A83040" },   // lighter blood
-    heal:    { value: "#4ade80" },
+    heal:    { value: "#D4AC38" },   // bright gold
   },
 
   accent: {
@@ -103,14 +103,14 @@ const base = {
       ember:  "#1A1510",
     },
     verdant: {
-      life:     "#4ade80",
-      bright:   "#6bff6b",
-      moss:     "#4a6a4a",
-      loam:     "#2A3A1A",
-      forest:   "#0a1a10",
-      jade:     "#22c55e",
-      pass:     "#4a8",
-      uncommon: "#56b455",
+      life:     "#D4AC38",   // bright gold (attribute values, buff active)
+      bright:   "#E0C050",   // hot gold (buff toggle dot)
+      moss:     "#5C5030",   // dark gold (buff toggle track)
+      loam:     "#3A3020",   // dark warm (attribute card border)
+      forest:   "#1A1510",   // deep warm (attribute card bg)
+      jade:     "#B8942C",   // true gold
+      pass:     "#B8942C",   // test pass = gold
+      uncommon: "#56b455",   // keep — rarity canonical
     },
     blood: {
       wound:   "#D42268",   // hot magenta (danger focal point)
