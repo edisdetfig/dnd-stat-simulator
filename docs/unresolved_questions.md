@@ -202,14 +202,55 @@ Noxulon VERIFIED. Zorin, Solaris, Blythar NOT TESTED.
 
 ---
 
+## UNRESOLVED: Druid Form Attack Damage Formula
+
+**Status: WIKI-SOURCED, not independently verified**
+
+Shapeshift attacks use the primitive curve formula instead of weapon damage:
+```
+(primitiveCurve(attr) × primitiveMultiplier + primitiveAdd) × (1 + PowerBonus)
+```
+
+The wiki confirms Power Bonus (PPB for physical, MPB for magical) applies as a multiplier on the total. The `shapeshiftPrimitive` curve is in `data/stat_curves.json` (78 segments, wiki LaTeX source).
+
+Wiki example: 30 AGI, attack "Agility based × 50% + 5", +10% PPB:
+`(primitiveCurve(30) × 0.5 + 5) × (1.1) = (8.631 × 0.5 + 5) × 1.1 = 10.45`
+
+### What to verify in-game
+1. Bear form, Swipe (STR-based): compare predicted vs actual damage at different STR levels
+2. Does `(1.0)` scaling in tooltips like `27(1.0)` mean PPB scaling = 1.0? Or is it always 100%?
+3. Penguin Water Cannon (ice magical) — confirm MPB applies instead of PPB
+
+### Testing Protocol
+1. Naked Druid in Bear form: record Swipe damage vs Training Dummy (-22% PDR)
+2. Add STR gear → re-record → check if damage increase matches primitive curve delta × PPB
+3. Add Physical Damage Bonus gear → check if PPB multiplies the full `(curve × mult + add)` value
+
+---
+
+## UNRESOLVED: Panther Base Attack Speed
+
+**Status: UNKNOWN**
+
+Panther form ignores the character's Action Speed stat entirely and uses a fixed attack speed. Exact value needs in-game measurement.
+
+### Testing Protocol
+1. Enter Panther form with 0% Action Speed
+2. Time Scratch attack cycle (start to start)
+3. Enter Panther form with high Action Speed gear
+4. Re-time — should be identical if truly fixed
+5. Record the fixed cycle time
+
+---
+
 ## Verified Class Base Stats
 
 | Class | DEX | RES | Full Stats |
 |---|---|---|---|
 | Fighter | 15 | 15 | All 15s ✅ |
 | Warlock | 15 | 14 | Full set ✅ |
+| Druid | 12 | 18 | STR 12, VIG 13, AGI 12, DEX 12, WIL 18, KNO 20, RES 18 ✅ |
 | Others | DEX/RES only | | Need full sets |
-| Druid | ? | ? | Unavailable |
 
 ---
 

@@ -3,15 +3,17 @@
 
 import { warlock } from './warlock.js';
 import { fighter } from './fighter.js';
+import { druid } from './druid.js';
 
 // Aggregate all classes into a single lookup object
 export const CLASSES = {
   warlock,
   fighter,
+  druid,
 };
 
 // Export individual classes for direct import if needed
-export { warlock, fighter };
+export { warlock, fighter, druid };
 
 // Display metadata for the class picker landing page.
 // Order: playable (active / wip) first, then coming_soon alphabetically.
@@ -59,7 +61,7 @@ export const CLASS_ROSTER = [
     id: "druid",
     name: "Druid",
     tagline: "A whole zoo in a trenchcoat with a get-out-of-jail-free card",
-    status: "coming_soon",
+    status: "wip",
     color: "#84cc16",
   },
   {
