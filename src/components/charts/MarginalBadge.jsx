@@ -12,10 +12,9 @@ import {
   STAT_CURVES,
   getCurveContext,
   DERIVED_CURVE_MAP,
-  TIER_COLORS,
 } from '../../engine/curves.js';
 import { fmtSlope } from '../../utils/format.js';
-import { TIER_LABELS, defaultTheme } from '../../styles/theme.js';
+import { TIER_LABELS, TIER_COLORS, TIER_KEY_MAP, defaultTheme } from '../../styles/theme.js';
 
 function MarginalBadgeImpl({ statId, ds, attrs, isExpanded, onToggle }) {
   const [show, setShow] = useState(false);
@@ -59,8 +58,8 @@ function MarginalBadgeImpl({ statId, ds, attrs, isExpanded, onToggle }) {
       <span onClick={(e) => { e.stopPropagation(); onToggle && onToggle(statId); }} style={{
         display: "inline-flex", alignItems: "center", gap: 2,
         fontSize: 9, fontWeight: 600, color,
-        background: isExpanded ? defaultTheme.tier[ctx.tier].glowActive : defaultTheme.tier[ctx.tier].glow,
-        border: `1px solid ${isExpanded ? color : defaultTheme.tier[ctx.tier].border}`,
+        background: isExpanded ? defaultTheme.tier[TIER_KEY_MAP[ctx.tier]].glowActive : defaultTheme.tier[TIER_KEY_MAP[ctx.tier]].glow,
+        border: `1px solid ${isExpanded ? color : defaultTheme.tier[TIER_KEY_MAP[ctx.tier]].border}`,
         padding: "1px 5px", borderRadius: 8, marginLeft: 6,
         cursor: "pointer", whiteSpace: "nowrap", lineHeight: 1.4,
       }}>

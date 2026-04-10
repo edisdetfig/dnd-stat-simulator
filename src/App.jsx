@@ -26,7 +26,7 @@ import { makeEmptyGear } from './data/gear-defaults.js';
 import { getExampleBuildsForClass } from './data/example-builds.js';
 
 // Engine
-import { TIER_COLORS } from './engine/curves.js';
+import { TIER_COLORS } from './styles/theme.js';
 import { aggregateGear, computeAttrBreakdown } from './engine/aggregator.js';
 import { computeDerivedStats } from './engine/derived-stats.js';
 import {

@@ -14,8 +14,8 @@ import {
   getCurveContext,
   getMarginalSlope,
   DERIVED_CURVE_MAP,
-  TIER_COLORS,
 } from '../../engine/curves.js';
+import { TIER_COLORS } from '../../styles/theme.js';
 import { fmtPct } from '../../utils/format.js';
 
 function CurveChartImpl({ statId, ds, attrs }) {

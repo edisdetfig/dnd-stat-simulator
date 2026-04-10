@@ -258,6 +258,21 @@ function buildTheme(base) {
 export const defaultTheme = buildTheme(baseTheme);
 
 // ---------------------------------------------------------------------------
+// Tier bridge — the engine (getCurveContext) returns gold/green/amber/gray
+// but the theme uses peak/good/tapering/dim. These maps let components do
+// TIER_COLORS[ctx.tier] and TIER_KEY_MAP[ctx.tier] without caring.
+// ---------------------------------------------------------------------------
+
+export const TIER_KEY_MAP = { gold: "peak", green: "good", amber: "tapering", gray: "dim" };
+
+export const TIER_COLORS = {
+  gold:  "var(--sim-tier-peak-fill)",
+  green: "var(--sim-tier-good-fill)",
+  amber: "var(--sim-tier-tapering-fill)",
+  gray:  "var(--sim-tier-dim-fill)",
+};
+
+// ---------------------------------------------------------------------------
 // Legacy style objects — hex values migrate to var() in step 3.
 // ---------------------------------------------------------------------------
 
