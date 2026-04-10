@@ -249,9 +249,9 @@ export const defaultTheme = buildTheme(baseTheme);
 
 export const styles = {
   select: {
-    background: "#0d0d14",
-    border: "1px solid #1e1e2e",
-    color: "#c8c8d4",
+    background: "var(--sim-surface-ink)",
+    border: "1px solid var(--sim-border-hairline)",
+    color: "var(--sim-text-body)",
     padding: "4px 6px",
     borderRadius: 3,
     fontFamily: "inherit",
@@ -260,9 +260,9 @@ export const styles = {
     cursor: "pointer",
   },
   numInput: {
-    background: "#0d0d14",
-    border: "1px solid #1e1e2e",
-    color: "#e0e0ec",
+    background: "var(--sim-surface-ink)",
+    border: "1px solid var(--sim-border-hairline)",
+    color: "var(--sim-text-primary)",
     padding: "4px 8px",
     borderRadius: 3,
     fontFamily: "inherit",
@@ -271,9 +271,9 @@ export const styles = {
     textAlign: "right",
   },
   textInput: {
-    background: "#0d0d14",
-    border: "1px solid #1e1e2e",
-    color: "#e0e0ec",
+    background: "var(--sim-surface-ink)",
+    border: "1px solid var(--sim-border-hairline)",
+    color: "var(--sim-text-primary)",
     padding: "4px 8px",
     borderRadius: 3,
     fontFamily: "inherit",
@@ -283,8 +283,8 @@ export const styles = {
   },
   addBtn: {
     background: "none",
-    border: "1px solid #1e1e2e",
-    color: "#556",
+    border: "1px solid var(--sim-border-hairline)",
+    color: "var(--sim-text-whisper)",
     padding: "2px 8px",
     borderRadius: 3,
     cursor: "pointer",
@@ -295,7 +295,7 @@ export const styles = {
   removeBtn: {
     background: "none",
     border: "none",
-    color: "#664444",
+    color: "var(--sim-accent-blood-scab)",
     cursor: "pointer",
     fontFamily: "inherit",
     fontSize: 14,
@@ -306,7 +306,7 @@ export const styles = {
   },
   fieldLabel: {
     fontSize: 10,
-    color: "#555",
+    color: "var(--sim-text-whisper)",
     whiteSpace: "nowrap",
   },
   // Row used by damage lines (renderDmgLine) and healing lines (allHealLines)
@@ -317,11 +317,11 @@ export const styles = {
     justifyContent: "space-between",
     alignItems: "baseline",
     padding: "4px 8px",
-    background: "#0d0d14",
+    background: "var(--sim-surface-ink)",
     borderRadius: 4,
     marginBottom: 2,
   },
-  dmgHealLabel: { fontSize: 10, color: "#888" },
+  dmgHealLabel: { fontSize: 10, color: "var(--sim-text-muted)" },
 };
 
 export const TIER_LABELS = {
