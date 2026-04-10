@@ -17,7 +17,7 @@ function findThemeId(themeObj) {
  * Encode the current build state into a URL-safe base64 string.
  * Returns the fragment (without the leading '#').
  */
-export function encodeBuild({ selectedClass, weapon, religion, selectedPerks, selectedSkills, selectedSpells, activeBuffs, target, gear, currentTheme }) {
+export function encodeBuild({ selectedClass, weapon, religion, selectedPerks, selectedSkills, selectedSpells, activeBuffs, selectedTransformations, activeForm, target, gear, currentTheme }) {
   const payload = {
     v: 1,
     class: selectedClass,
@@ -27,6 +27,8 @@ export function encodeBuild({ selectedClass, weapon, religion, selectedPerks, se
     skills: selectedSkills,
     spells: selectedSpells,
     buffs: Object.keys(activeBuffs).filter(k => activeBuffs[k]),
+    transformations: selectedTransformations,
+    activeForm,
     target,
     gear,
     theme: findThemeId(currentTheme),

@@ -63,6 +63,8 @@ export const BuildSchemaV1 = z.object({
   skills: z.array(z.string()).default([]),
   spells: z.array(z.string()).default([]),
   buffs: z.array(z.string()).default([]),
+  transformations: z.array(z.string()).default([]),
+  activeForm: z.string().nullable().default(null),
   target: TargetSchema,
   gear: GearSchema,
   theme: z.string().optional(),

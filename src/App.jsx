@@ -108,6 +108,18 @@ function App() {
     const cd = CLASSES[_initBuild.class];
     return _initBuild.spells.filter(id => cd.spells.some(s => s.id === id));
   });
+  const [selectedTransformations, setSelectedTransformations] = useState(() => {
+    if (!_initBuild) return [];
+    const cd = CLASSES[_initBuild.class];
+    if (!cd.transformations) return [];
+    return _initBuild.transformations.filter(id => cd.transformations.some(t => t.id === id));
+  });
+  const [activeForm, setActiveForm] = useState(() => {
+    if (!_initBuild?.activeForm) return null;
+    const cd = CLASSES[_initBuild.class];
+    if (!cd.transformations?.some(t => t.id === _initBuild.activeForm)) return null;
+    return _initBuild.activeForm;
+  });
   // Tracks which example preset is currently loaded so the picker trigger
   // can display its name + subtitle. Cleared on class change / reset.
   const [loadedExampleId, setLoadedExampleId] = useState(null);
@@ -129,12 +141,13 @@ function App() {
     urlTimer.current = setTimeout(() => {
       const fragment = encodeBuild({
         selectedClass, weapon, religion, selectedPerks, selectedSkills,
-        selectedSpells, activeBuffs, target, gear, currentTheme,
+        selectedSpells, activeBuffs, selectedTransformations, activeForm,
+        target, gear, currentTheme,
       });
       history.replaceState(null, '', '#' + fragment);
     }, 400);
     return () => clearTimeout(urlTimer.current);
-  }, [selectedClass, weapon, religion, selectedPerks, selectedSkills, selectedSpells, activeBuffs, target, gear, currentTheme]);
+  }, [selectedClass, weapon, religion, selectedPerks, selectedSkills, selectedSpells, activeBuffs, selectedTransformations, activeForm, target, gear, currentTheme]);
 
   const tests = useMemo(() => runTests(), []);
   const pc = tests.filter(t => t.status === "PASS").length;
@@ -142,6 +155,21 @@ function App() {
 
   const handleGearChange = useCallback((slot, data) => setGear(prev => ({ ...prev, [slot]: data })), []);
   const toggleBuff = useCallback((buffId) => setActiveBuffs(prev => ({ ...prev, [buffId]: !prev[buffId] })), []);
+  const toggleTransformation = useCallback((formId) => {
+    setSelectedTransformations(prev => {
+      if (prev.includes(formId)) {
+        // Deselecting a form — also deactivate it if it's the active one
+        if (activeForm === formId) setActiveForm(null);
+        return prev.filter(f => f !== formId);
+      }
+      const maxSlots = classData?.skills?.find(s => s.type === "shapeshift_memory")?.shapeshiftSlots || 5;
+      if (prev.length >= maxSlots) return prev;
+      return [...prev, formId];
+    });
+  }, [classData, activeForm]);
+  const handleSetActiveForm = useCallback((formId) => {
+    setActiveForm(prev => prev === formId ? null : formId);
+  }, []);
   const togglePerk = useCallback((perkId) => {
     setSelectedPerks(prev => {
       if (prev.includes(perkId)) return prev.filter(p => p !== perkId);
@@ -171,6 +199,8 @@ function App() {
     setSelectedSkills([]);
     setSelectedSpells([]);
     setActiveBuffs({});
+    setSelectedTransformations([]);
+    setActiveForm(null);
     setLoadedExampleId(null);
     setCurrentTheme(defaultTheme);
   }, []);
@@ -183,6 +213,8 @@ function App() {
     if (selectedSkills.length > 0) return true;
     if (selectedSpells.length > 0) return true;
     if (Object.values(activeBuffs).some(Boolean)) return true;
+    if (selectedTransformations.length > 0) return true;
+    if (activeForm) return true;
     if (weapon !== "none") return true;
     if (religion !== "none") return true;
     for (const slotDef of ALL_SLOTS) {
@@ -191,7 +223,7 @@ function App() {
       if (slotDef.isWeapon ? (slot.primary || slot.secondary) : slot.id) return true;
     }
     return false;
-  }, [selectedPerks, selectedSkills, selectedSpells, activeBuffs, weapon, religion, gear]);
+  }, [selectedPerks, selectedSkills, selectedSpells, activeBuffs, selectedTransformations, activeForm, weapon, religion, gear]);
 
   // Pick a class from the ClassPicker takeover. Called when selectedClass is
   // null and the user clicks a class card.
@@ -223,6 +255,8 @@ function App() {
     setSelectedSkills(built.selectedSkills);
     setSelectedSpells(built.selectedSpells);
     setActiveBuffs(built.activeBuffs);
+    setSelectedTransformations(built.selectedTransformations || []);
+    setActiveForm(built.activeForm || null);
     setLoadedExampleId(exampleId);
     setCurrentTheme(ex.theme ? (THEMES[ex.theme] || defaultTheme) : defaultTheme);
   }, [selectedClass, isBuildDirty, loadedExampleId]);
@@ -345,6 +379,30 @@ function App() {
 
     ds.typeDamageBonuses = typeDmgBonuses;
 
+    // Active transformation form — apply stat modifiers
+    ds.activeFormDef = null;
+    if (activeForm && classData.transformations) {
+      const formDef = classData.transformations.find(t => t.id === activeForm);
+      if (formDef) {
+        ds.activeFormDef = formDef;
+        for (const mod of formDef.statModifiers) {
+          ds[mod.stat] = (ds[mod.stat] || 0) + mod.value;
+        }
+      }
+    }
+
+    // Shapeshift-only perk effects (e.g., Enhanced Wildness) — apply only when a form is active
+    if (activeForm) {
+      for (const perkId of selectedPerks) {
+        const perkDef = classData.perks.find(p => p.id === perkId);
+        if (!perkDef?.shapeshiftOnly) continue;
+        for (const eff of (perkDef.statEffects || [])) {
+          if (CORE_ATTRS.has(eff.stat)) attrs[eff.stat] = (attrs[eff.stat] || 0) + eff.value;
+          else ds[eff.stat] = (ds[eff.stat] || 0) + eff.value;
+        }
+      }
+    }
+
     // Healing stats
     ds.healingMod = pe.healingMod || 0;
     ds.magicalHealingAdd = bonuses.magicalHealing || 0;
@@ -363,7 +421,7 @@ function App() {
     ds._perkFlags = pe;
 
     return { attrs, bonuses, ds, activeWeapon };
-  }, [weapon, gear, activeBuffs, religion, selectedPerks, selectedClass, classData, availableBuffs]);
+  }, [weapon, gear, activeBuffs, religion, selectedPerks, selectedClass, classData, availableBuffs, activeForm]);
 
   const { ds } = computed;
 
@@ -832,6 +890,8 @@ function App() {
                   selectedSkills,
                   selectedSpells,
                   activeBuffs: Object.keys(activeBuffs).filter(k => activeBuffs[k]),
+                  selectedTransformations,
+                  activeForm,
                   target,
                   attrs: computed.attrs,
                   attrBreakdown,
