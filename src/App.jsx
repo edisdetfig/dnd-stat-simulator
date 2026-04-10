@@ -65,7 +65,9 @@ import { ALL_SLOTS } from './components/gear/slots.js';
 const ARMOR_SLOT_KEYS = ["head", "chest", "back", "hands", "legs", "feet", "ring1", "ring2", "necklace"];
 
 // Decode URL hash once at module load to seed initial state (avoids flash).
-const _initBuild = decodeBuild(window.location.hash.replace(/^#/, ''));
+// Discard if the class ID doesn't exist in CLASSES — prevents broken sim state.
+const _rawBuild = decodeBuild(window.location.hash.replace(/^#/, ''));
+const _initBuild = _rawBuild && CLASSES[_rawBuild.class] ? _rawBuild : null;
 const _initTheme = _initBuild ? (resolveTheme(_initBuild.theme) || defaultTheme) : defaultTheme;
 
 function App() {
@@ -91,9 +93,21 @@ function App() {
   // selectedClass === null means the picker takeover is shown. All other
   // build state stays empty until a class is chosen.
   const [selectedClass, setSelectedClass] = useState(_initBuild?.class ?? null);
-  const [selectedPerks, setSelectedPerks] = useState(() => _initBuild?.perks ?? []);
-  const [selectedSkills, setSelectedSkills] = useState(() => _initBuild?.skills ?? []);
-  const [selectedSpells, setSelectedSpells] = useState(() => _initBuild?.spells ?? []);
+  const [selectedPerks, setSelectedPerks] = useState(() => {
+    if (!_initBuild) return [];
+    const cd = CLASSES[_initBuild.class];
+    return _initBuild.perks.filter(id => cd.perks.some(p => p.id === id));
+  });
+  const [selectedSkills, setSelectedSkills] = useState(() => {
+    if (!_initBuild) return [];
+    const cd = CLASSES[_initBuild.class];
+    return _initBuild.skills.filter(id => cd.skills.some(s => s.id === id));
+  });
+  const [selectedSpells, setSelectedSpells] = useState(() => {
+    if (!_initBuild) return [];
+    const cd = CLASSES[_initBuild.class];
+    return _initBuild.spells.filter(id => cd.spells.some(s => s.id === id));
+  });
   // Tracks which example preset is currently loaded so the picker trigger
   // can display its name + subtitle. Cleared on class change / reset.
   const [loadedExampleId, setLoadedExampleId] = useState(null);
