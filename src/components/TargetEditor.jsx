@@ -61,7 +61,7 @@ export function TargetEditor({ target, onChange }) {
                   onChange={(e) => handleFieldChange(field.key, e.target.value)}
                   style={{ ...styles.numInput, width: "100%", fontSize: 14, fontWeight: 600,
                     textAlign: "center", padding: "8px 32px 8px 10px",
-                    color: target[field.key] < 0 ? "var(--sim-accent-blood-wound)" : "var(--sim-text-primary)", background: "var(--sim-surface-void)",
+                    color: target[field.key] < 0 ? "var(--sim-accent-blood-wound)" : "var(--sim-text-primary)", background: "var(--sim-surface-input)",
                     border: `1px solid ${!matchedPreset ? "var(--sim-border-edge)" : "var(--sim-border-hairline)"}` }} />
                 <span style={{ position: "absolute", right: 22, color: "var(--sim-text-whisper)", fontSize: 11, pointerEvents: "none" }}>%</span>
               </div>

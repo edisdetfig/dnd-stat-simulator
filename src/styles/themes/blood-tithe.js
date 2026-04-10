@@ -12,24 +12,28 @@
 import { buildTheme } from '../theme.js';
 
 const base = {
-  // Surfaces — warm near-black dungeon stone, torchlit
+  // Surfaces — warm near-black dungeon stone, torchlit.
+  // Layers: void (deepest stone) → ink (chamber walls) → shadow (gunmetal
+  // plate) → stone (worn leather straps) → iron (plate highlight).
   surface: {
     abyss:    "#0e0c0a",
-    void:     "#141210",   // warm near-black
-    ink:      "#1E1C1A",   // dark warm grey
+    void:     "#141210",   // warm near-black (torchlit dungeon stone)
+    ink:      "#1E1C1A",   // dark warm grey (chamber walls)
     inkRaised: "#232120",
-    shadow:   "#2A2A2E",   // gunmetal steel
-    stone:    "#4A2828",   // burgundy-brown (worn leather)
-    iron:     "#5C5C64",   // mid silver (plate armor highlight)
+    shadow:   "#2A2A2E",   // gunmetal steel (plate armor shadow tone)
+    stone:    "#4A2828",   // burgundy-brown (worn leather between plates)
+    iron:     "#5C5C64",   // mid silver (plate armor catching light)
+    input:    "#4A2828",   // burgundy-brown — input fields feel like leather
   },
 
+  // Borders — steel plate seams with gold at joints and rivets.
   border: {
     whisper:  "#1E1C1A",
-    hairline: "#2A2A2E",   // gunmetal
-    seam:     "#3A3838",   // steel seam
-    edge:     "#5C5C64",   // mid silver
-    info:     "#5C5C64",
-    focus:    "#8B2028",   // dusty blood red
+    hairline: "#2A2A2E",   // gunmetal plate edge
+    seam:     "#4A3C20",   // dark gold at joints (gold rivet line)
+    edge:     "#6A5C40",   // warm gold-tinted silver (active border rivets)
+    info:     "#6A6460",   // warm silver (tooltip border)
+    focus:    "#8B2028",   // dusty blood red (selected state)
   },
 
   text: {
@@ -113,15 +117,15 @@ const base = {
       uncommon: "#56b455",   // keep — rarity canonical
     },
     blood: {
-      wound:   "#D42268",   // hot magenta (danger focal point)
-      peril:   "#D42268",
-      crimson: "#8B2028",
+      wound:   "#D42268",   // hot magenta — ONLY for headshot/crit (the gem)
+      peril:   "#C03048",   // bright blood (danger, not magenta)
+      crimson: "#8B2028",   // dried blood
       bruise:  "#6A2040",
-      scab:    "#4A2828",
+      scab:    "#4A2828",   // burgundy-brown leather
       clotted: "#1A0E14",
-      murmur:  "#8B2028",
+      murmur:  "#8B2028",   // HP cost (dried blood, not magenta)
       whisper: "#6B1820",
-      ember:   "#D42268",
+      ember:   "#A83040",   // test fail — blood, not magenta (save the gem)
     },
     azure: {
       steel:  "#5C5C64",   // steel silver (no blue in this theme)

@@ -63,6 +63,7 @@ const baseTheme = {
     shadow:   "#1a1a28",   // Raised elements, active buttons
     stone:    "#2a2a3e",   // Strong-emphasis raised surface
     iron:     "#3a3a5e",   // Selected/pressed affordance
+    input:    "#0d0d14",   // Input field backgrounds (default = ink)
   },
 
   border: {
@@ -278,7 +279,7 @@ export const TIER_COLORS = {
 
 export const styles = {
   select: {
-    background: "var(--sim-surface-ink)",
+    background: "var(--sim-surface-input)",
     border: "1px solid var(--sim-border-hairline)",
     color: "var(--sim-text-body)",
     padding: "4px 6px",
@@ -289,7 +290,7 @@ export const styles = {
     cursor: "pointer",
   },
   numInput: {
-    background: "var(--sim-surface-ink)",
+    background: "var(--sim-surface-input)",
     border: "1px solid var(--sim-border-hairline)",
     color: "var(--sim-text-primary)",
     padding: "4px 8px",
@@ -300,7 +301,7 @@ export const styles = {
     textAlign: "right",
   },
   textInput: {
-    background: "var(--sim-surface-ink)",
+    background: "var(--sim-surface-input)",
     border: "1px solid var(--sim-border-hairline)",
     color: "var(--sim-text-primary)",
     padding: "4px 8px",

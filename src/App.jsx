@@ -742,7 +742,7 @@ function App() {
                     );
                   })}
                 </div>
-                <div style={{ marginTop: 6, background: "var(--sim-surface-void)", border: `1px solid ${totalMemoryCost > ds.memoryCapacity ? "var(--sim-accent-blood-wound)" : "var(--sim-border-hairline)"}`, borderRadius: 5, padding: "6px 10px" }}>
+                <div style={{ marginTop: 6, background: "var(--sim-surface-input)", border: `1px solid ${totalMemoryCost > ds.memoryCapacity ? "var(--sim-accent-blood-wound)" : "var(--sim-border-hairline)"}`, borderRadius: 5, padding: "6px 10px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                     <span style={{ fontSize: 11, fontWeight: 600, color: totalMemoryCost > ds.memoryCapacity ? "var(--sim-accent-blood-wound)" : "var(--sim-accent-verdant-life)" }}>
                       Memory: {totalMemoryCost} / {ds.memoryCapacity}
