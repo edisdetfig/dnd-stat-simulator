@@ -26,7 +26,7 @@ export function StatRowEditor({ stat, value, onChange, onRemove }) {
           }}
           style={{ ...styles.numInput, paddingRight: meta?.unit === "percent" ? 20 : 8 }} />
         {meta?.unit === "percent" && (
-          <span style={{ position: "absolute", right: 6, color: "#555", fontSize: 10, pointerEvents: "none" }}>%</span>
+          <span style={{ position: "absolute", right: 6, color: "var(--sim-text-whisper)", fontSize: 10, pointerEvents: "none" }}>%</span>
         )}
       </div>
       <button onClick={onRemove} style={styles.removeBtn} title="Remove">×</button>

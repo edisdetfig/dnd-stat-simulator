@@ -14,8 +14,8 @@ import {
   getCurveContext,
   getMarginalSlope,
   DERIVED_CURVE_MAP,
-  TIER_COLORS,
 } from '../../engine/curves.js';
+import { TIER_COLORS } from '../../styles/theme.js';
 import { fmtPct } from '../../utils/format.js';
 
 function CurveChartImpl({ statId, ds, attrs }) {
@@ -119,25 +119,25 @@ function CurveChartImpl({ statId, ds, attrs }) {
   const zeroY = zeroInRange ? toSvgY(0) : null;
 
   return (
-    <div style={{ margin: "6px 0 8px 0", background: "#0a0a12", border: "1px solid #1e1e2e", borderRadius: 6, padding: "8px 4px 4px 4px" }}>
+    <div style={{ margin: "6px 0 8px 0", background: "var(--sim-surface-void)", border: "1px solid var(--sim-border-hairline)", borderRadius: 6, padding: "8px 4px 4px 4px" }}>
       <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: "block" }}>
         {/* Grid */}
         {yLabels.map((t, i) => (
           <g key={`y${i}`}>
-            <line x1={pad.left} y1={t.y} x2={W - pad.right} y2={t.y} stroke="#1a1a28" strokeWidth="0.5" />
-            <text x={pad.left - 4} y={t.y + 3} textAnchor="end" fill="#444" fontSize="8" fontFamily="monospace">{t.label}</text>
+            <line x1={pad.left} y1={t.y} x2={W - pad.right} y2={t.y} stroke="var(--sim-surface-shadow)" strokeWidth="0.5" />
+            <text x={pad.left - 4} y={t.y + 3} textAnchor="end" fill="var(--sim-text-ghost)" fontSize="8" fontFamily="monospace">{t.label}</text>
           </g>
         ))}
         {xLabels.map((t, i) => (
-          <text key={`x${i}`} x={t.x} y={H - 4} textAnchor="middle" fill="#444" fontSize="8" fontFamily="monospace">{t.label}</text>
+          <text key={`x${i}`} x={t.x} y={H - 4} textAnchor="middle" fill="var(--sim-text-ghost)" fontSize="8" fontFamily="monospace">{t.label}</text>
         ))}
 
         {/* Zero line */}
-        {zeroY != null && <line x1={pad.left} y1={zeroY} x2={W - pad.right} y2={zeroY} stroke="#333" strokeWidth="1" strokeDasharray="4,3" />}
+        {zeroY != null && <line x1={pad.left} y1={zeroY} x2={W - pad.right} y2={zeroY} stroke="var(--sim-text-ghost)" strokeWidth="1" strokeDasharray="4,3" />}
 
         {/* Segment boundaries */}
         {boundaries.map((v, i) => (
-          <line key={`b${i}`} x1={toSvgX(v)} y1={pad.top} x2={toSvgX(v)} y2={H - pad.bottom} stroke="#1e1e2e" strokeWidth="1" strokeDasharray="2,2" />
+          <line key={`b${i}`} x1={toSvgX(v)} y1={pad.top} x2={toSvgX(v)} y2={H - pad.bottom} stroke="var(--sim-border-hairline)" strokeWidth="1" strokeDasharray="2,2" />
         ))}
 
         {/* Curve segments */}
@@ -146,21 +146,21 @@ function CurveChartImpl({ statId, ds, attrs }) {
         ))}
 
         {/* Current position marker */}
-        <line x1={curX} y1={pad.top} x2={curX} y2={H - pad.bottom} stroke="#e0e0ec" strokeWidth="1" strokeDasharray="3,3" opacity="0.4" />
-        <circle cx={curX} cy={curY} r="4" fill="#e0e0ec" stroke="#0a0a12" strokeWidth="1.5" />
-        <text x={curX + 6} y={curY - 6} fill="#e0e0ec" fontSize="9" fontFamily="monospace" fontWeight="600">{curLabel}</text>
-        <text x={curX} y={H - pad.bottom + 12} textAnchor="middle" fill="#e0e0ec" fontSize="8" fontFamily="monospace" fontWeight="600">
+        <line x1={curX} y1={pad.top} x2={curX} y2={H - pad.bottom} stroke="var(--sim-text-primary)" strokeWidth="1" strokeDasharray="3,3" opacity="0.4" />
+        <circle cx={curX} cy={curY} r="4" fill="var(--sim-text-primary)" stroke="var(--sim-surface-void)" strokeWidth="1.5" />
+        <text x={curX + 6} y={curY - 6} fill="var(--sim-text-primary)" fontSize="9" fontFamily="monospace" fontWeight="600">{curLabel}</text>
+        <text x={curX} y={H - pad.bottom + 12} textAnchor="middle" fill="var(--sim-text-primary)" fontSize="8" fontFamily="monospace" fontWeight="600">
           {Number.isInteger(inputVal) ? inputVal : inputVal.toFixed(1)}
         </text>
       </svg>
       {/* Formula and per-attribute breakdown */}
-      <div style={{ padding: "6px 10px 4px 10px", borderTop: "1px solid #1a1a28" }}>
+      <div style={{ padding: "6px 10px 4px 10px", borderTop: "1px solid var(--sim-surface-shadow)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: 10, marginBottom: 4 }}>
-          <span style={{ color: "#888" }}>
-            Input = <span style={{ color: "#e0e0ec", fontWeight: 600 }}>{mapping.formula}</span>
-            <span style={{ color: "#555", marginLeft: 6 }}>= {Number.isInteger(inputVal) ? inputVal : inputVal.toFixed(1)}</span>
+          <span style={{ color: "var(--sim-text-muted)" }}>
+            Input = <span style={{ color: "var(--sim-text-primary)", fontWeight: 600 }}>{mapping.formula}</span>
+            <span style={{ color: "var(--sim-text-whisper)", marginLeft: 6 }}>= {Number.isInteger(inputVal) ? inputVal : inputVal.toFixed(1)}</span>
           </span>
-          <span style={{ color: "#444", fontSize: 9 }}>{segments.length} segments</span>
+          <span style={{ color: "var(--sim-text-ghost)", fontSize: 9 }}>{segments.length} segments</span>
         </div>
         {mapping.attrs && mapping.attrs.length > 0 && (() => {
           const slope = getMarginalSlope(curveDef, inputVal);
@@ -176,12 +176,12 @@ function CurveChartImpl({ statId, ds, attrs }) {
                 const color = TIER_COLORS[ctx.tier];
                 return (
                   <span key={attr} style={{ color }}>
-                    <span style={{ color: "#888" }}>+1 {attr} →</span> {perAttr < 0 ? "-" : "+"}{display}
+                    <span style={{ color: "var(--sim-text-muted)" }}>+1 {attr} →</span> {perAttr < 0 ? "-" : "+"}{display}
                   </span>
                 );
               })}
               {mapping.attrs.length > 1 && (
-                <span style={{ color: "#444", fontSize: 9, fontStyle: "italic" }}>
+                <span style={{ color: "var(--sim-text-ghost)", fontSize: 9, fontStyle: "italic" }}>
                   (slope {isPct ? `${(Math.abs(slope)*100).toFixed(1)}%` : slope.toFixed(2)}/{mapping.inputLabel || "pt"}, split by weight)
                 </span>
               )}

@@ -22,10 +22,10 @@ export function StatSection({ title, stats, onChange, color }) {
   return (
     <div style={{ marginBottom: 8 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-        <span style={{ fontSize: 10, color: color || "#666", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>{title}</span>
+        <span style={{ fontSize: 10, color: color || "var(--sim-text-dim)", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>{title}</span>
         <button onClick={addStat} style={styles.addBtn}>+ Add</button>
       </div>
-      {stats.length === 0 && <div style={{ fontSize: 10, color: "#333", fontStyle: "italic", padding: "2px 0" }}>None</div>}
+      {stats.length === 0 && <div style={{ fontSize: 10, color: "var(--sim-text-ghost)", fontStyle: "italic", padding: "2px 0" }}>None</div>}
       {stats.map((s, i) => (
         <StatRowEditor key={i} stat={s.stat} value={s.value} onChange={(u) => updateStat(i, u)} onRemove={() => removeStat(i)} />
       ))}

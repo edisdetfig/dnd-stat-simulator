@@ -6,9 +6,9 @@ import { CLASS_ROSTER } from '../data/classes/index.js';
 import { GAME_VERSION } from '../data/constants.js';
 
 const STATUS_LABELS = {
-  active: { text: "ACTIVE", bg: "#14301a", fg: "#4ade80", border: "#4ade8040" },
-  wip: { text: "WIP", bg: "#302014", fg: "#f59e0b", border: "#f59e0b40" },
-  coming_soon: { text: "LOCKED", bg: "#18182a", fg: "#555", border: "#33334a" },
+  active: { text: "ACTIVE", bg: "var(--sim-state-active-bg)", fg: "var(--sim-state-active-fg)", border: "var(--sim-state-active-border)" },
+  wip: { text: "WIP", bg: "var(--sim-state-wip-bg)", fg: "var(--sim-state-wip-fg)", border: "var(--sim-state-wip-border)" },
+  coming_soon: { text: "LOCKED", bg: "var(--sim-state-locked-bg)", fg: "var(--sim-state-locked-fg)", border: "var(--sim-state-locked-border)" },
 };
 
 export function ClassPicker({ onSelect }) {
@@ -17,13 +17,13 @@ export function ClassPicker({ onSelect }) {
       fontFamily: "'JetBrains Mono', monospace",
       position: "relative",
       minHeight: "100vh",
-      color: "#c8c8d4",
-      background: "#07070c",
+      color: "var(--sim-text-body)",
+      background: "var(--sim-surface-abyss)",
       // Static corner ambient — subtle violet/red hint that stays still while
       // the amber torchlight (below, in the .classpicker-glow layers) breathes.
       backgroundImage:
-        "radial-gradient(ellipse at top left, rgba(168, 85, 247, 0.07) 0%, rgba(10, 10, 15, 0) 45%), " +
-        "radial-gradient(ellipse at bottom right, rgba(239, 68, 68, 0.06) 0%, rgba(10, 10, 15, 0) 45%)",
+        "radial-gradient(ellipse at top left, var(--sim-glow-arcane-corner) 0%, var(--sim-veil-void-edge) 45%), " +
+        "radial-gradient(ellipse at bottom right, var(--sim-glow-blood-corner) 0%, var(--sim-veil-void-edge) 45%)",
       padding: "48px 24px 24px",
       display: "flex",
       flexDirection: "column",
@@ -58,10 +58,10 @@ export function ClassPicker({ onSelect }) {
           width: 100vw; height: 100vh;
           pointer-events: none;
           background: radial-gradient(ellipse at center,
-            rgba(245, 158, 11, 0.16) 0%,
-            rgba(245, 158, 11, 0.07) 18%,
-            rgba(245, 158, 11, 0.03) 35%,
-            rgba(10, 10, 15, 0)     55%);
+            var(--sim-glow-torch-inner) 0%,
+            var(--sim-glow-torch-mid) 18%,
+            var(--sim-glow-torch-outer) 35%,
+            var(--sim-glow-torch-edge) 55%);
           animation: torchBreathe 5.5s ease-in-out infinite;
           will-change: opacity, transform;
         }
@@ -80,9 +80,9 @@ export function ClassPicker({ onSelect }) {
           inset: 0;
           pointer-events: none;
           background: radial-gradient(ellipse at center,
-            rgba(0, 0, 0, 0)    30%,
-            rgba(0, 0, 0, 0.45) 65%,
-            rgba(0, 0, 0, 0.82) 100%);
+            var(--sim-veil-transparent) 30%,
+            var(--sim-veil-dim) 65%,
+            var(--sim-veil-deep) 100%);
         }
 
         /* Parchment / stone grain. SVG fractalNoise baked into a data URL
@@ -114,8 +114,8 @@ export function ClassPicker({ onSelect }) {
            inline style, so the same static CSS rules work for every class. */
         .classpicker-card {
           position: relative;
-          background: linear-gradient(145deg, #101018 0%, #0b0b12 100%);
-          border: 1px solid #1e1e2e;
+          background: linear-gradient(145deg, var(--sim-surface-ink-raised) 0%, var(--sim-surface-void) 100%);
+          border: 1px solid var(--sim-border-hairline);
           border-radius: 6px;
           padding: 18px 14px 14px;
           min-height: 220px;
@@ -123,7 +123,7 @@ export function ClassPicker({ onSelect }) {
           flex-direction: column;
           user-select: none;
           cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+          box-shadow: var(--sim-shadow-card);
           /* Transition ONLY cheap, compositor-friendly properties.
              box-shadow and background are paint-bound, so the hover glow
              lives on a ::before pseudo-element below and animates opacity. */
@@ -185,12 +185,12 @@ export function ClassPicker({ onSelect }) {
           opacity: 0.55;
         }
         .classpicker-card-locked .classpicker-card-accent {
-          background: #3a3a4a;
+          background: var(--sim-surface-iron);
         }
         .classpicker-card-locked:hover,
         .classpicker-card-locked:focus-visible {
           transform: none;
-          border-color: #1e1e2e;
+          border-color: var(--sim-border-hairline);
           will-change: auto;
         }
         .classpicker-card-locked:hover::before,
@@ -199,7 +199,7 @@ export function ClassPicker({ onSelect }) {
         }
         .classpicker-card-locked:hover .classpicker-card-name,
         .classpicker-card-locked:focus-visible .classpicker-card-name {
-          color: #e0e0ec;
+          color: var(--sim-text-primary);
         }
         .classpicker-card-locked:hover .classpicker-card-accent,
         .classpicker-card-locked:focus-visible .classpicker-card-accent {
@@ -208,7 +208,7 @@ export function ClassPicker({ onSelect }) {
         .classpicker-card-locked .classpicker-card-prompt,
         .classpicker-card-locked:hover .classpicker-card-prompt,
         .classpicker-card-locked:focus-visible .classpicker-card-prompt {
-          color: #3a3a4a;
+          color: var(--sim-surface-iron);
         }
         .classpicker-card-locked .classpicker-card-prompt::before,
         .classpicker-card-locked:hover .classpicker-card-prompt::before,
@@ -222,7 +222,7 @@ export function ClassPicker({ onSelect }) {
           font-family: 'Cinzel', serif;
           font-size: 22px;
           font-weight: 700;
-          color: #e0e0ec;
+          color: var(--sim-text-primary);
           letter-spacing: 0.06em;
           margin-bottom: 10px;
           transition: color 0.18s ease;
@@ -241,7 +241,7 @@ export function ClassPicker({ onSelect }) {
         .classpicker-card-locked .classpicker-card-accent { opacity: 0.5; }
         .classpicker-card-prompt {
           font-size: 9px;
-          color: #444;
+          color: var(--sim-text-ghost);
           text-transform: uppercase;
           letter-spacing: 0.15em;
           margin-top: 12px;
@@ -276,7 +276,7 @@ export function ClassPicker({ onSelect }) {
       <div style={{ textAlign: "center", marginBottom: 48, maxWidth: 820 }}>
         <div style={{
           fontSize: 10,
-          color: "#666",
+          color: "var(--sim-text-dim)",
           letterSpacing: "0.3em",
           textTransform: "uppercase",
           marginBottom: 14,
@@ -287,19 +287,19 @@ export function ClassPicker({ onSelect }) {
           fontFamily: "'Cinzel', serif",
           fontSize: 46,
           fontWeight: 700,
-          color: "#f59e0b",
+          color: "var(--sim-accent-flame-hot)",
           letterSpacing: "0.18em",
           margin: 0,
           // Static shadow at the brightest value the old flicker animation
           // reached. Matches the previous peak so the title doesn't read
           // dimmer now that text-shadow is no longer in the keyframes.
-          textShadow: "0 0 28px rgba(245, 158, 11, 0.55), 0 0 56px rgba(245, 158, 11, 0.22)",
+          textShadow: "0 0 28px var(--sim-glow-torch-text-near), 0 0 56px var(--sim-glow-torch-text-far)",
         }}>
           CHOOSE YOUR ADVENTURER
         </h1>
         <div style={{
           fontSize: 11,
-          color: "#5a5a6e",
+          color: "var(--sim-text-dim)",
           marginTop: 12,
           letterSpacing: "0.1em",
         }}>
@@ -377,7 +377,7 @@ export function ClassPicker({ onSelect }) {
               {/* Tagline */}
               <div style={{
                 fontSize: 10,
-                color: "#7a7a8e",
+                color: "var(--sim-text-aside)",
                 lineHeight: 1.5,
                 fontStyle: "italic",
                 flex: 1,
@@ -399,7 +399,7 @@ export function ClassPicker({ onSelect }) {
       <div style={{
         marginTop: 48,
         fontSize: 9,
-        color: "#444",
+        color: "var(--sim-text-ghost)",
         textAlign: "center",
         maxWidth: 600,
         lineHeight: 1.6,

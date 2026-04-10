@@ -16,13 +16,13 @@ export function ArmorEditor({ item, onChange }) {
           const rarity = e.target.value;
           const maxMods = RARITY_CONFIG[rarity]?.modCount || 0;
           onChange({ ...item, rarity, modifiers: (item.modifiers || []).slice(0, maxMods) });
-        }} style={{ ...styles.select, color: RARITY_CONFIG[item.rarity]?.color || "#c8c8d4" }}>
+        }} style={{ ...styles.select, color: RARITY_CONFIG[item.rarity]?.color || "var(--sim-text-body)" }}>
           {RARITY_ORDER.map(r => <option key={r} value={r} style={{ color: RARITY_CONFIG[r].color }}>{RARITY_CONFIG[r].label}</option>)}
         </select>
       </div>
-      <StatSection title="Inherent Stats" stats={item.inherentStats || []} onChange={(s) => updateField("inherentStats", s)} color="#666" />
+      <StatSection title="Inherent Stats" stats={item.inherentStats || []} onChange={(s) => updateField("inherentStats", s)} color="var(--sim-text-dim)" />
       <StatSection title={`Modifiers (${(item.modifiers || []).length}/${RARITY_CONFIG[item.rarity]?.modCount || 0})`}
-        stats={item.modifiers || []} onChange={(s) => updateField("modifiers", s.slice(0, RARITY_CONFIG[item.rarity]?.modCount || 0))} color="#a855f7" />
+        stats={item.modifiers || []} onChange={(s) => updateField("modifiers", s.slice(0, RARITY_CONFIG[item.rarity]?.modCount || 0))} color="var(--sim-accent-arcane-core)" />
     </div>
   );
 }

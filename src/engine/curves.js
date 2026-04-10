@@ -231,9 +231,7 @@ export const DERIVED_CURVE_MAP = {
   },
 };
 
-export const TIER_COLORS = {
-  gold: "#fbbf24",
-  green: "#4ade80",
-  amber: "#f97316",
-  gray: "#555",
-};
+// Back-compat re-export: canonical TIER_COLORS now lives in
+// src/styles/theme.js with CSS var values. This raw-hex version is kept
+// for any non-UI consumer that needs the literal colors.
+export { TIER_COLORS } from '../styles/theme.js';

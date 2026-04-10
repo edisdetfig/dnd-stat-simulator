@@ -13,14 +13,14 @@ export function InfoTip({ text, color }) {
   };
   return (
     <span onMouseEnter={handleEnter} onMouseLeave={() => setShow(false)}
-      style={{ cursor: "help", fontSize: 10, color: color || "#4a4a6e", marginLeft: 4, userSelect: "none" }}>
+      style={{ cursor: "help", fontSize: 10, color: color || "var(--sim-border-info)", marginLeft: 4, userSelect: "none" }}>
       ⓘ
       {show && (
         <span style={{
           position: "fixed", left: pos.x, top: pos.y, zIndex: 999,
-          background: "#1a1a30", border: "1px solid #4a4a6e", borderRadius: 5,
-          padding: "6px 10px", maxWidth: 240, fontSize: 10, color: "#c8c8d4",
-          boxShadow: "0 6px 20px rgba(0,0,0,0.5)", pointerEvents: "none",
+          background: "var(--sim-surface-shadow)", border: "1px solid var(--sim-border-info)", borderRadius: 5,
+          padding: "6px 10px", maxWidth: 240, fontSize: 10, color: "var(--sim-text-body)",
+          boxShadow: "var(--sim-shadow-tooltip-soft)", pointerEvents: "none",
           fontWeight: 400, lineHeight: 1.5, fontStyle: "normal",
           display: "block", whiteSpace: "normal",
         }}>

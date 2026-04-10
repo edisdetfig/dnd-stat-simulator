@@ -16,7 +16,7 @@ export function WeaponEditor({ weapon, onChange }) {
           const rarity = e.target.value;
           const maxMods = RARITY_CONFIG[rarity]?.modCount || 0;
           onChange({ ...weapon, rarity, modifiers: (weapon.modifiers || []).slice(0, maxMods) });
-        }} style={{ ...styles.select, color: RARITY_CONFIG[weapon.rarity]?.color || "#c8c8d4" }}>
+        }} style={{ ...styles.select, color: RARITY_CONFIG[weapon.rarity]?.color || "var(--sim-text-body)" }}>
           {RARITY_ORDER.map(r => <option key={r} value={r} style={{ color: RARITY_CONFIG[r].color }}>{RARITY_CONFIG[r].label}</option>)}
         </select>
       </div>
@@ -33,9 +33,9 @@ export function WeaponEditor({ weapon, onChange }) {
         <label style={styles.fieldLabel}>Magic Wpn Dmg</label>
         <input type="number" value={weapon.magicWeaponDamage || 0} onChange={(e) => updateField("magicWeaponDamage", parseInt(e.target.value) || 0)} style={{ ...styles.numInput, width: 60 }} title="Magic melee damage, scales with MPB (e.g., Crystal Sword). Does NOT affect spells." />
       </div>
-      <StatSection title="Inherent Stats" stats={weapon.inherentStats || []} onChange={(s) => updateField("inherentStats", s)} color="#666" />
+      <StatSection title="Inherent Stats" stats={weapon.inherentStats || []} onChange={(s) => updateField("inherentStats", s)} color="var(--sim-text-dim)" />
       <StatSection title={`Modifiers (${(weapon.modifiers || []).length}/${RARITY_CONFIG[weapon.rarity]?.modCount || 0})`}
-        stats={weapon.modifiers || []} onChange={(s) => updateField("modifiers", s.slice(0, RARITY_CONFIG[weapon.rarity]?.modCount || 0))} color="#a855f7" />
+        stats={weapon.modifiers || []} onChange={(s) => updateField("modifiers", s.slice(0, RARITY_CONFIG[weapon.rarity]?.modCount || 0))} color="var(--sim-accent-arcane-core)" />
     </div>
   );
 }

@@ -33,25 +33,25 @@ export function GearSlot({ slotDef, gear, onGearChange }) {
   };
 
   return (
-    <div style={{ border: `1px solid ${expanded ? "#2a2a3e" : "#1a1a28"}`, borderRadius: 6, marginBottom: 4, background: expanded ? "#0e0e18" : "#0b0b12" }}>
+    <div style={{ border: `1px solid ${expanded ? "var(--sim-border-seam)" : "var(--sim-surface-shadow)"}`, borderRadius: 6, marginBottom: 4, background: expanded ? "var(--sim-surface-ink)" : "var(--sim-surface-void)" }}>
       <div onClick={() => !isEmpty && setExpanded(!expanded)}
-        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", cursor: isEmpty ? "default" : "pointer", borderBottom: expanded ? "1px solid #1a1a28" : "none" }}>
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", cursor: isEmpty ? "default" : "pointer", borderBottom: expanded ? "1px solid var(--sim-surface-shadow)" : "none" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 10, color: "#444", width: 80, flexShrink: 0, textTransform: "uppercase", letterSpacing: "0.08em" }}>{slotDef.label}</span>
-          {!isEmpty ? <span style={{ fontSize: 12, color: RARITY_CONFIG[rarity]?.color || "#c8c8d4" }}>{itemName}</span>
+          <span style={{ fontSize: 10, color: "var(--sim-text-ghost)", width: 80, flexShrink: 0, textTransform: "uppercase", letterSpacing: "0.08em" }}>{slotDef.label}</span>
+          {!isEmpty ? <span style={{ fontSize: 12, color: RARITY_CONFIG[rarity]?.color || "var(--sim-text-body)" }}>{itemName}</span>
             : <button onClick={handleCreate} style={{ ...styles.addBtn, fontSize: 10 }}>+ Equip Item</button>}
         </div>
         {!isEmpty && (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 9, color: "#444" }}>{inherentCount}inh · {modCount}mod</span>
-            <span style={{ fontSize: 10, color: "#444" }}>{expanded ? "▼" : "▶"}</span>
+            <span style={{ fontSize: 9, color: "var(--sim-text-ghost)" }}>{inherentCount}inh · {modCount}mod</span>
+            <span style={{ fontSize: 10, color: "var(--sim-text-ghost)" }}>{expanded ? "▼" : "▶"}</span>
           </div>
         )}
       </div>
       {expanded && !isEmpty && (
         <div style={{ padding: "8px 12px" }}>
           {slotDef.isWeapon ? <WeaponEditor weapon={item} onChange={handleChange} /> : <ArmorEditor item={item} onChange={handleChange} />}
-          <div style={{ borderTop: "1px solid #1a1a28", paddingTop: 6, marginTop: 6 }}>
+          <div style={{ borderTop: "1px solid var(--sim-surface-shadow)", paddingTop: 6, marginTop: 6 }}>
             <button onClick={handleClear} style={{ ...styles.removeBtn, fontSize: 10, padding: "2px 8px", width: "auto" }}>Remove Item</button>
           </div>
         </div>
