@@ -15,7 +15,7 @@ import {
   TIER_COLORS,
 } from '../../engine/curves.js';
 import { fmtSlope } from '../../utils/format.js';
-import { TIER_LABELS } from '../../styles/theme.js';
+import { TIER_LABELS, defaultTheme } from '../../styles/theme.js';
 
 function MarginalBadgeImpl({ statId, ds, attrs, isExpanded, onToggle }) {
   const [show, setShow] = useState(false);
@@ -59,8 +59,8 @@ function MarginalBadgeImpl({ statId, ds, attrs, isExpanded, onToggle }) {
       <span onClick={(e) => { e.stopPropagation(); onToggle && onToggle(statId); }} style={{
         display: "inline-flex", alignItems: "center", gap: 2,
         fontSize: 9, fontWeight: 600, color,
-        background: isExpanded ? `${color}30` : `${color}15`,
-        border: `1px solid ${isExpanded ? color : `${color}30`}`,
+        background: isExpanded ? defaultTheme.tier[ctx.tier].glowActive : defaultTheme.tier[ctx.tier].glow,
+        border: `1px solid ${isExpanded ? color : defaultTheme.tier[ctx.tier].border}`,
         padding: "1px 5px", borderRadius: 8, marginLeft: 6,
         cursor: "pointer", whiteSpace: "nowrap", lineHeight: 1.4,
       }}>
@@ -72,30 +72,30 @@ function MarginalBadgeImpl({ statId, ds, attrs, isExpanded, onToggle }) {
       {show && (
         <div style={{
           position: "fixed", left: Math.min(pos.x, window.innerWidth - 290), top: pos.y, zIndex: 999,
-          background: "#16162a", border: "1px solid #4a4a6e", borderRadius: 6,
-          padding: "10px 14px", width: 270, boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
+          background: "var(--sim-surface-shadow)", border: "1px solid var(--sim-border-info)", borderRadius: 6,
+          padding: "10px 14px", width: 270, boxShadow: "var(--sim-shadow-tooltip)",
           pointerEvents: "none", fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
         }}>
           {/* Header with tier */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, paddingBottom: 4, borderBottom: "1px solid #1e1e2e" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, paddingBottom: 4, borderBottom: "1px solid var(--sim-border-hairline)" }}>
             <span style={{ fontWeight: 700, color }}>
               {ctx.isGoldenZone ? "★ " : ""}{TIER_LABELS[ctx.tier]}
             </span>
-            <span style={{ fontSize: 10, color: "#555" }}>{(ctx.slopeRatio * 100).toFixed(0)}% of peak</span>
+            <span style={{ fontSize: 10, color: "var(--sim-text-whisper)" }}>{(ctx.slopeRatio * 100).toFixed(0)}% of peak</span>
           </div>
 
           {/* Current position */}
           <div style={{ marginBottom: 6 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#888", marginBottom: 3 }}>
-              <span>Input: <span style={{ color: "#e0e0ec" }}>{Number.isInteger(inputVal) ? inputVal : inputVal.toFixed(1)}</span></span>
-              <span style={{ color: "#555" }}>{remaining.toFixed(remaining % 1 === 0 ? 0 : 1)} pts left in zone</span>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--sim-text-muted)", marginBottom: 3 }}>
+              <span>Input: <span style={{ color: "var(--sim-text-primary)" }}>{Number.isInteger(inputVal) ? inputVal : inputVal.toFixed(1)}</span></span>
+              <span style={{ color: "var(--sim-text-whisper)" }}>{remaining.toFixed(remaining % 1 === 0 ? 0 : 1)} pts left in zone</span>
             </div>
             {/* Segment position bar */}
-            <div style={{ height: 6, background: "#1a1a2e", borderRadius: 3, overflow: "hidden", position: "relative" }}>
+            <div style={{ height: 6, background: "var(--sim-surface-shadow)", borderRadius: 3, overflow: "hidden", position: "relative" }}>
               <div style={{ height: "100%", borderRadius: 3, width: `${pctThrough * 100}%`, background: color, opacity: 0.7, transition: "width 0.2s" }} />
-              <div style={{ position: "absolute", top: -1, left: `${pctThrough * 100}%`, width: 2, height: 8, background: "#fff", borderRadius: 1, transform: "translateX(-1px)" }} />
+              <div style={{ position: "absolute", top: -1, left: `${pctThrough * 100}%`, width: 2, height: 8, background: "var(--sim-text-primary)", borderRadius: 1, transform: "translateX(-1px)" }} />
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "#444", marginTop: 2 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "var(--sim-text-ghost)", marginTop: 2 }}>
               <span>{ctx.segmentStart}</span>
               <span>{ctx.segmentEnd}</span>
             </div>
@@ -103,17 +103,17 @@ function MarginalBadgeImpl({ statId, ds, attrs, isExpanded, onToggle }) {
 
           {/* Current slope */}
           <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontSize: 10 }}>
-            <span style={{ color: "#888" }}>Current gain</span>
+            <span style={{ color: "var(--sim-text-muted)" }}>Current gain</span>
             <span style={{ color, fontWeight: 600 }}>{ctx.slope < 0 ? "-" : "+"}{slopeDisplay}{perLabel}</span>
           </div>
 
           {/* Next segment preview */}
           {nextSeg && (
             <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontSize: 10 }}>
-              <span style={{ color: "#888" }}>Next zone <span style={{ color: "#555" }}>({nextSeg.start}–{nextSeg.end})</span></span>
+              <span style={{ color: "var(--sim-text-muted)" }}>Next zone <span style={{ color: "var(--sim-text-whisper)" }}>({nextSeg.start}–{nextSeg.end})</span></span>
               <span style={{
                 color: Math.abs(nextSeg.slope) > ctx.absSlope * 1.05 ? TIER_COLORS.gold :
-                       Math.abs(nextSeg.slope) < ctx.absSlope * 0.8 ? TIER_COLORS.amber : "#888",
+                       Math.abs(nextSeg.slope) < ctx.absSlope * 0.8 ? TIER_COLORS.amber : "var(--sim-text-muted)",
                 fontWeight: 500,
               }}>
                 {Math.abs(nextSeg.slope) > ctx.absSlope * 1.05 ? "↑ " : Math.abs(nextSeg.slope) < ctx.absSlope * 0.8 ? "↓ " : ""}
@@ -125,8 +125,8 @@ function MarginalBadgeImpl({ statId, ds, attrs, isExpanded, onToggle }) {
           {/* Previous segment for context */}
           {prevSeg && (
             <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontSize: 10 }}>
-              <span style={{ color: "#555" }}>Prev zone <span style={{ color: "#444" }}>({prevSeg.start}–{prevSeg.end})</span></span>
-              <span style={{ color: "#555" }}>
+              <span style={{ color: "var(--sim-text-whisper)" }}>Prev zone <span style={{ color: "var(--sim-text-ghost)" }}>({prevSeg.start}–{prevSeg.end})</span></span>
+              <span style={{ color: "var(--sim-text-whisper)" }}>
                 {prevSeg.slope < 0 ? "-" : "+"}{fmtSlope(prevSeg.slope, mapping.unit)}{perLabel}
               </span>
             </div>
@@ -134,13 +134,13 @@ function MarginalBadgeImpl({ statId, ds, attrs, isExpanded, onToggle }) {
 
           {/* Acceleration callout */}
           {ctx.isAccelerating && ctx.distToNextSeg != null && (
-            <div style={{ marginTop: 4, padding: "4px 6px", background: `${TIER_COLORS.gold}15`, border: `1px solid ${TIER_COLORS.gold}30`, borderRadius: 4, fontSize: 10, color: TIER_COLORS.gold }}>
+            <div style={{ marginTop: 4, padding: "4px 6px", background: defaultTheme.tier.peak.glow, border: `1px solid ${defaultTheme.tier.peak.border}`, borderRadius: 4, fontSize: 10, color: TIER_COLORS.gold }}>
               ↑ Slope jumps {(Math.abs(ctx.nextSegmentSlope) / ctx.absSlope).toFixed(1)}× in {Math.round(ctx.distToNextSeg)} pts
             </div>
           )}
 
           {segIdx === segments.length - 1 && (
-            <div style={{ marginTop: 4, fontSize: 9, color: "#555", fontStyle: "italic" }}>Final segment — no further changes</div>
+            <div style={{ marginTop: 4, fontSize: 9, color: "var(--sim-text-whisper)", fontStyle: "italic" }}>Final segment — no further changes</div>
           )}
         </div>
       )}

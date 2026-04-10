@@ -101,14 +101,17 @@ const baseTheme = {
   },
 
   stat: {
-    physical:   "#f59e0b",
-    magical:    "#a78bfa",
+    physical:       "#f59e0b",
+    physicalSoft:   "rgba(245, 158, 11, 0.5)",
+    magical:        "#a78bfa",
+    magicalSoft:    "rgba(167, 139, 250, 0.5)",
     healing:    "#4ade80",
     build:      "#6366f1",
     buildBadge: "rgba(99, 102, 241, 0.145)",
     weapon:     "#60a5fa",
     spellcraft: "#a855f7",
-    headshot:   "#f87171",
+    headshot:       "#f87171",
+    headshotSoft:   "rgba(248, 113, 113, 0.5)",
   },
 
   damageType: {
