@@ -1,6 +1,13 @@
 // CurveChart — expandable inline SVG showing full piecewise curve with current position
 // Source: index.old.html lines 1568-1742
+//
+// Exported as a React.memo wrapper. The three props (statId string, ds object,
+// attrs object) come from App.jsx's `computed` useMemo so their references are
+// stable across re-renders until the underlying gear/perks/buffs change — which
+// is exactly when we *want* the chart to recompute. Shallow comparison is enough;
+// no custom equality fn needed.
 
+import { memo } from 'react';
 import {
   STAT_CURVES,
   evaluateCurve,
@@ -11,7 +18,7 @@ import {
 } from '../../engine/curves.js';
 import { fmtPct } from '../../utils/format.js';
 
-export function CurveChart({ statId, ds, attrs }) {
+function CurveChartImpl({ statId, ds, attrs }) {
   const mapping = DERIVED_CURVE_MAP[statId];
   if (!mapping) return null;
   const curveDef = STAT_CURVES[mapping.curveKey];
@@ -185,3 +192,5 @@ export function CurveChart({ statId, ds, attrs }) {
     </div>
   );
 }
+
+export const CurveChart = memo(CurveChartImpl);

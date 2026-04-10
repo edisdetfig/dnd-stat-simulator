@@ -1,7 +1,13 @@
 // MarginalBadge — colored badge showing slope per input point with hover detail
 // Source: index.old.html lines 1744-1869
+//
+// Exported as a React.memo wrapper. App renders one badge per derived stat
+// (5-7 per class), and without memo each one re-renders on every App state
+// change. Shallow comparison of props is sufficient because ds/attrs come
+// from App's `computed` useMemo (stable refs) and `onToggle` is a stable
+// useCallback at the App level that takes statId as an argument.
 
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import {
   STAT_CURVES,
   getCurveContext,
@@ -11,7 +17,7 @@ import {
 import { fmtSlope } from '../../utils/format.js';
 import { TIER_LABELS } from '../../styles/theme.js';
 
-export function MarginalBadge({ statId, ds, attrs, isExpanded, onToggle }) {
+function MarginalBadgeImpl({ statId, ds, attrs, isExpanded, onToggle }) {
   const [show, setShow] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const mapping = DERIVED_CURVE_MAP[statId];
@@ -46,7 +52,11 @@ export function MarginalBadge({ statId, ds, attrs, isExpanded, onToggle }) {
   return (
     <span style={{ position: "relative", display: "inline-flex" }}
       onMouseEnter={handleEnter} onMouseLeave={() => setShow(false)}>
-      <span onClick={(e) => { e.stopPropagation(); onToggle && onToggle(); }} style={{
+      {/* onToggle is called with the statId so a single stable useCallback
+          at the App level can serve every badge without needing per-badge
+          arrow wrappers (those would defeat React.memo by giving every
+          render a new function identity for this prop). */}
+      <span onClick={(e) => { e.stopPropagation(); onToggle && onToggle(statId); }} style={{
         display: "inline-flex", alignItems: "center", gap: 2,
         fontSize: 9, fontWeight: 600, color,
         background: isExpanded ? `${color}30` : `${color}15`,
@@ -137,3 +147,5 @@ export function MarginalBadge({ statId, ds, attrs, isExpanded, onToggle }) {
     </span>
   );
 }
+
+export const MarginalBadge = memo(MarginalBadgeImpl);

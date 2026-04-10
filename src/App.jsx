@@ -16,11 +16,14 @@ import {
   TARGETING,
   TARGET_PRESETS,
   FALLBACK_MAJOR_STATS,
+  GAME_VERSION,
+  APP_VERSION,
 } from './data/constants.js';
 import { derivedLabel } from './data/stat-meta.js';
-import { CLASSES } from './data/classes/index.js';
+import { CLASSES, EMPTY_CLASS_STUB } from './data/classes/index.js';
 import { RELIGION_BLESSINGS } from './data/religions.js';
-import { makeDefaultGear } from './data/gear-defaults.js';
+import { makeEmptyGear } from './data/gear-defaults.js';
+import { getExampleBuildsForClass } from './data/example-builds.js';
 
 // Engine
 import { TIER_COLORS } from './engine/curves.js';
@@ -48,6 +51,8 @@ import { AttrTooltip } from './components/ui/AttrTooltip.jsx';
 import { SR, CapSR, SubSR } from './components/stats/StatRows.jsx';
 import { CurveChart } from './components/charts/CurveChart.jsx';
 import { MarginalBadge } from './components/charts/MarginalBadge.jsx';
+import { ClassPicker } from './components/ClassPicker.jsx';
+import { ExampleBuildPicker } from './components/ExampleBuildPicker.jsx';
 import { TargetEditor } from './components/TargetEditor.jsx';
 import { GearSlot } from './components/gear/GearSlot.jsx';
 import { ALL_SLOTS } from './components/gear/slots.js';
@@ -60,7 +65,7 @@ function App() {
   const [showTests, setShowTests] = useState(null);
   const [weapon, setWeapon] = useState("none");
   const [showDebug, setShowDebug] = useState(false);
-  const [gear, setGear] = useState(makeDefaultGear);
+  const [gear, setGear] = useState(makeEmptyGear);
   const [gearCollapsed, setGearCollapsed] = useState(false);
   const [activeBuffs, setActiveBuffs] = useState({});
   const [religion, setReligion] = useState("none");
@@ -70,14 +75,19 @@ function App() {
   // v0.5.0 — Target properties (internal decimals)
   const [target, setTarget] = useState({ pdr: -0.22, mdr: 0.075, headshotDR: 0 });
 
-  const [selectedClass, setSelectedClass] = useState("warlock");
-  const [selectedPerks, setSelectedPerks] = useState(["demon_armor", "shadow_touch", "dark_reflection"]);
-  const [selectedSkills, setSelectedSkills] = useState(["spell_memory_1", "blow_of_corruption"]);
-  const [selectedSpells, setSelectedSpells] = useState([
-    "curse_of_weakness", "power_of_sacrifice", "bloodstained_blade", "eldritch_shield", "spell_predation"
-  ]);
+  // selectedClass === null means the picker takeover is shown. All other
+  // build state stays empty until a class is chosen.
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedPerks, setSelectedPerks] = useState([]);
+  const [selectedSkills, setSelectedSkills] = useState([]);
+  const [selectedSpells, setSelectedSpells] = useState([]);
+  // Tracks which example preset is currently loaded so the picker trigger
+  // can display its name + subtitle. Cleared on class change / reset.
+  const [loadedExampleId, setLoadedExampleId] = useState(null);
 
-  const classData = CLASSES[selectedClass];
+  // Stub fallback lets the hooks below run unconditionally before the
+  // ClassPicker early-return.
+  const classData = CLASSES[selectedClass] || EMPTY_CLASS_STUB;
 
   const tests = useMemo(() => runTests(), []);
   const pc = tests.filter(t => t.status === "PASS").length;
@@ -103,13 +113,71 @@ function App() {
       return [...prev, spellId];
     });
   }, [classData, selectedSkills]);
-  const handleClassChange = useCallback((newClassId) => {
-    setSelectedClass(newClassId);
+  // Reset the entire build state to a fresh empty loadout (gear, weapon,
+  // religion, perks, skills, spells, buffs). Called by the class picker and
+  // example-build loader so switching contexts never leaves stale state.
+  const resetBuildState = useCallback(() => {
+    setGear(makeEmptyGear());
+    setWeapon("none");
+    setReligion("none");
     setSelectedPerks([]);
     setSelectedSkills([]);
     setSelectedSpells([]);
     setActiveBuffs({});
+    setLoadedExampleId(null);
   }, []);
+
+  // Does the current build have anything worth warning about before reset?
+  // True if any perks/skills/spells are picked, any buffs active, weapon or
+  // religion changed from default, or any gear slot is populated.
+  const isBuildDirty = useCallback(() => {
+    if (selectedPerks.length > 0) return true;
+    if (selectedSkills.length > 0) return true;
+    if (selectedSpells.length > 0) return true;
+    if (Object.values(activeBuffs).some(Boolean)) return true;
+    if (weapon !== "none") return true;
+    if (religion !== "none") return true;
+    for (const slotDef of ALL_SLOTS) {
+      const slot = gear[slotDef.key];
+      if (slot == null) continue;
+      if (slotDef.isWeapon ? (slot.primary || slot.secondary) : slot.id) return true;
+    }
+    return false;
+  }, [selectedPerks, selectedSkills, selectedSpells, activeBuffs, weapon, religion, gear]);
+
+  // Pick a class from the ClassPicker takeover. Called when selectedClass is
+  // null and the user clicks a class card.
+  const handlePickClass = useCallback((classId) => {
+    resetBuildState();
+    setSelectedClass(classId);
+  }, [resetBuildState]);
+
+  // Return to the ClassPicker takeover. If the user has in-progress work,
+  // confirm before discarding it.
+  const handleChangeClass = useCallback(() => {
+    if (isBuildDirty() && !window.confirm("Switching class will discard your current build. Continue?")) return;
+    resetBuildState();
+    setSelectedClass(null);
+  }, [isBuildDirty, resetBuildState]);
+
+  // Load a pre-made example build from src/data/example-builds.js. Calls the
+  // preset's `build()` factory each time to produce a fresh deep copy.
+  const handleLoadExample = useCallback((exampleId) => {
+    const ex = getExampleBuildsForClass(selectedClass).find((b) => b.id === exampleId);
+    if (!ex) return;
+    if (isBuildDirty() && loadedExampleId !== exampleId &&
+        !window.confirm("Loading an example will discard your current build. Continue?")) return;
+    const built = ex.build();
+    setGear(built.gear);
+    setWeapon(built.weapon);
+    setReligion(built.religion);
+    setSelectedPerks(built.selectedPerks);
+    setSelectedSkills(built.selectedSkills);
+    setSelectedSpells(built.selectedSpells);
+    setActiveBuffs(built.activeBuffs);
+    setLoadedExampleId(exampleId);
+  }, [selectedClass, isBuildDirty, loadedExampleId]);
+
   const handleSkillChange = useCallback((slotIndex, skillId) => {
     setSelectedSkills(prev => {
       const next = [...prev];
@@ -118,6 +186,12 @@ function App() {
       else next.push(skillId);
       return next;
     });
+  }, []);
+
+  // Stable identity (empty deps) so MarginalBadge's React.memo holds across
+  // App re-renders. Each badge passes its own statId on click.
+  const handleCurveToggle = useCallback((id) => {
+    setExpandedCurve(prev => prev === id ? null : id);
   }, []);
 
   const spellMemorySlots = useMemo(() => {
@@ -263,7 +337,7 @@ function App() {
   // Helper: marginal badge for a stat — clickable to toggle curve chart
   const badge = (id) => <MarginalBadge statId={id} ds={ds} attrs={computed.attrs}
     isExpanded={expandedCurve === id}
-    onToggle={() => setExpandedCurve(expandedCurve === id ? null : id)} />;
+    onToggle={handleCurveToggle} />;
 
   // Helper: wrap a stat block with optional curve chart
   const withCurve = (id, content) => (
@@ -279,8 +353,8 @@ function App() {
     const bodyDmg = calcSpellDamage({ baseDamage: effBase, scaling: d.scaling, mpb: ds.mpb, targetMDR: target.mdr, attackerMagicPen: ds.magicPenetration, typeBonuses: typeBonus, affectedByHitLocation: !!d.affectedByHitLocation });
     const headDmg = d.affectedByHitLocation ? calcSpellDamage({ baseDamage: effBase, scaling: d.scaling, mpb: ds.mpb, targetMDR: target.mdr, attackerMagicPen: ds.magicPenetration, typeBonuses: typeBonus, hitLocation: "head", affectedByHitLocation: true, headshotBonus: ds.headshotDamageBonus, targetHeadshotDR: target.headshotDR }) : null;
     return (
-      <div key={`${source}-${di}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "4px 8px", background: "#0d0d14", borderRadius: 4, marginBottom: 2 }}>
-        <span style={{ fontSize: 10, color: "#888" }}>{source} · {d.label} · {d.base}({d.scaling}){magDmg > 0 ? `+${magDmg}wpn` : ""}{typeBonus > 0 ? ` +${Math.round(typeBonus*100)}%` : ""} {(d.damageType || "").replace("_magical", "")}</span>
+      <div key={`${source}-${di}`} style={styles.dmgHealRow}>
+        <span style={styles.dmgHealLabel}>{source} · {d.label} · {d.base}({d.scaling}){magDmg > 0 ? `+${magDmg}wpn` : ""}{typeBonus > 0 ? ` +${Math.round(typeBonus*100)}%` : ""} {(d.damageType || "").replace("_magical", "")}</span>
         <span style={{ fontSize: 11 }}>
           <span style={{ color: "#c8a8ff", fontWeight: 500 }}>{bodyDmg}</span>
           {headDmg != null && <span style={{ color: "#666", marginLeft: 4 }}>/ {headDmg} head</span>}
@@ -311,8 +385,8 @@ function App() {
         healingMod: ds.healingMod,
       });
       allHealLines.push(
-        <div key={`perk-${perkId}-${hi}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "4px 8px", background: "#0d0d14", borderRadius: 4, marginBottom: 2 }}>
-          <span style={{ fontSize: 10, color: "#888" }}>
+        <div key={`perk-${perkId}-${hi}`} style={styles.dmgHealRow}>
+          <span style={styles.dmgHealLabel}>
             {perkDef.name} · {h.label} · {h.baseHeal}({h.scaling})
             {h.scaling > 0 && ds.magicalHealingAdd > 0 ? ` +${ds.magicalHealingAdd}mh` : ""}
             {ds.healingMod > 0 ? ` ×${(1 + ds.healingMod).toFixed(1)}` : ""}
@@ -335,8 +409,8 @@ function App() {
     });
     const ticks = item.isHoT ? Math.floor(item.baseDuration * (1 + ds.buffDuration)) : 0;
     allHealLines.push(
-      <div key={`item-${ii}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "4px 8px", background: "#0d0d14", borderRadius: 4, marginBottom: 2 }}>
-        <span style={{ fontSize: 10, color: "#888" }}>
+      <div key={`item-${ii}`} style={styles.dmgHealRow}>
+        <span style={styles.dmgHealLabel}>
           {item.name} · {item.baseHeal}({item.scaling}) {item.label}
           {ds.magicalHealingAdd > 0 ? ` +${ds.magicalHealingAdd}mh` : ""}
           {item.isHoT ? ` · ${ticks}s` : ""}
@@ -403,9 +477,20 @@ function App() {
     "armorPenetration", "magicPenetration", "headshotDamageBonus", "headshotDamageReduction", "projectileDamageReduction"];
   const minorStatIds = ALL_DERIVED_IDS.filter(id => !majorStatIds.includes(id));
 
+  // Example builds available for the current class (if any) — drives the
+  // "Load Example Build" control in the header.
+  const classExamples = selectedClass ? getExampleBuildsForClass(selectedClass) : [];
+  const loadedExample = loadedExampleId ? classExamples.find((b) => b.id === loadedExampleId) : null;
+
+  // ═══ Early return: show the class picker when no class is selected ═══
+  // All hooks above run unconditionally; this guard only affects rendering.
+  if (!selectedClass) {
+    return <ClassPicker onSelect={handlePickClass} />;
+  }
+
   return (
     <div style={{ fontFamily: "'JetBrains Mono', monospace", background: "#0a0a0f", color: "#c8c8d4", minHeight: "100vh", padding: 20, maxWidth: 1200, margin: "0 auto" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+      <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; } body { background: #0a0a0f; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { opacity: 1; }
         select option:disabled { color: #666; font-weight: 600; background: #0a0a0f; }
@@ -415,7 +500,7 @@ function App() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #1e1e2e", paddingBottom: 16, marginBottom: 16 }}>
         <div>
           <h1 style={{ fontSize: 18, fontWeight: 600, color: "#e0e0ec", letterSpacing: "0.05em", textTransform: "uppercase" }}>D&D Simulator</h1>
-          <div style={{ fontSize: 11, color: "#666", marginTop: 4 }}>Season 8 · Hotfix 112-1 · v0.5.0</div>
+          <div style={{ fontSize: 11, color: "#666", marginTop: 4 }}>{GAME_VERSION.season} · {GAME_VERSION.hotfix} · {APP_VERSION}</div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <div onClick={() => setUseAcronyms(!useAcronyms)} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", background: "#10101c", border: "1px solid #1e1e2e", borderRadius: 20, padding: "4px 12px" }}>
@@ -425,10 +510,26 @@ function App() {
             </div>
             <span style={{ fontSize: 10, color: useAcronyms ? "#6366f1" : "#555", fontWeight: 600, minWidth: 36 }}>{useAcronyms ? "Short" : "Full"}</span>
           </div>
-          <select value={selectedClass} onChange={(e) => handleClassChange(e.target.value)}
-            style={{ ...styles.select, fontSize: 12, minWidth: 120 }}>
-            {Object.values(CLASSES).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          {/* Current class display + Change Class button. Clicking the
+              button returns to the ClassPicker takeover (with dirty confirm). */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#10101c", border: "1px solid #1e1e2e", borderRadius: 4, padding: "4px 10px" }}>
+            <span style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: "0.08em" }}>Class</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#c8b4ff" }}>{classData.name}</span>
+            <button onClick={handleChangeClass}
+              title="Return to the class picker"
+              style={{ background: "none", border: "1px solid #2a2a3e", color: "#666", padding: "2px 8px", borderRadius: 3, cursor: "pointer", fontFamily: "inherit", fontSize: 9, marginLeft: 4 }}>
+              ◀ Change
+            </button>
+          </div>
+
+          {/* Load Example Build — only shown when presets exist for this class. */}
+          {classExamples.length > 0 && (
+            <ExampleBuildPicker
+              examples={classExamples}
+              loaded={loadedExample}
+              onLoad={handleLoadExample}
+            />
+          )}
         </div>
       </div>
 

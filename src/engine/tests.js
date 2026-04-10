@@ -16,7 +16,7 @@ import { aggregateGear } from './aggregator.js';
 import { computeDerivedStats } from './derived-stats.js';
 import { calcPhysicalMeleeDamage, calcSpellDamage } from './damage.js';
 import { CLASSES } from '../data/classes/index.js';
-import { makeDefaultGear } from '../data/gear-defaults.js';
+import { makeWarlockDarkPlateGear } from '../data/example-builds.js';
 
 const WARLOCK = CLASSES.warlock;
 
@@ -27,7 +27,7 @@ export function runTests() {
   const eq = (a, b, t = 0.015) => Math.abs(a - b) <= t;
   let v;
 
-  const TEST_GEAR = makeDefaultGear();
+  const TEST_GEAR = makeWarlockDarkPlateGear();
 
   v = evaluateCurve(STAT_CURVES.physicalPowerBonus, 11); eq(v, -0.08) ? pass("PPB(11)=-8%") : fail("PPB(11)", -0.08, v);
   v = evaluateCurve(STAT_CURVES.physicalPowerBonus, 15); eq(v, 0) ? pass("PPB(15)=0%") : fail("PPB(15)", 0, v);

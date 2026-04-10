@@ -1,5 +1,14 @@
 // Game constants and configuration
 
+// Patch / app version — shown in the main app header and on the class picker
+// landing page. Update these when a new Dark and Darker hotfix drops or the
+// simulator version bumps; both callers read from here so they never drift.
+export const GAME_VERSION = {
+  season: "Season 8",
+  hotfix: "Hotfix 112-1",
+};
+export const APP_VERSION = "v0.5.0";
+
 // Base stat caps - perks can override these via capOverrides
 export const CAPS = {
   pdr: 0.65,

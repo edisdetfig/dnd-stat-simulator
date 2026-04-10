@@ -62,6 +62,19 @@ export const styles = {
     color: "#555",
     whiteSpace: "nowrap",
   },
+  // Row used by damage lines (renderDmgLine) and healing lines (allHealLines)
+  // in App.jsx. Previously inlined 3× inside .map() callbacks — hoisted here
+  // so the object is allocated once at module load, not per-row per-render.
+  dmgHealRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+    padding: "4px 8px",
+    background: "#0d0d14",
+    borderRadius: 4,
+    marginBottom: 2,
+  },
+  dmgHealLabel: { fontSize: 10, color: "#888" },
 };
 
 export const TIER_LABELS = {
