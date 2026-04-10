@@ -39,11 +39,11 @@ const base = {
   text: {
     primary: "#E0D8CC",    // warm parchment
     body:    "#C0B8C0",    // lavender-grey (ashen warlock skin)
-    muted:   "#908888",
-    dim:     "#686064",
-    whisper: "#484244",
-    aside:   "#787074",
-    ghost:   "#383234",
+    muted:   "#9A9294",    // readable secondary labels
+    dim:     "#7A7476",    // metadata, version strings
+    whisper: "#605A5C",    // faint captions (raised for warm bg contrast)
+    aside:   "#8A8486",    // card taglines
+    ghost:   "#504A4C",    // barely visible hints (raised from #383234)
   },
 
   state: {
