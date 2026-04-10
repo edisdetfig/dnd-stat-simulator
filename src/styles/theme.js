@@ -80,7 +80,15 @@ const baseTheme = {
     muted:   "#888",       // Stat labels, secondary info
     dim:     "#666",       // Metadata, version strings
     whisper: "#555",       // Empty-state captions
+    aside:   "#7a7a8e",   // Card taglines, cool-cast secondary prose
     ghost:   "#444",       // Barely-visible hints
+  },
+
+  // State — status pill colors for ClassPicker active/wip/locked states
+  state: {
+    active: { bg: "#14301a", fg: "#4ade80", border: "rgba(74, 222, 128, 0.25)" },
+    wip:    { bg: "#302014", fg: "#f59e0b", border: "rgba(245, 158, 11, 0.25)" },
+    locked: { bg: "#18182a", fg: "#555",    border: "#33334a" },
   },
 
   // Tier — curve efficiency badges. Only .fill is authored; the alpha
