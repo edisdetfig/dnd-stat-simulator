@@ -6,7 +6,7 @@
 //   - Effect phases use EFFECT_PHASES constants (PRE_CURVE_FLAT, POST_CURVE, TYPE_DAMAGE_BONUS).
 //   - PDR/MDR cap references now use CAPS.pdr / CAPS.mdr (was CONSTANTS.PDR_CAP/MDR_CAP).
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 
 // Data
 import {
@@ -44,6 +44,7 @@ import { THEMES } from './styles/themes/index.js';
 
 // Format helpers
 import { fmtPct } from './utils/format.js';
+import { encodeBuild, decodeBuild, resolveTheme } from './utils/build-url.js';
 
 // Components
 import { Panel } from './components/ui/Panel.jsx';
@@ -63,34 +64,63 @@ import { ALL_SLOTS } from './components/gear/slots.js';
 // in ALL_SLOTS minus the weapon slots.
 const ARMOR_SLOT_KEYS = ["head", "chest", "back", "hands", "legs", "feet", "ring1", "ring2", "necklace"];
 
+// Decode URL hash once at module load to seed initial state (avoids flash).
+const _initBuild = decodeBuild(window.location.hash.replace(/^#/, ''));
+const _initTheme = _initBuild ? (resolveTheme(_initBuild.theme) || defaultTheme) : defaultTheme;
+
 function App() {
   const [showTests, setShowTests] = useState(null);
-  const [weapon, setWeapon] = useState("none");
+  const [weapon, setWeapon] = useState(_initBuild?.weapon ?? "none");
   const [showDebug, setShowDebug] = useState(false);
-  const [gear, setGear] = useState(makeEmptyGear);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [gear, setGear] = useState(() => _initBuild?.gear ?? makeEmptyGear());
   const [gearCollapsed, setGearCollapsed] = useState(false);
-  const [activeBuffs, setActiveBuffs] = useState({});
-  const [religion, setReligion] = useState("none");
+  const [activeBuffs, setActiveBuffs] = useState(() => {
+    if (!_initBuild) return {};
+    const buffs = {};
+    for (const id of _initBuild.buffs) buffs[id] = true;
+    return buffs;
+  });
+  const [religion, setReligion] = useState(_initBuild?.religion ?? "none");
   const [useAcronyms, setUseAcronyms] = useState(true);
   const [expandedCurve, setExpandedCurve] = useState(null);
 
   // v0.5.0 — Target properties (internal decimals)
-  const [target, setTarget] = useState({ pdr: -0.22, mdr: 0.075, headshotDR: 0 });
+  const [target, setTarget] = useState(() => _initBuild?.target ?? { pdr: -0.22, mdr: 0.075, headshotDR: 0 });
 
   // selectedClass === null means the picker takeover is shown. All other
   // build state stays empty until a class is chosen.
-  const [selectedClass, setSelectedClass] = useState(null);
-  const [selectedPerks, setSelectedPerks] = useState([]);
-  const [selectedSkills, setSelectedSkills] = useState([]);
-  const [selectedSpells, setSelectedSpells] = useState([]);
+  const [selectedClass, setSelectedClass] = useState(_initBuild?.class ?? null);
+  const [selectedPerks, setSelectedPerks] = useState(() => _initBuild?.perks ?? []);
+  const [selectedSkills, setSelectedSkills] = useState(() => _initBuild?.skills ?? []);
+  const [selectedSpells, setSelectedSpells] = useState(() => _initBuild?.spells ?? []);
   // Tracks which example preset is currently loaded so the picker trigger
   // can display its name + subtitle. Cleared on class change / reset.
   const [loadedExampleId, setLoadedExampleId] = useState(null);
-  const [currentTheme, setCurrentTheme] = useState(defaultTheme);
+  const [currentTheme, setCurrentTheme] = useState(_initTheme);
 
   // Stub fallback lets the hooks below run unconditionally before the
   // ClassPicker early-return.
   const classData = CLASSES[selectedClass] || EMPTY_CLASS_STUB;
+
+  // ── URL sync: debounced replaceState keeps the hash in sync with state ──
+  const urlTimer = useRef(null);
+  useEffect(() => {
+    if (!selectedClass) {
+      // No build loaded — clear the hash
+      if (window.location.hash) history.replaceState(null, '', window.location.pathname);
+      return;
+    }
+    clearTimeout(urlTimer.current);
+    urlTimer.current = setTimeout(() => {
+      const fragment = encodeBuild({
+        selectedClass, weapon, religion, selectedPerks, selectedSkills,
+        selectedSpells, activeBuffs, target, gear, currentTheme,
+      });
+      history.replaceState(null, '', '#' + fragment);
+    }, 400);
+    return () => clearTimeout(urlTimer.current);
+  }, [selectedClass, weapon, religion, selectedPerks, selectedSkills, selectedSpells, activeBuffs, target, gear, currentTheme]);
 
   const tests = useMemo(() => runTests(), []);
   const pc = tests.filter(t => t.status === "PASS").length;
@@ -803,6 +833,11 @@ function App() {
                   alert("Clipboard blocked — snapshot logged to console.");
                 });
               }} style={{ background: "none", border: "1px solid var(--sim-border-hairline)", color: "var(--sim-text-whisper)", padding: "2px 8px", borderRadius: 3, cursor: "pointer", fontFamily: "inherit", fontSize: 9 }}>Copy Debug JSON</button>
+              <button onClick={() => {
+                (navigator.clipboard?.writeText?.(window.location.href) ?? Promise.reject())
+                  .then(() => { setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2000); })
+                  .catch(() => alert("Clipboard blocked — copy the URL from the address bar."));
+              }} style={{ background: "none", border: `1px solid ${linkCopied ? "var(--sim-accent-verdant-pass)" : "var(--sim-border-hairline)"}`, color: linkCopied ? "var(--sim-accent-verdant-pass)" : "var(--sim-text-whisper)", padding: "2px 8px", borderRadius: 3, cursor: "pointer", fontFamily: "inherit", fontSize: 9, transition: "border-color 0.3s, color 0.3s" }}>{linkCopied ? "Copied!" : "Copy Build Link"}</button>
             </div>
             {showTests && (
               <div style={{ background: "var(--sim-surface-ink)", border: "1px solid var(--sim-border-hairline)", borderRadius: 6, padding: 8, maxHeight: 200, overflowY: "auto", fontSize: 10 }}>
