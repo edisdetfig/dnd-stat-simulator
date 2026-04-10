@@ -105,6 +105,7 @@ const baseTheme = {
     magical:    "#a78bfa",
     healing:    "#4ade80",
     build:      "#6366f1",
+    buildBadge: "rgba(99, 102, 241, 0.145)",
     weapon:     "#60a5fa",
     spellcraft: "#a855f7",
     headshot:   "#f87171",

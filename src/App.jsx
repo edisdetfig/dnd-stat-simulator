@@ -356,8 +356,8 @@ function App() {
       <div key={`${source}-${di}`} style={styles.dmgHealRow}>
         <span style={styles.dmgHealLabel}>{source} · {d.label} · {d.base}({d.scaling}){magDmg > 0 ? `+${magDmg}wpn` : ""}{typeBonus > 0 ? ` +${Math.round(typeBonus*100)}%` : ""} {(d.damageType || "").replace("_magical", "")}</span>
         <span style={{ fontSize: 11 }}>
-          <span style={{ color: "#c8a8ff", fontWeight: 500 }}>{bodyDmg}</span>
-          {headDmg != null && <span style={{ color: "#666", marginLeft: 4 }}>/ {headDmg} head</span>}
+          <span style={{ color: "var(--sim-damage-type-magical-value)", fontWeight: 500 }}>{bodyDmg}</span>
+          {headDmg != null && <span style={{ color: "var(--sim-text-dim)", marginLeft: 4 }}>/ {headDmg} head</span>}
         </span>
       </div>
     );
@@ -391,7 +391,7 @@ function App() {
             {h.scaling > 0 && ds.magicalHealingAdd > 0 ? ` +${ds.magicalHealingAdd}mh` : ""}
             {ds.healingMod > 0 ? ` ×${(1 + ds.healingMod).toFixed(1)}` : ""}
           </span>
-          <span style={{ fontSize: 11, color: "#4ade80", fontWeight: 500 }}>
+          <span style={{ fontSize: 11, color: "var(--sim-damage-type-heal-value)", fontWeight: 500 }}>
             +{heal.toFixed(1)} HP
           </span>
         </div>
@@ -416,7 +416,7 @@ function App() {
           {item.isHoT ? ` · ${ticks}s` : ""}
           {ds.healingMod > 0 ? ` ×${(1 + ds.healingMod).toFixed(1)}` : ""}
         </span>
-        <span style={{ fontSize: 11, color: "#4ade80", fontWeight: 500 }}>
+        <span style={{ fontSize: 11, color: "var(--sim-damage-type-heal-value)", fontWeight: 500 }}>
           +{heal.toFixed(1)} HP
         </span>
       </div>
@@ -489,35 +489,35 @@ function App() {
   }
 
   return (
-    <div style={{ fontFamily: "'JetBrains Mono', monospace", background: "#0a0a0f", color: "#c8c8d4", minHeight: "100vh", padding: 20, maxWidth: 1200, margin: "0 auto" }}>
+    <div style={{ fontFamily: "'JetBrains Mono', monospace", background: "var(--sim-surface-void)", color: "var(--sim-text-body)", minHeight: "100vh", padding: 20, maxWidth: 1200, margin: "0 auto" }}>
       <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; } body { background: #0a0a0f; }
+        * { box-sizing: border-box; margin: 0; padding: 0; } body { background: var(--sim-surface-void); }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { opacity: 1; }
-        select option:disabled { color: #666; font-weight: 600; background: #0a0a0f; }
+        select option:disabled { color: var(--sim-text-dim); font-weight: 600; background: var(--sim-surface-void); }
       `}</style>
 
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #1e1e2e", paddingBottom: 16, marginBottom: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--sim-border-hairline)", paddingBottom: 16, marginBottom: 16 }}>
         <div>
-          <h1 style={{ fontSize: 18, fontWeight: 600, color: "#e0e0ec", letterSpacing: "0.05em", textTransform: "uppercase" }}>D&D Simulator</h1>
-          <div style={{ fontSize: 11, color: "#666", marginTop: 4 }}>{GAME_VERSION.season} · {GAME_VERSION.hotfix} · {APP_VERSION}</div>
+          <h1 style={{ fontSize: 18, fontWeight: 600, color: "var(--sim-text-primary)", letterSpacing: "0.05em", textTransform: "uppercase" }}>D&D Simulator</h1>
+          <div style={{ fontSize: 11, color: "var(--sim-text-dim)", marginTop: 4 }}>{GAME_VERSION.season} · {GAME_VERSION.hotfix} · {APP_VERSION}</div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <div onClick={() => setUseAcronyms(!useAcronyms)} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", background: "#10101c", border: "1px solid #1e1e2e", borderRadius: 20, padding: "4px 12px" }}>
-            <span style={{ fontSize: 10, color: "#555" }}>Labels:</span>
-            <div style={{ width: 32, height: 16, borderRadius: 8, background: useAcronyms ? "#6366f1" : "#2a2a3e", position: "relative", transition: "background 0.2s" }}>
-              <div style={{ width: 12, height: 12, borderRadius: 6, background: "#e0e0ec", position: "absolute", top: 2, left: useAcronyms ? 18 : 2, transition: "left 0.2s" }} />
+          <div onClick={() => setUseAcronyms(!useAcronyms)} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", background: "var(--sim-surface-ink-raised)", border: "1px solid var(--sim-border-hairline)", borderRadius: 20, padding: "4px 12px" }}>
+            <span style={{ fontSize: 10, color: "var(--sim-text-whisper)" }}>Labels:</span>
+            <div style={{ width: 32, height: 16, borderRadius: 8, background: useAcronyms ? "var(--sim-border-focus)" : "var(--sim-surface-stone)", position: "relative", transition: "background 0.2s" }}>
+              <div style={{ width: 12, height: 12, borderRadius: 6, background: "var(--sim-text-primary)", position: "absolute", top: 2, left: useAcronyms ? 18 : 2, transition: "left 0.2s" }} />
             </div>
-            <span style={{ fontSize: 10, color: useAcronyms ? "#6366f1" : "#555", fontWeight: 600, minWidth: 36 }}>{useAcronyms ? "Short" : "Full"}</span>
+            <span style={{ fontSize: 10, color: useAcronyms ? "var(--sim-border-focus)" : "var(--sim-text-whisper)", fontWeight: 600, minWidth: 36 }}>{useAcronyms ? "Short" : "Full"}</span>
           </div>
           {/* Current class display + Change Class button. Clicking the
               button returns to the ClassPicker takeover (with dirty confirm). */}
-          <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#10101c", border: "1px solid #1e1e2e", borderRadius: 4, padding: "4px 10px" }}>
-            <span style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: "0.08em" }}>Class</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#c8b4ff" }}>{classData.name}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--sim-surface-ink-raised)", border: "1px solid var(--sim-border-hairline)", borderRadius: 4, padding: "4px 10px" }}>
+            <span style={{ fontSize: 10, color: "var(--sim-text-whisper)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Class</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--sim-accent-arcane-pale)" }}>{classData.name}</span>
             <button onClick={handleChangeClass}
               title="Return to the class picker"
-              style={{ background: "none", border: "1px solid #2a2a3e", color: "#666", padding: "2px 8px", borderRadius: 3, cursor: "pointer", fontFamily: "inherit", fontSize: 9, marginLeft: 4 }}>
+              style={{ background: "none", border: "1px solid var(--sim-border-seam)", color: "var(--sim-text-dim)", padding: "2px 8px", borderRadius: 3, cursor: "pointer", fontFamily: "inherit", fontSize: 9, marginLeft: 4 }}>
               ◀ Change
             </button>
           </div>
@@ -534,8 +534,8 @@ function App() {
       </div>
 
       {/* Legend for marginal badges */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 12, padding: "4px 8px", fontSize: 9, color: "#555", alignItems: "center" }}>
-        <span style={{ color: "#777" }}>Curve efficiency:</span>
+      <div style={{ display: "flex", gap: 12, marginBottom: 12, padding: "4px 8px", fontSize: 9, color: "var(--sim-text-whisper)", alignItems: "center" }}>
+        <span style={{ color: "var(--sim-text-dim)" }}>Curve efficiency:</span>
         <span style={{ display: "flex", alignItems: "center", gap: 3 }}><span style={{ width: 8, height: 8, borderRadius: 4, background: TIER_COLORS.gold, display: "inline-block" }} /> <span style={{ color: TIER_COLORS.gold }}>★ Peak</span></span>
         <span style={{ display: "flex", alignItems: "center", gap: 3 }}><span style={{ width: 8, height: 8, borderRadius: 4, background: TIER_COLORS.green, display: "inline-block" }} /> <span style={{ color: TIER_COLORS.green }}>Good</span></span>
         <span style={{ display: "flex", alignItems: "center", gap: 3 }}><span style={{ width: 8, height: 8, borderRadius: 4, background: TIER_COLORS.amber, display: "inline-block" }} /> <span style={{ color: TIER_COLORS.amber }}>Tapering</span></span>
@@ -549,13 +549,13 @@ function App() {
         {/* ═══ LEFT PANEL: COMBAT ═══ */}
         <div>
 
-          <Panel title="Weapon Held" color="#60a5fa">
+          <Panel title="Weapon Held" color="var(--sim-stat-weapon)">
             <div style={{ display: "flex", gap: 6 }}>
               {[["none", "Bare Hands"], ["weaponSlot1", gear.weaponSlot1?.primary?.name || "Weapon 1"], ["weaponSlot2", gear.weaponSlot2?.primary?.name || "Weapon 2"]].map(([k, l]) => (
                 <button key={k} onClick={() => setWeapon(k)} style={{
-                  flex: 1, background: weapon === k ? "#1a1a2e" : "transparent",
-                  border: `1px solid ${weapon === k ? "#4a4a6e" : "#1e1e2e"}`,
-                  color: weapon === k ? "#e0e0ec" : "#666", padding: "8px 12px", borderRadius: 4,
+                  flex: 1, background: weapon === k ? "var(--sim-surface-shadow)" : "transparent",
+                  border: `1px solid ${weapon === k ? "var(--sim-border-info)" : "var(--sim-border-hairline)"}`,
+                  color: weapon === k ? "var(--sim-text-primary)" : "var(--sim-text-dim)", padding: "8px 12px", borderRadius: 4,
                   cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: weapon === k ? 600 : 400,
                 }}>{l}</button>
               ))}
@@ -563,44 +563,44 @@ function App() {
           </Panel>
 
           {/* v0.5.0 — Target Property Editor */}
-          <Panel title={<span>Target {"\u2014"} <span style={{ color: "#c8b4ff", fontWeight: 500, textTransform: "none", letterSpacing: "normal" }}>{targetLabel}</span></span>} color="#a78bfa">
+          <Panel title={<span>Target {"\u2014"} <span style={{ color: "var(--sim-accent-arcane-pale)", fontWeight: 500, textTransform: "none", letterSpacing: "normal" }}>{targetLabel}</span></span>} color="var(--sim-stat-magical)">
             <TargetEditor target={target} onChange={setTarget} />
           </Panel>
 
           {availableBuffs.length > 0 && (
-            <Panel title="Active Buffs" color="#a78bfa">
+            <Panel title="Active Buffs" color="var(--sim-stat-magical)">
               {availableBuffs.map(buff => {
                 const active = !!activeBuffs[buff.id];
                 return (
-                  <div key={buff.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid #111118" }}>
+                  <div key={buff.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid var(--sim-border-whisper)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <button onClick={() => toggleBuff(buff.id)} style={{
                         width: 36, height: 20, flexShrink: 0, borderRadius: 10, border: "none", cursor: "pointer",
-                        background: active ? "#4a6a4a" : "#2a2a3e", position: "relative", transition: "background 0.2s",
+                        background: active ? "var(--sim-accent-verdant-moss)" : "var(--sim-surface-stone)", position: "relative", transition: "background 0.2s",
                       }}>
-                        <div style={{ width: 14, height: 14, borderRadius: 7, background: active ? "#6bff6b" : "#555",
+                        <div style={{ width: 14, height: 14, borderRadius: 7, background: active ? "var(--sim-accent-verdant-bright)" : "var(--sim-text-whisper)",
                           position: "absolute", top: 3, left: active ? 19 : 3, transition: "left 0.2s, background 0.2s" }} />
                       </button>
                       <div>
-                        <div style={{ fontSize: 11, color: active ? "#e0e0ec" : "#666", fontWeight: active ? 500 : 400 }}>{buff.name}</div>
-                        <div style={{ fontSize: 9, color: "#444" }}>{buff.description}</div>
+                        <div style={{ fontSize: 11, color: active ? "var(--sim-text-primary)" : "var(--sim-text-dim)", fontWeight: active ? 500 : 400 }}>{buff.name}</div>
+                        <div style={{ fontSize: 9, color: "var(--sim-text-ghost)" }}>{buff.description}</div>
                       </div>
                     </div>
-                    <div style={{ textAlign: "right", fontSize: 10, color: "#555" }}>
+                    <div style={{ textAlign: "right", fontSize: 10, color: "var(--sim-text-whisper)" }}>
                       {buff.duration && <span>{buff.duration}</span>}
-                      {buff.healthCost && <span style={{ color: "#a44", marginLeft: 6 }}>-{buff.healthCost} HP</span>}
+                      {buff.healthCost && <span style={{ color: "var(--sim-accent-blood-murmur)", marginLeft: 6 }}>-{buff.healthCost} HP</span>}
                     </div>
                   </div>
                 );
               })}
               {Object.values(activeBuffs).some(v => v) && (() => {
                 const totalHpCost = availableBuffs.filter(b => activeBuffs[b.id] && b.healthCost).reduce((sum, b) => sum + b.healthCost, 0);
-                return totalHpCost > 0 ? <div style={{ fontSize: 10, color: "#a44", marginTop: 4, textAlign: "right" }}>Total buff cast cost: -{totalHpCost} HP</div> : null;
+                return totalHpCost > 0 ? <div style={{ fontSize: 10, color: "var(--sim-accent-blood-murmur)", marginTop: 4, textAlign: "right" }}>Total buff cast cost: -{totalHpCost} HP</div> : null;
               })()}
             </Panel>
           )}
 
-          <Panel title={`Physical Damage — ${computed.activeWeapon ? computed.activeWeapon.name : "Bare Hands"} vs ${targetLabel}`} color="#f59e0b">
+          <Panel title={`Physical Damage — ${computed.activeWeapon ? computed.activeWeapon.name : "Bare Hands"} vs ${targetLabel}`} color="var(--sim-stat-physical)">
             {(() => {
               const UNARMED_BASE = 8;
               const baseWpnDmg = computed.activeWeapon ? computed.activeWeapon.weaponDamage : UNARMED_BASE;
@@ -627,16 +627,16 @@ function App() {
                     const d = calcPhysicalMeleeDamage({ baseWeaponDmg: baseWpnDmg, buffWeaponDmg: buffWpnDmg, gearWeaponDmg: gearWpnDmg, ppb: ds.ppb, comboMultiplier: cm, targetPDR: target.pdr, attackerPen: pen, truePhysicalDmg: truePhysDmg });
                     const dh = calcPhysicalMeleeDamage({ baseWeaponDmg: baseWpnDmg, buffWeaponDmg: buffWpnDmg, gearWeaponDmg: gearWpnDmg, ppb: ds.ppb, comboMultiplier: cm, targetPDR: target.pdr, attackerPen: pen, hitLocation: "head", headshotBonus: hsBonus, targetHeadshotDR: target.headshotDR, truePhysicalDmg: truePhysDmg });
                     return (
-                      <div key={i} style={{ flex: 1, background: "#1a150d", border: "1px solid #3a3020", borderRadius: 4, padding: "6px 8px" }}>
-                        <div style={{ fontSize: 10, color: "#666", textAlign: "center", marginBottom: 4 }}>{combos.length > 1 ? `Hit ${i + 1}` : "Hit"} {cm !== 1.0 && <span style={{ color: "#555" }}>×{cm}</span>}</div>
+                      <div key={i} style={{ flex: 1, background: "var(--sim-damage-type-physical-well-frame)", border: "1px solid var(--sim-damage-type-physical-well-border)", borderRadius: 4, padding: "6px 8px" }}>
+                        <div style={{ fontSize: 10, color: "var(--sim-text-dim)", textAlign: "center", marginBottom: 4 }}>{combos.length > 1 ? `Hit ${i + 1}` : "Hit"} {cm !== 1.0 && <span style={{ color: "var(--sim-text-whisper)" }}>×{cm}</span>}</div>
                         <div style={{ display: "flex", gap: 4 }}>
-                          <div style={{ flex: 1, background: "#1a180a", borderRadius: 3, padding: "4px 0", textAlign: "center" }}>
-                            <div style={{ fontSize: 9, color: "#8a7a3a", textTransform: "uppercase", letterSpacing: "0.05em" }}>Body</div>
-                            <div style={{ fontSize: 18, fontWeight: 700, color: "#f59e0b" }}>{d}</div>
+                          <div style={{ flex: 1, background: "var(--sim-damage-type-physical-body-well)", borderRadius: 3, padding: "4px 0", textAlign: "center" }}>
+                            <div style={{ fontSize: 9, color: "var(--sim-damage-type-physical-body-label)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Body</div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: "var(--sim-damage-type-physical-body)" }}>{d}</div>
                           </div>
-                          <div style={{ flex: 1, background: "#1a0e0e", borderRadius: 3, padding: "4px 0", textAlign: "center" }}>
-                            <div style={{ fontSize: 9, color: "#8a4a4a", textTransform: "uppercase", letterSpacing: "0.05em" }}>Head</div>
-                            <div style={{ fontSize: 18, fontWeight: 700, color: "#f87171" }}>{dh}</div>
+                          <div style={{ flex: 1, background: "var(--sim-damage-type-physical-head-well)", borderRadius: 3, padding: "4px 0", textAlign: "center" }}>
+                            <div style={{ fontSize: 9, color: "var(--sim-damage-type-physical-head-label)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Head</div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: "var(--sim-damage-type-physical-head)" }}>{dh}</div>
                           </div>
                         </div>
                       </div>
@@ -645,37 +645,37 @@ function App() {
                 </div>
               );
             })()}
-            {!computed.activeWeapon && <div style={{ fontSize: 9, color: "#444", marginTop: 4 }}>Unarmed base damage: 8 (verified)</div>}
+            {!computed.activeWeapon && <div style={{ fontSize: 9, color: "var(--sim-text-ghost)", marginTop: 4 }}>Unarmed base damage: 8 (verified)</div>}
             {target.pdr < 0 && ds.armorPenetration > 0 && (
-              <div style={{ fontSize: 9, color: "#a86b32", marginTop: 4 }}>
+              <div style={{ fontSize: 9, color: "var(--sim-accent-flame-rust)", marginTop: 4 }}>
                 {"\u26a0"} Target has negative PDR {"\u2014"} your {fmtPct(ds.armorPenetration)} armor pen has no effect
               </div>
             )}
           </Panel>
 
           {allDmgLines.length > 0 && (
-            <Panel title={`Spell & Skill Damage vs ${targetLabel}`} color="#f59e0b">
-              <div style={{ fontSize: 9, color: "#444", marginBottom: 6 }}>MDR {fmtPct(target.mdr)}{magDmg > 0 ? ` · +${magDmg} Magical Damage from ${computed.activeWeapon?.name || "weapon"}` : ""}
-                <InfoTip text={"Dmg = Base × (1 + MPB × Scaling + TypeBonus) × HitLoc × DR. The (1.0) is Scaling — at 1.0 you get full MPB benefit, at 0.5 only half. Type bonuses (e.g., Dark Enhancement) only apply to matching damage types."} color="#6a6a4e" />
+            <Panel title={`Spell & Skill Damage vs ${targetLabel}`} color="var(--sim-stat-physical)">
+              <div style={{ fontSize: 9, color: "var(--sim-text-ghost)", marginBottom: 6 }}>MDR {fmtPct(target.mdr)}{magDmg > 0 ? ` · +${magDmg} Magical Damage from ${computed.activeWeapon?.name || "weapon"}` : ""}
+                <InfoTip text={"Dmg = Base × (1 + MPB × Scaling + TypeBonus) × HitLoc × DR. The (1.0) is Scaling — at 1.0 you get full MPB benefit, at 0.5 only half. Type bonuses (e.g., Dark Enhancement) only apply to matching damage types."} color="var(--sim-accent-flame-dim)" />
               </div>
               {allDmgLines}
             </Panel>
           )}
 
           {allHealLines.length > 0 && (
-            <Panel title="Healing" color="#4ade80">
-              <div style={{ fontSize: 9, color: "#444", marginBottom: 6 }}>
+            <Panel title="Healing" color="var(--sim-stat-healing)">
+              <div style={{ fontSize: 9, color: "var(--sim-text-ghost)", marginBottom: 6 }}>
                 Mag Heal: {ds.magicalHealingAdd || 0}
                 {ds.healingMod > 0 ? ` · Healing Mod: +${Math.round(ds.healingMod * 100)}%` : ""}
                 {ds.mpb > 0 ? ` · MPB: ${fmtPct(ds.mpb)}` : ""}
-                <InfoTip text={"Heal = (Base + MagHeal × Scaling) × (1 + MPB × Scaling) × (1 + HealMod). The (0.5) after an ability is its Scaling — controls how much your stats contribute. MPB boosts magical healing (potions, spells), not just damage."} color="#4a6a4e" />
+                <InfoTip text={"Heal = (Base + MagHeal × Scaling) × (1 + MPB × Scaling) × (1 + HealMod). The (0.5) after an ability is its Scaling — controls how much your stats contribute. MPB boosts magical healing (potions, spells), not just damage."} color="var(--sim-accent-verdant-moss)" />
               </div>
               {allHealLines}
             </Panel>
           )}
 
-          <Panel title={`Build — ${classData.name}`} color="#6366f1">
-            <Collapsible title="Perks" color="#6366f1" badge={`${selectedPerks.length}/${classData.maxPerks}`} defaultOpen>
+          <Panel title={`Build — ${classData.name}`} color="var(--sim-stat-build)">
+            <Collapsible title="Perks" color="var(--sim-stat-build)" badgeBg="var(--sim-stat-build-badge)" badge={`${selectedPerks.length}/${classData.maxPerks}`} defaultOpen>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2px 12px", padding: "4px 0" }}>
                 {(classData.perks || []).map(perk => {
                   const active = selectedPerks.includes(perk.id);
@@ -683,12 +683,12 @@ function App() {
                   return (
                     <div key={perk.id} onClick={() => !atMax && togglePerk(perk.id)}
                       style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 6px", borderRadius: 4, cursor: atMax ? "not-allowed" : "pointer",
-                        background: active ? "#141428" : "transparent", border: `1px solid ${active ? "#3a3a5e" : "transparent"}`, opacity: atMax ? 0.4 : 1 }}>
-                      <div style={{ width: 14, height: 14, borderRadius: 3, border: `1px solid ${active ? "#6b8aff" : "#333"}`,
-                        background: active ? "#6b8aff" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff", fontWeight: 700 }}>{active ? "✓" : ""}</div>
+                        background: active ? "var(--sim-surface-ink-raised)" : "transparent", border: `1px solid ${active ? "var(--sim-border-edge)" : "transparent"}`, opacity: atMax ? 0.4 : 1 }}>
+                      <div style={{ width: 14, height: 14, borderRadius: 3, border: `1px solid ${active ? "var(--sim-accent-azure-pulse)" : "var(--sim-text-ghost)"}`,
+                        background: active ? "var(--sim-accent-azure-pulse)" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--sim-text-primary)", fontWeight: 700 }}>{active ? "✓" : ""}</div>
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 11, color: active ? "#e0e0ec" : "#888", fontWeight: active ? 500 : 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{perk.name}</div>
-                        <div style={{ fontSize: 9, color: "#444", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{perk.desc}</div>
+                        <div style={{ fontSize: 11, color: active ? "var(--sim-text-primary)" : "var(--sim-text-muted)", fontWeight: active ? 500 : 400, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{perk.name}</div>
+                        <div style={{ fontSize: 9, color: "var(--sim-text-ghost)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{perk.desc}</div>
                       </div>
                     </div>
                   );
@@ -697,7 +697,7 @@ function App() {
             </Collapsible>
 
             {(classData.skills || []).length > 0 && (
-              <Collapsible title="Skills" color="#6366f1" badge={`${selectedSkills.length} slots`} defaultOpen>
+              <Collapsible title="Skills" color="var(--sim-stat-build)" badgeBg="var(--sim-stat-build-badge)" badge={`${selectedSkills.length} slots`} defaultOpen>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "4px 0" }}>
                   {[0, 1].map(slot => (
                     <select key={slot} value={selectedSkills[slot] || ""} onChange={(e) => handleSkillChange(slot, e.target.value)}
@@ -712,7 +712,7 @@ function App() {
             )}
 
             {(classData.spells || []).length > 0 && spellMemorySlots > 0 && (
-              <Collapsible title="Spells" color="#6366f1"
+              <Collapsible title="Spells" color="var(--sim-stat-build)" badgeBg="var(--sim-stat-build-badge)"
                 badge={`${totalMemoryCost}/${ds.memoryCapacity} memory${totalMemoryCost > ds.memoryCapacity ? " ⚠" : ""}`} defaultOpen>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2px 12px", padding: "4px 0" }}>
                   {(classData.spells || []).map(spell => {
@@ -721,48 +721,48 @@ function App() {
                     return (
                       <div key={spell.id} onClick={() => !atSlotMax && toggleSpell(spell.id)}
                         style={{ padding: "4px 6px", borderRadius: 4, cursor: atSlotMax ? "not-allowed" : "pointer",
-                          background: equipped ? "#141428" : "transparent", border: `1px solid ${equipped ? "#3a3a5e" : "transparent"}`, opacity: atSlotMax ? 0.4 : 1 }}>
+                          background: equipped ? "var(--sim-surface-ink-raised)" : "transparent", border: `1px solid ${equipped ? "var(--sim-border-edge)" : "transparent"}`, opacity: atSlotMax ? 0.4 : 1 }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <div style={{ width: 14, height: 14, borderRadius: 3, border: `1px solid ${equipped ? "#a855f7" : "#333"}`,
-                              background: equipped ? "#a855f7" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff", fontWeight: 700 }}>{equipped ? "✓" : ""}</div>
-                            <span style={{ fontSize: 11, color: equipped ? "#e0e0ec" : "#888" }}>{spell.name}</span>
+                            <div style={{ width: 14, height: 14, borderRadius: 3, border: `1px solid ${equipped ? "var(--sim-accent-arcane-core)" : "var(--sim-text-ghost)"}`,
+                              background: equipped ? "var(--sim-accent-arcane-core)" : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--sim-text-primary)", fontWeight: 700 }}>{equipped ? "✓" : ""}</div>
+                            <span style={{ fontSize: 11, color: equipped ? "var(--sim-text-primary)" : "var(--sim-text-muted)" }}>{spell.name}</span>
                           </div>
-                          <div style={{ fontSize: 9, color: "#555", display: "flex", gap: 6 }}>
+                          <div style={{ fontSize: 9, color: "var(--sim-text-whisper)", display: "flex", gap: 6 }}>
                             <span>T{spell.tier}</span><span>M{spell.memoryCost}</span>
-                            {classData.spellCostType === "health" && <span style={{ color: "#a44" }}>-{spell.healthCost}HP</span>}
+                            {classData.spellCostType === "health" && <span style={{ color: "var(--sim-accent-blood-murmur)" }}>-{spell.healthCost}HP</span>}
                           </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-                <div style={{ marginTop: 6, background: "#0b0b12", border: `1px solid ${totalMemoryCost > ds.memoryCapacity ? "#f87171" : "#1e1e2e"}`, borderRadius: 5, padding: "6px 10px" }}>
+                <div style={{ marginTop: 6, background: "var(--sim-surface-void)", border: `1px solid ${totalMemoryCost > ds.memoryCapacity ? "var(--sim-accent-blood-wound)" : "var(--sim-border-hairline)"}`, borderRadius: 5, padding: "6px 10px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: totalMemoryCost > ds.memoryCapacity ? "#f87171" : "#4ade80" }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: totalMemoryCost > ds.memoryCapacity ? "var(--sim-accent-blood-wound)" : "var(--sim-accent-verdant-life)" }}>
                       Memory: {totalMemoryCost} / {ds.memoryCapacity}
                     </span>
-                    {totalMemoryCost > ds.memoryCapacity && <span style={{ fontSize: 10, color: "#f87171", fontWeight: 600 }}>⚠ Over by {totalMemoryCost - ds.memoryCapacity}</span>}
-                    {totalMemoryCost <= ds.memoryCapacity && <span style={{ fontSize: 10, color: totalMemoryCost === ds.memoryCapacity ? "#f59e0b" : "#4ade80" }}>{ds.memoryCapacity - totalMemoryCost} remaining</span>}
+                    {totalMemoryCost > ds.memoryCapacity && <span style={{ fontSize: 10, color: "var(--sim-accent-blood-wound)", fontWeight: 600 }}>⚠ Over by {totalMemoryCost - ds.memoryCapacity}</span>}
+                    {totalMemoryCost <= ds.memoryCapacity && <span style={{ fontSize: 10, color: totalMemoryCost === ds.memoryCapacity ? "var(--sim-accent-flame-hot)" : "var(--sim-accent-verdant-life)" }}>{ds.memoryCapacity - totalMemoryCost} remaining</span>}
                   </div>
-                  <div style={{ height: 5, background: "#1a1a2e", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ height: 5, background: "var(--sim-surface-shadow)", borderRadius: 3, overflow: "hidden" }}>
                     <div style={{ height: "100%", borderRadius: 3, width: `${Math.min(100, (totalMemoryCost / ds.memoryCapacity) * 100)}%`,
-                      background: totalMemoryCost > ds.memoryCapacity ? "#f87171" : totalMemoryCost === ds.memoryCapacity ? "#f59e0b" : "#4ade80", transition: "width 0.2s" }} />
+                      background: totalMemoryCost > ds.memoryCapacity ? "var(--sim-accent-blood-wound)" : totalMemoryCost === ds.memoryCapacity ? "var(--sim-accent-flame-hot)" : "var(--sim-accent-verdant-life)", transition: "width 0.2s" }} />
                   </div>
                 </div>
               </Collapsible>
             )}
 
-            <Collapsible title="Religion" color="#6366f1" badge={religion !== "none" ? RELIGION_BLESSINGS.find(b => b.id === religion)?.name.replace("Blessing of ", "") : "None"}>
+            <Collapsible title="Religion" color="var(--sim-stat-build)" badgeBg="var(--sim-stat-build-badge)" badge={religion !== "none" ? RELIGION_BLESSINGS.find(b => b.id === religion)?.name.replace("Blessing of ", "") : "None"}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "4px 0" }}>
                 <select value={religion} onChange={(e) => setReligion(e.target.value)} style={{ ...styles.select, minWidth: 200, fontSize: 11 }}>
                   {RELIGION_BLESSINGS.map(b => <option key={b.id} value={b.id}>{b.name}{b.description ? ` — ${b.description}` : ""}</option>)}
                 </select>
                 {religion !== "none" && (() => {
                   const b = RELIGION_BLESSINGS.find(x => x.id === religion);
-                  return b ? <div style={{ fontSize: 10, color: "#888" }}>
+                  return b ? <div style={{ fontSize: 10, color: "var(--sim-text-muted)" }}>
                     {b.description}
-                    {b.verification === "NOT_TESTED" && <span style={{ color: "#a86b32", fontSize: 9, marginLeft: 6 }}>UNVERIFIED</span>}
+                    {b.verification === "NOT_TESTED" && <span style={{ color: "var(--sim-accent-flame-rust)", fontSize: 9, marginLeft: 6 }}>UNVERIFIED</span>}
                   </div> : null;
                 })()}
               </div>
@@ -771,9 +771,9 @@ function App() {
 
           <div style={{ marginTop: 8 }}>
             <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
-              <span style={{ fontSize: 10, color: fc > 0 ? "#f66" : "#4a8", fontWeight: 600 }}>{fc > 0 ? "⚠" : "✓"} {pc}/{tests.length} tests</span>
-              <button onClick={() => setShowTests(showTests ? null : tests)} style={{ background: "none", border: "1px solid #1e1e2e", color: "#555", padding: "2px 8px", borderRadius: 3, cursor: "pointer", fontFamily: "inherit", fontSize: 9 }}>{showTests ? "Hide" : "Show"}</button>
-              <button onClick={() => setShowDebug(!showDebug)} style={{ background: "none", border: "1px solid #1e1e2e", color: "#555", padding: "2px 8px", borderRadius: 3, cursor: "pointer", fontFamily: "inherit", fontSize: 9 }}>{showDebug ? "Hide" : "Show"} Debug</button>
+              <span style={{ fontSize: 10, color: fc > 0 ? "var(--sim-accent-blood-ember)" : "var(--sim-accent-verdant-pass)", fontWeight: 600 }}>{fc > 0 ? "⚠" : "✓"} {pc}/{tests.length} tests</span>
+              <button onClick={() => setShowTests(showTests ? null : tests)} style={{ background: "none", border: "1px solid var(--sim-border-hairline)", color: "var(--sim-text-whisper)", padding: "2px 8px", borderRadius: 3, cursor: "pointer", fontFamily: "inherit", fontSize: 9 }}>{showTests ? "Hide" : "Show"}</button>
+              <button onClick={() => setShowDebug(!showDebug)} style={{ background: "none", border: "1px solid var(--sim-border-hairline)", color: "var(--sim-text-whisper)", padding: "2px 8px", borderRadius: 3, cursor: "pointer", fontFamily: "inherit", fontSize: 9 }}>{showDebug ? "Hide" : "Show"} Debug</button>
               <button onClick={() => {
                 const snapshot = {
                   class: selectedClass,
@@ -797,60 +797,60 @@ function App() {
                   console.log("[debug snapshot]\n" + json);
                   alert("Clipboard blocked — snapshot logged to console.");
                 });
-              }} style={{ background: "none", border: "1px solid #1e1e2e", color: "#555", padding: "2px 8px", borderRadius: 3, cursor: "pointer", fontFamily: "inherit", fontSize: 9 }}>Copy Debug JSON</button>
+              }} style={{ background: "none", border: "1px solid var(--sim-border-hairline)", color: "var(--sim-text-whisper)", padding: "2px 8px", borderRadius: 3, cursor: "pointer", fontFamily: "inherit", fontSize: 9 }}>Copy Debug JSON</button>
             </div>
             {showTests && (
-              <div style={{ background: "#0d0d14", border: "1px solid #1e1e2e", borderRadius: 6, padding: 8, maxHeight: 200, overflowY: "auto", fontSize: 10 }}>
-                {showTests.map((t, i) => <div key={i} style={{ padding: "2px 0", color: t.status === "PASS" ? "#4a8" : "#f66" }}>{t.status === "PASS" ? "✓" : "✗"} {t.name}{t.status === "FAIL" && <span style={{ color: "#a66" }}> — exp {t.expected}, got {t.got}</span>}</div>)}
+              <div style={{ background: "var(--sim-surface-ink)", border: "1px solid var(--sim-border-hairline)", borderRadius: 6, padding: 8, maxHeight: 200, overflowY: "auto", fontSize: 10 }}>
+                {showTests.map((t, i) => <div key={i} style={{ padding: "2px 0", color: t.status === "PASS" ? "var(--sim-accent-verdant-pass)" : "var(--sim-accent-blood-ember)" }}>{t.status === "PASS" ? "✓" : "✗"} {t.name}{t.status === "FAIL" && <span style={{ color: "var(--sim-accent-blood-whisper)" }}> — exp {t.expected}, got {t.got}</span>}</div>)}
               </div>
             )}
-            {showDebug && <pre style={{ marginTop: 8, background: "#0d0d14", border: "1px solid #1e1e2e", borderRadius: 6, padding: 8, fontSize: 9, overflow: "auto", maxHeight: 300, color: "#888" }}>{JSON.stringify({ attrs: computed.attrs, bonuses: computed.bonuses, derived: ds, target }, null, 2)}</pre>}
+            {showDebug && <pre style={{ marginTop: 8, background: "var(--sim-surface-ink)", border: "1px solid var(--sim-border-hairline)", borderRadius: 6, padding: 8, fontSize: 9, overflow: "auto", maxHeight: 300, color: "var(--sim-text-muted)" }}>{JSON.stringify({ attrs: computed.attrs, bonuses: computed.bonuses, derived: ds, target }, null, 2)}</pre>}
           </div>
         </div>
 
         {/* ═══ RIGHT PANEL: STATS + EQUIPMENT ═══ */}
         <div>
 
-          <Panel title="Attributes" color="#4ade80">
-            <div style={{ fontSize: 9, color: "#444", marginBottom: 6 }}>Hover for source breakdown</div>
+          <Panel title="Attributes" color="var(--sim-stat-healing)">
+            <div style={{ fontSize: 9, color: "var(--sim-text-ghost)", marginBottom: 6 }}>Hover for source breakdown</div>
             <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
               {["str", "vig", "agi", "dex", "wil", "kno", "res"].map(a => (
                 <AttrTooltip key={a} breakdown={attrBreakdown} attrKey={a} className={classData.name}>
-                  <div style={{ padding: "4px 10px", background: "#0a1a10", border: "1px solid #1a3a1a", borderRadius: 4, fontSize: 12, color: "#4ade80", cursor: "default", display: "flex", gap: 4, alignItems: "baseline" }}>
-                    <span style={{ fontWeight: 700, fontSize: 11, color: "#555" }}>{a.toUpperCase()}</span>
+                  <div style={{ padding: "4px 10px", background: "var(--sim-accent-verdant-forest)", border: "1px solid var(--sim-accent-verdant-loam)", borderRadius: 4, fontSize: 12, color: "var(--sim-accent-verdant-life)", cursor: "default", display: "flex", gap: 4, alignItems: "baseline" }}>
+                    <span style={{ fontWeight: 700, fontSize: 11, color: "var(--sim-text-whisper)" }}>{a.toUpperCase()}</span>
                     <span style={{ fontWeight: 700 }}>{computed.attrs[a]}</span>
-                    <span style={{ fontSize: 9, color: "#333" }}>({classData.baseStats[a]})</span>
+                    <span style={{ fontSize: 9, color: "var(--sim-text-ghost)" }}>({classData.baseStats[a]})</span>
                   </div>
                 </AttrTooltip>
               ))}
             </div>
           </Panel>
 
-          <Panel title={`${classData.name} — Key Stats`} color="#4ade80">
+          <Panel title={`${classData.name} — Key Stats`} color="var(--sim-stat-healing)">
             {majorStatIds.map(id => renderDerivedStat(id))}
           </Panel>
 
           <Panel>
-            <Collapsible title="Other Stats" color="#555" badge={`${minorStatIds.length} stats`}>
+            <Collapsible title="Other Stats" color="var(--sim-text-whisper)" badge={`${minorStatIds.length} stats`}>
               {minorStatIds.map(id => renderDerivedStat(id))}
             </Collapsible>
           </Panel>
 
           <Panel title={
             <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#555", textTransform: "uppercase", letterSpacing: "0.15em" }}>Equipment</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "var(--sim-text-whisper)", textTransform: "uppercase", letterSpacing: "0.15em" }}>Equipment</span>
               <button onClick={() => setGearCollapsed(!gearCollapsed)} style={{ ...styles.addBtn }}>{gearCollapsed ? "Expand" : "Collapse"}</button>
             </span>
           }>
             {!gearCollapsed && ALL_SLOTS.map(s => <GearSlot key={s.key} slotDef={s} gear={gear} onGearChange={handleGearChange} />)}
-            {gearCollapsed && <div style={{ fontSize: 10, color: "#444", padding: "4px 0" }}>
+            {gearCollapsed && <div style={{ fontSize: 10, color: "var(--sim-text-ghost)", padding: "4px 0" }}>
               {ALL_SLOTS.map(s => { const item = s.isWeapon ? gear[s.key]?.primary : gear[s.key]; return item ? item.name : null; }).filter(Boolean).join(" · ")}
             </div>}
           </Panel>
         </div>
       </div>
 
-      <div style={{ marginTop: 20, padding: "12px 0", borderTop: "1px solid #1e1e2e", fontSize: 10, color: "#444" }}>v0.5.0 · {tests.length} tests · Target property editor</div>
+      <div style={{ marginTop: 20, padding: "12px 0", borderTop: "1px solid var(--sim-border-hairline)", fontSize: 10, color: "var(--sim-text-ghost)" }}>v0.5.0 · {tests.length} tests · Target property editor</div>
     </div>
   );
 }
