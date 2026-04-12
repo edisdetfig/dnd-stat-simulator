@@ -7,7 +7,7 @@ import WARLOCK from '../../data/classes/warlock.js';
 import { RELIGION_BLESSINGS } from '../../data/religions.js';
 import { makeEmptyGear } from '../../data/gear-defaults.js';
 import { buildEngineContext } from '../context.js';
-import { runEffectPipeline } from '../effect-pipeline.js';
+import { runEffectPipeline, runTargetPipeline } from '../effect-pipeline.js';
 import { computeDerivedStats } from '../recipes.js';
 
 function computeFor(stateOverrides = {}) {
@@ -21,6 +21,17 @@ function computeFor(stateOverrides = {}) {
   const result = runEffectPipeline(ctx);
   const ds = computeDerivedStats(result.finalAttrs, result.finalBonuses, result.capOverrides);
   return { ctx, result, ds };
+}
+
+function selfAndTarget(stateOverrides = {}) {
+  const state = {
+    classData: WARLOCK,
+    gear: makeEmptyGear(),
+    weaponHeldState: "none",
+    ...stateOverrides,
+  };
+  const ctx = buildEngineContext(state);
+  return { self: runEffectPipeline(ctx), enemy: runTargetPipeline(ctx) };
 }
 
 describe('Warlock — naked baseline', () => {
@@ -282,5 +293,108 @@ describe('Blood Tithe full build — end-to-end', () => {
   it('Noxulon religion contributes +20% RIS', async () => {
     const { result } = await loadBloodTithe();
     expect(result.finalBonuses.regularInteractionSpeed).toBeCloseTo(0.20, 6);
+  });
+});
+
+// ── Target routing regressions ──
+//
+// Pre-fix, every active ability dumped its effects into the self
+// pipeline regardless of target. Curse of Weakness active meant the
+// CASTER took the -25% all_attributes / -15% DR debuffs. These tests
+// pin correct self/enemy split.
+
+describe('Curse of Weakness — enemy-target routing', () => {
+  it('toggled active: caster finalAttrs unchanged from baseline', () => {
+    const { self } = selfAndTarget({
+      selectedSpells: ["curse_of_weakness"],
+      activeBuffs: { curse_of_weakness: true },
+    });
+    expect(self.finalAttrs).toEqual({
+      str: 11, vig: 14, agi: 14, dex: 15, wil: 22, kno: 15, res: 14,
+    });
+    // Self PDR/MDR untouched by the debuffs.
+    expect(self.finalBonuses.physicalDamageReduction ?? 0).toBe(0);
+    expect(self.finalBonuses.magicalDamageReduction ?? 0).toBe(0);
+  });
+
+  it('toggled active: enemy pipeline receives the debuffs', () => {
+    const { enemy } = selfAndTarget({
+      selectedSpells: ["curse_of_weakness"],
+      activeBuffs: { curse_of_weakness: true },
+    });
+    // Enemy attrs × 0.75 (all_attributes -0.25 attribute_multiplier).
+    // Enemy starts with finalAttrs = {} (Phase 1 no enemy baseline),
+    // so multiplying by 0.75 stays 0 — we verify the trace rather than
+    // the unattached attr values.
+    expect(enemy.trace.some(t => t.stat === "all_attributes" && t.phase === "attribute_multiplier")).toBe(true);
+    // PDR / MDR debuffs land in enemy bonuses.
+    expect(enemy.finalBonuses.physicalDamageReduction).toBeCloseTo(-0.15, 6);
+    expect(enemy.finalBonuses.magicalDamageReduction).toBeCloseTo(-0.15, 6);
+  });
+
+  it('toggled off: neither pipeline is affected', () => {
+    const { self, enemy } = selfAndTarget({
+      selectedSpells: ["curse_of_weakness"],
+      activeBuffs: { curse_of_weakness: false },
+    });
+    expect(self.finalAttrs.str).toBe(11);
+    expect(enemy.trace).toEqual([]);
+  });
+});
+
+describe('Power of Sacrifice — "either" with per-ability toggles', () => {
+  const state = (applyToSelf, applyToEnemy) => ({
+    selectedSpells: ["power_of_sacrifice"],
+    activeBuffs: { power_of_sacrifice: true },
+    abilityTargetMode: { power_of_sacrifice: { applyToSelf, applyToEnemy } },
+  });
+
+  it('applyToSelf=true, applyToEnemy=false: caster +15 STR/VIG, enemy untouched', () => {
+    const { self, enemy } = selfAndTarget(state(true, false));
+    expect(self.finalAttrs.str).toBe(11 + 15);
+    expect(self.finalAttrs.vig).toBe(14 + 15);
+    expect(enemy.trace.filter(t => t.ability === "power_of_sacrifice")).toEqual([]);
+  });
+
+  it('applyToSelf=false, applyToEnemy=true: caster untouched, enemy gets +15 STR/VIG', () => {
+    const { self, enemy } = selfAndTarget(state(false, true));
+    expect(self.finalAttrs.str).toBe(11);
+    expect(self.finalAttrs.vig).toBe(14);
+    // Enemy baseline attrs are {}, so STR ends at 0 + 15 = 15.
+    expect(enemy.finalAttrs.str).toBe(15);
+    expect(enemy.finalAttrs.vig).toBe(15);
+  });
+
+  it('both true: entries route to BOTH pipelines simultaneously', () => {
+    const { self, enemy } = selfAndTarget(state(true, true));
+    expect(self.finalAttrs.str).toBe(11 + 15);
+    expect(enemy.finalAttrs.str).toBe(15);
+  });
+
+  it('both false: nothing applies anywhere', () => {
+    const { self, enemy } = selfAndTarget(state(false, false));
+    expect(self.finalAttrs.str).toBe(11);
+    expect(enemy.trace.filter(t => t.ability === "power_of_sacrifice")).toEqual([]);
+  });
+
+  it('no abilityTargetMode override: ability defaults apply (self-only)', () => {
+    const { self, enemy } = selfAndTarget({
+      selectedSpells: ["power_of_sacrifice"],
+      activeBuffs: { power_of_sacrifice: true },
+      // abilityTargetMode omitted — PoS defaults to applyToSelf: true.
+    });
+    expect(self.finalAttrs.str).toBe(11 + 15);
+    expect(enemy.finalAttrs.str ?? 0).toBe(0);
+  });
+});
+
+describe('runTargetPipeline — seeds from ctx.target', () => {
+  it('enemy finalBonuses start with PDR/MDR/HSDR from target editor values', () => {
+    const { enemy } = selfAndTarget({
+      target: { pdr: 0.30, mdr: 0.20, headshotDR: 0.10 },
+    });
+    expect(enemy.finalBonuses.physicalDamageReduction).toBeCloseTo(0.30, 6);
+    expect(enemy.finalBonuses.magicalDamageReduction).toBeCloseTo(0.20, 6);
+    expect(enemy.finalBonuses.headshotDamageReduction).toBeCloseTo(0.10, 6);
   });
 });

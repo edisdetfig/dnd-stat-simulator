@@ -36,6 +36,9 @@
 //   activeMergedSpells   — string[]
 //   selectedStacks       — { [abilityId]: number }
 //   selectedTiers        — { [abilityId]: "poor"|"good"|"perfect" }
+//   abilityTargetMode    — { [abilityId]: { applyToSelf, applyToEnemy } }
+//                          Per-ability override for "either"-target effects
+//                          (see effect-pipeline.resolveApplyMode).
 //   hpPercent            — 0..100
 //   playerStates         — { [state]: boolean }
 //   frenzyActive         — boolean
@@ -57,6 +60,7 @@ export function buildEngineContext(state) {
     activeSummons = {}, activeAfterEffects = {},
     activeWildSkill = null, activeMergedSpells = [],
     selectedStacks = {}, selectedTiers = {},
+    abilityTargetMode = {},
     hpPercent = 100, playerStates = {}, frenzyActive = false,
     environment = null,
     targetStatuses = {}, targetStatusSource = {},
@@ -90,7 +94,7 @@ export function buildEngineContext(state) {
     selectedPerks, selectedSkills, selectedSpells,
     activeBuffs, activeForm,
     activeSummons, activeAfterEffects, activeWildSkill, activeMergedSpells,
-    selectedStacks, selectedTiers,
+    selectedStacks, selectedTiers, abilityTargetMode,
     hpPercent, playerStates, frenzyActive, environment,
     targetStatuses, targetStatusSource, target,
     activeAbilityIds,

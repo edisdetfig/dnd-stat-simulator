@@ -120,10 +120,17 @@ export const TARGETING = Object.freeze({
 });
 
 // Effect-level `target` values (spec §3 effects[].target).
-// Distinct from ability-level TARGETING; party / nearby_* are display-only
-// distinctions in snapshot mode (engine treats them as self).
+//   "self"     — applies to caster stats (runEffectPipeline)
+//   "enemy"    — applies to target stats (runTargetPipeline)
+//   "either"   — ability exposes per-ability applyToSelf / applyToEnemy
+//                checkboxes; user picks one/both/neither. Both → the
+//                entry routes to both pipelines simultaneously
+//   "party" / "nearby_allies" / "nearby_enemies" — display-only in
+//                snapshot mode; engine treats them as self
+// Distinct from ability-level TARGETING (which gates what the ability
+// can be cast on).
 export const EFFECT_TARGETS = new Set([
-  "self", "enemy", "party", "nearby_allies", "nearby_enemies",
+  "self", "enemy", "either", "party", "nearby_allies", "nearby_enemies",
 ]);
 
 // ── UI-oriented constants consumed by existing components ──

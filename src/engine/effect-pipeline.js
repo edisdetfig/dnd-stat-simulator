@@ -1,24 +1,30 @@
-// runEffectPipeline — partitions collected effects by phase and applies
-// each phase in the documented order.
+// Effect pipeline — routes collected effects to self-side or enemy-side
+// accumulators and applies them in phase order.
 //
-// Flow (per plan §1.5):
-//   1. Collect effects from all sources (via collectors)
-//   2. Filter by ability-level + effect-level conditions
-//   3. Partition by phase
-//   4. Apply phases:
-//      cap_override          → capOverrides[stat] = max(current, value)
-//      pre_curve_flat        → CORE_ATTRS: finalAttrs[stat] += value
-//                              otherwise:  finalBonuses[stat] += value
-//      attribute_multiplier  → "all_attributes": each of 7 attrs ×= (1+v)
-//                              single attr:    finalAttrs[stat] ×= (1+v)
-//      post_curve            → finalBonuses[stat] += value
-//      multiplicative_layer  → layers[stat] *= value  (init 1)
-//      type_damage_bonus     → typeDamageBonuses[damageType] += value
-//      healing_modifier      → healingMods[healType|"all"] += value
+// Two public entrypoints, both consuming the same collected entries:
+//   runEffectPipeline(ctx) — accumulates effects routing to the caster
+//   runTargetPipeline(ctx) — accumulates effects routing to the enemy
 //
-// Returns:
-//   { finalAttrs, finalBonuses, capOverrides, typeDamageBonuses,
-//     healingMods, multiplicativeLayers, trace }
+// Per-entry routing (see resolveTarget below):
+//   effect.target === "self"   → self pipeline
+//   effect.target === "enemy"  → enemy pipeline
+//   effect.target === "either" → per-ability applyToSelf / applyToEnemy
+//                                toggles (ctx.abilityTargetMode, with
+//                                ability defaults as fallback) decide —
+//                                BOTH can be true, routing to both
+//   target unset or party/nearby_* → treated as "self" (snapshot principle)
+//
+// Phase application order inside applyEntries (per plan §1.5):
+//   cap_override          → capOverrides[stat] = max(current, value)
+//   pre_curve_flat        → CORE_ATTRS: finalAttrs[stat] += value
+//                           all_attributes: fans out to all 7 CORE_ATTRS
+//                           otherwise:      finalBonuses[stat] += value
+//   attribute_multiplier  → "all_attributes": each of 7 attrs ×= (1+v)
+//                           single attr:      finalAttrs[stat] ×= (1+v)
+//   post_curve            → finalBonuses[stat] += value
+//   multiplicative_layer  → layers[stat] *= value  (init 1)
+//   type_damage_bonus     → typeDamageBonuses[damageType] += value
+//   healing_modifier      → healingMods[healType|"all"] += value
 
 import { CORE_ATTRS, EFFECT_PHASES } from '../data/constants.js';
 import { collectAllEffects } from './collectors/index.js';
@@ -26,24 +32,84 @@ import { passesConditions } from './conditions.js';
 
 const CORE_ATTR_LIST = ["str", "vig", "agi", "dex", "wil", "kno", "res"];
 
+// ── Public entrypoints ──
+
 export function runEffectPipeline(ctx) {
-  // 1–2. Collect and filter by conditions.
-  const entries = collectAllEffects(ctx)
+  const { self } = partitionEntries(ctx);
+  return applyEntries(self, ctx.attrs, ctx.bonuses);
+}
+
+export function runTargetPipeline(ctx) {
+  const { enemy } = partitionEntries(ctx);
+  // Enemy baseline: Phase 1 doesn't model enemy attributes (no enemy
+  // baseStats in the sim). Seed finalBonuses from the Target editor's
+  // DR values so self-pipeline and enemy-pipeline both land on concrete
+  // numbers Phase 3 damage calcs can consume.
+  const seedBonuses = {};
+  if (ctx.target) {
+    if (ctx.target.pdr)        seedBonuses.physicalDamageReduction = ctx.target.pdr;
+    if (ctx.target.mdr)        seedBonuses.magicalDamageReduction  = ctx.target.mdr;
+    if (ctx.target.headshotDR) seedBonuses.headshotDamageReduction = ctx.target.headshotDR;
+  }
+  return applyEntries(enemy, {}, seedBonuses);
+}
+
+// ── Routing ──
+
+function partitionEntries(ctx) {
+  const raw = collectAllEffects(ctx)
     .filter(({ ability, effect }) => passesConditions(ability, effect, ctx));
 
-  // Accumulators seeded from gear-baseline attrs/bonuses.
-  const finalAttrs = { ...ctx.attrs };
-  const finalBonuses = { ...ctx.bonuses };
+  const self = [];
+  const enemy = [];
+  for (const entry of raw) {
+    for (const route of resolveTargets(entry, ctx)) {
+      if (route === "self") self.push(entry);
+      else if (route === "enemy") enemy.push(entry);
+    }
+  }
+  return { self, enemy };
+}
+
+function resolveTargets(entry, ctx) {
+  const t = entry.effect?.target ?? "self";
+  if (t === "self" || t === "enemy") return [t];
+  if (t === "either") {
+    const mode = resolveApplyMode(entry.ability, ctx);
+    const out = [];
+    if (mode.applyToSelf)  out.push("self");
+    if (mode.applyToEnemy) out.push("enemy");
+    return out;
+  }
+  // party / nearby_allies / nearby_enemies — display-only, routed as self.
+  return ["self"];
+}
+
+// Per-ability apply mode for "either" entries. State override (from the
+// user's toggle) beats the ability's authored defaults. Unset falls back
+// to { applyToSelf: true, applyToEnemy: false } — the most common Warlock
+// pattern (self-buff + optional enemy debuff).
+export function resolveApplyMode(ability, ctx) {
+  const override = ctx?.abilityTargetMode?.[ability.id];
+  if (override) return override;
+  return {
+    applyToSelf:  ability.defaultApplyToSelf  ?? true,
+    applyToEnemy: ability.defaultApplyToEnemy ?? false,
+  };
+}
+
+// ── Shared accumulator ──
+
+function applyEntries(entries, seedAttrs, seedBonuses) {
+  const finalAttrs = { ...seedAttrs };
+  const finalBonuses = { ...seedBonuses };
   const capOverrides = {};
   const typeDamageBonuses = {};
   const healingMods = { all: 0, physical: 0, magical: 0 };
   const multiplicativeLayers = {};
   const trace = [];
 
-  // 3–4. Phase partitioning. We iterate in a fixed order so dependent
-  // phases (attribute_multiplier after pre_curve_flat attrs adds) see
-  // the right inputs.
-  const byPhase = partition(entries);
+  const byPhase = partitionByPhase(entries);
 
   // cap_override — max-wins per stat.
   for (const entry of byPhase[EFFECT_PHASES.CAP_OVERRIDE]) {
@@ -54,12 +120,7 @@ export function runEffectPipeline(ctx) {
   }
 
   // pre_curve_flat — core attrs into attrs, rest into bonuses.
-  // "all_attributes" fans out to each of the 7 CORE_ATTRS using effect.value
-  // (the literal authored value, not a hardcoded +1). Used by Soul Collector's
-  // shard bonus, Barbarian War Sacrifice, etc. When any data carries
-  // "+N to all attributes" as a flat addition, authoring it once via
-  // all_attributes is cheaper than 7 explicit entries and keeps class data
-  // terse.
+  // "all_attributes" fans out to each of the 7 CORE_ATTRS using effect.value.
   for (const entry of byPhase[EFFECT_PHASES.PRE_CURVE_FLAT]) {
     const { effect } = entry;
     if (effect.stat === "all_attributes") {
@@ -125,15 +186,13 @@ export function runEffectPipeline(ctx) {
   };
 }
 
-function partition(entries) {
+function partitionByPhase(entries) {
   const buckets = {};
   for (const phase of Object.values(EFFECT_PHASES)) buckets[phase] = [];
   for (const entry of entries) {
     const phase = entry.effect?.phase;
     if (buckets[phase]) buckets[phase].push(entry);
-    // Unknown phases are silently dropped. defineClass catches these at
-    // class load, so a bad phase reaching the pipeline means someone
-    // bypassed defineClass — the silent drop is safe.
+    // Unknown phases silently dropped — defineClass catches them at load time.
   }
   return buckets;
 }
@@ -147,5 +206,6 @@ function traceEntry(trace, { source, ability, effect }, appliedValue) {
     appliedValue,
     damageType: effect.damageType,
     healType: effect.healType,
+    target: effect.target ?? "self",
   });
 }

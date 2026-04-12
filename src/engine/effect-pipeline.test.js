@@ -200,6 +200,7 @@ describe('runEffectPipeline — trace', () => {
       source: "perk", ability: "robust",
       stat: "maxHealthBonus", phase: "pre_curve_flat",
       appliedValue: 0.075, damageType: undefined, healType: undefined,
+      target: "self",
     }]);
   });
 });

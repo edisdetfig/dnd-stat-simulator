@@ -12,7 +12,7 @@
 import { STAT_META } from '../stat-meta.js';
 import {
   CORE_ATTRS, EFFECT_PHASES, CONDITION_TYPES,
-  STATUS_TYPES, TRIGGER_EVENTS,
+  STATUS_TYPES, TRIGGER_EVENTS, EFFECT_TARGETS,
 } from '../constants.js';
 
 const VALID_PHASES = new Set(Object.values(EFFECT_PHASES));
@@ -151,6 +151,9 @@ function validateEffect(eff, path, issues) {
     issues.push(`${path}: unknown phase "${eff.phase}"`);
   } else if (eff.stat === "all_attributes" && !ALL_ATTRS_ALLOWED_PHASES.has(eff.phase)) {
     issues.push(`${path}: stat "all_attributes" not valid under phase "${eff.phase}" (only pre_curve_flat / attribute_multiplier)`);
+  }
+  if (eff.target != null && !EFFECT_TARGETS.has(eff.target)) {
+    issues.push(`${path}: unknown target "${eff.target}"`);
   }
   if (eff.condition) validateCondition(eff.condition, `${path}.condition`, issues);
 }

@@ -18,6 +18,7 @@ const V3_DEFAULTS = Object.freeze({
   activeMergedSpells:   [],
   selectedStacks:       {},
   selectedTiers:        {},
+  abilityTargetMode:    {},
   hpPercent:            100,
   playerStates:         {},
   frenzyActive:         false,

@@ -221,7 +221,7 @@ const WARLOCK = defineClass({
       duration: 12,
       damage: [
         { base: 12, scaling: 1.0, damageType: "evil_magical", label: "on next attack",
-          affectedByHitLocation: true },
+          affectedByHitLocation: true, target: "enemy" },
       ],
       triggers: [
         { event: "on_melee_hit",
@@ -248,7 +248,7 @@ const WARLOCK = defineClass({
       // Abyssal Flame AoE damage ring around the caster.
       damage: [
         { base: 2, scaling: 0.25, damageType: "magical",
-          label: "Abyssal Flame (AoE/s)", isDot: true, tickRate: 1 },
+          label: "Abyssal Flame (AoE/s)", isDot: true, tickRate: 1, target: "enemy" },
       ],
       // Darkness Shards consumed at activation, locked in for the duration.
       // User picks 0–3 via the stack selector to represent shards banked
@@ -338,12 +338,18 @@ const WARLOCK = defineClass({
       targeting: "enemy_or_self",
       duration: 12,
       activation: "toggle",
+      // "either": user picks apply-to-self and/or apply-to-enemy per cast.
+      // Default is self-cast (Warlock most common pattern). User can flip
+      // applyToEnemy on to model casting PoS on a target simultaneously
+      // (12s duration overlaps — real in-game scenario).
+      defaultApplyToSelf:  true,
+      defaultApplyToEnemy: false,
       effects: [
-        { stat: "str", value: 15, phase: "pre_curve_flat", target: "enemy" },
-        { stat: "vig", value: 15, phase: "pre_curve_flat", target: "enemy" },
+        { stat: "str", value: 15, phase: "pre_curve_flat", target: "either" },
+        { stat: "vig", value: 15, phase: "pre_curve_flat", target: "either" },
       ],
       damage: [
-        { base: 3, scaling: 0, damageType: "evil_magical", isDot: true, label: "DoT/s" },
+        { base: 3, scaling: 0, damageType: "evil_magical", isDot: true, label: "DoT/s", target: "either" },
       ],
       _unverified: "does not scale (DoT scaling is 0)",
     },
@@ -381,7 +387,7 @@ const WARLOCK = defineClass({
       targeting: "enemy",
       activation: "cast",
       damage: [
-        { base: 20, scaling: 1.0, damageType: "dark_magical", label: "bolt" },
+        { base: 20, scaling: 1.0, damageType: "dark_magical", label: "bolt", target: "enemy" },
       ],
     },
 
@@ -419,8 +425,8 @@ const WARLOCK = defineClass({
       activation: "cast",
       tags: ["curse"],
       damage: [
-        { base: 15, scaling: 1.0, damageType: "evil_magical", label: "instant" },
-        { base: 15, scaling: 0.5, damageType: "evil_magical", label: "DoT total (8s)", isDot: true },
+        { base: 15, scaling: 1.0, damageType: "evil_magical", label: "instant",        target: "enemy" },
+        { base: 15, scaling: 0.5, damageType: "evil_magical", label: "DoT total (8s)", isDot: true, target: "enemy" },
       ],
     },
 
@@ -436,13 +442,13 @@ const WARLOCK = defineClass({
       targeting: "enemy",
       activation: "cast",
       damage: [
-        { base: 3, scaling: 1.0, damageType: "evil_magical", label: "per buff stripped", perBuff: true },
+        { base: 3, scaling: 1.0, damageType: "evil_magical", label: "per buff stripped", perBuff: true, target: "enemy" },
       ],
       stacking: {
         maxStacks: 3,
         perStack: [
-          { stat: "all_attributes", value: 1, phase: "pre_curve_flat" },
-          { stat: "typeDamageBonus", value: 0.33, phase: "type_damage_bonus", damageType: "dark_magical" },
+          { stat: "all_attributes", value: 1, phase: "pre_curve_flat", target: "self" },
+          { stat: "typeDamageBonus", value: 0.33, phase: "type_damage_bonus", damageType: "dark_magical", target: "self" },
         ],
         triggerOn: "buff_strip",
         consumedOn: "dark_spell_cast",
@@ -475,7 +481,7 @@ const WARLOCK = defineClass({
       targeting: "enemy",
       activation: "cast",
       damage: [
-        { base: 12, scaling: 1.0, damageType: "dark_magical", isChannel: true, isDot: true, label: "channel/s" },
+        { base: 12, scaling: 1.0, damageType: "dark_magical", isChannel: true, isDot: true, label: "channel/s", target: "enemy" },
       ],
     },
 
@@ -492,7 +498,7 @@ const WARLOCK = defineClass({
       duration: 7.5,
       activation: "cast",
       damage: [
-        { base: 5, scaling: 0.25, damageType: "evil_magical", isChannel: true, isDot: true, label: "channel/s" },
+        { base: 5, scaling: 0.25, damageType: "evil_magical", isChannel: true, isDot: true, label: "channel/s", target: "enemy" },
       ],
       triggers: [
         { event: "on_damage_dealt", heal: { equalToDamage: true, healType: "magical" } },
@@ -512,7 +518,7 @@ const WARLOCK = defineClass({
       targeting: "enemy",
       activation: "cast",
       damage: [
-        { base: 60, scaling: 0.5, damageType: "fire_magical", isDot: true, label: "AoE/s" },
+        { base: 60, scaling: 0.5, damageType: "fire_magical", isDot: true, label: "AoE/s", target: "enemy" },
       ],
     },
 
@@ -551,7 +557,7 @@ const WARLOCK = defineClass({
       activation: "toggle",
       duration: 6,
       damage: [
-        { base: 5, scaling: 1.0, damageType: "fire_magical", isDot: true, tickRate: 0.2, label: "trail/0.2s" },
+        { base: 5, scaling: 1.0, damageType: "fire_magical", isDot: true, tickRate: 0.2, label: "trail/0.2s", target: "enemy" },
       ],
     },
 
@@ -569,7 +575,7 @@ const WARLOCK = defineClass({
         type: "hydra",
         duration: 10,
         damage: [
-          { base: 10, scaling: 1.0, damageType: "fire_magical", label: "fireball" },
+          { base: 10, scaling: 1.0, damageType: "fire_magical", label: "fireball", target: "enemy" },
         ],
       },
     },

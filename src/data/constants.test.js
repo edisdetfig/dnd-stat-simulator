@@ -92,10 +92,10 @@ describe('membership sets', () => {
     expect(WEAPON_TYPES.size).toBe(13);
   });
 
-  it('EFFECT_TARGETS contains the five effect-level target values', () => {
-    for (const t of ["self", "enemy", "party", "nearby_allies", "nearby_enemies"]) {
+  it('EFFECT_TARGETS contains the six effect-level target values', () => {
+    for (const t of ["self", "enemy", "either", "party", "nearby_allies", "nearby_enemies"]) {
       expect(EFFECT_TARGETS.has(t)).toBe(true);
     }
-    expect(EFFECT_TARGETS.size).toBe(5);
+    expect(EFFECT_TARGETS.size).toBe(6);
   });
 });
