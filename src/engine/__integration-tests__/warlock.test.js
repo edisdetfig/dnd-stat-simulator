@@ -276,11 +276,8 @@ describe('Blood Tithe full build — end-to-end', () => {
     expect(result.finalBonuses.spellCastingSpeed).toBeCloseTo(-0.10, 6);
   });
 
-  it('no religion selected by default → no Noxulon bonus', async () => {
-    // Historical Blood Tithe runs with no religion ("none"). If this
-    // changes, both the example-build and this test need updating
-    // together.
+  it('Noxulon religion contributes +20% RIS', async () => {
     const { result } = await loadBloodTithe();
-    expect(result.finalBonuses.regularInteractionSpeed ?? 0).toBeCloseTo(0, 6);
+    expect(result.finalBonuses.regularInteractionSpeed).toBeCloseTo(0.20, 6);
   });
 });

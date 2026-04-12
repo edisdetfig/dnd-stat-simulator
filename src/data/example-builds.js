@@ -249,7 +249,7 @@ function bloodTitheBuild() {
     description:
       "Spectral Blade + dark plate setup used to verify damage formulas. " +
       "With PoS + Bloodstained Blade active, Hit 1 body ≈ 85, head ≈ 131 vs Training Dummy.",
-    religionId:      null,
+    religionId:      "noxulon",
     gear:            makeBloodTitheGear(),
     weaponHeldState: "weaponSlot1",
     selectedPerks:   ["demon_armor", "shadow_touch", "dark_reflection"],

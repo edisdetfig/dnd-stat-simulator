@@ -3,6 +3,12 @@
 // One-way flow: state → buildEngineContext (the seam) → engine → derived
 // stats → render. All user controls are toggles/sliders/selectors per the
 // snapshot principle; the engine never reads temporal fields.
+//
+// ── Phase 1 scope ──
+// This App.jsx wires the existing primitives (ClassPicker, ExampleBuildPicker,
+// TargetEditor, GearSlot, Panel, StatRows) around the v3 state model so
+// Warlock is fully functional end-to-end. Several richer UI surfaces are
+// planned for Phase 2/3 and are marked TODO below with their target phase.
 
 import { useState, useMemo, useCallback } from 'react';
 import { ThemeProvider } from './styles/ThemeProvider.jsx';
@@ -14,13 +20,15 @@ import {
   computeDerivedStats,
   getAvailableSpells,
 } from './engine/index.js';
-import { CLASSES, getClass } from './data/classes/index.js';
+import { getClass } from './data/classes/index.js';
 import { RELIGION_BLESSINGS } from './data/religions.js';
 import { EXAMPLE_BUILDS, defaultStateForClass } from './data/example-builds.js';
 import { STAT_META, derivedLabel } from './data/stat-meta.js';
 import { ClassPicker } from './components/ClassPicker.jsx';
 import { ExampleBuildPicker } from './components/ExampleBuildPicker.jsx';
 import { TargetEditor } from './components/TargetEditor.jsx';
+import { GearSlot } from './components/gear/GearSlot.jsx';
+import { ALL_SLOTS } from './components/gear/slots.js';
 import { Panel } from './components/ui/Panel.jsx';
 import { fmtPct } from './utils/format.js';
 
@@ -30,7 +38,6 @@ export default function App() {
   const [state, setState] = useState(() => defaultStateForClass(null));
 
   const theme = THEMES[state.theme] ?? defaultTheme;
-
   const classData = state.classId ? getClass(state.classId) : null;
 
   if (!classData) {
@@ -54,6 +61,10 @@ function Simulator({ state, setState, classData }) {
     : null;
 
   // The seam: single memoized derivation of EngineContext + pipeline output.
+  // Pipeline already emits a `trace` array (see effect-pipeline.js) —
+  // unused by this Phase 1 App.jsx but ready for the Phase 2 hover-over
+  // attribute-breakdown UI and the "where did this +20 AR come from?"
+  // display per plan §13.8.
   const { ctx, pipeline, ds, availableSpells } = useMemo(() => {
     const ctx = buildEngineContext({ ...state, classData, religion });
     const pipeline = runEffectPipeline(ctx);
@@ -98,6 +109,14 @@ function Simulator({ state, setState, classData }) {
     patchState((s) => ({ selectedStacks: { ...s.selectedStacks, [id]: n } }));
   }, [patchState]);
 
+  const setGearSlot = useCallback((slotKey, value) => {
+    patchState((s) => ({ gear: { ...s.gear, [slotKey]: value } }));
+  }, [patchState]);
+
+  const setWeaponHeld = useCallback((held) => {
+    patchState({ weaponHeldState: held });
+  }, [patchState]);
+
   const loadExample = useCallback((id) => {
     const ex = EXAMPLE_BUILDS.find(b => b.id === id);
     if (ex) setState(ex.build());
@@ -106,6 +125,22 @@ function Simulator({ state, setState, classData }) {
   const loadedExample = useMemo(() => EXAMPLE_BUILDS.find(b =>
     b.id === state.id && b.classId === state.classId,
   ), [state.id, state.classId]);
+
+  // Abilities with `activation: "toggle"` that the user has equipped.
+  // Used to populate the Active Buffs toggle list.
+  const toggleableBuffs = useMemo(() => {
+    const out = [];
+    const addIf = (list, selectedSet, source) => {
+      for (const a of list ?? []) {
+        if (a.activation === "toggle" && selectedSet.has(a.id)) {
+          out.push({ ability: a, source });
+        }
+      }
+    };
+    addIf(classData.skills, new Set(state.selectedSkills), "skill");
+    addIf(classData.spells, new Set(state.selectedSpells), "spell");
+    return out;
+  }, [classData, state.selectedSkills, state.selectedSpells]);
 
   return (
     <div style={{
@@ -124,22 +159,16 @@ function Simulator({ state, setState, classData }) {
         onLoadExample={loadExample}
       />
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(300px, 1fr) minmax(300px, 1fr)", gap: 14, marginTop: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(320px, 1fr) minmax(360px, 1fr)", gap: 14, marginTop: 12 }}>
+        {/* ── Left column ── */}
         <Column>
-          <AttributesPanel attrs={pipeline.finalAttrs} base={classData.baseStats} />
-          <ContextInputsPanel state={state} patchState={patchState} />
-          <ReligionPanel state={state} patchState={patchState} />
-        </Column>
-
-        <Column>
-          <DerivedStatsPanel ds={ds} />
+          <TargetPanelWrapper target={state.target} patchState={patchState} />
+          <LiveStatePanel state={state} patchState={patchState} />
           <PerksPanel classData={classData} selected={state.selectedPerks} toggle={togglePerk} />
           <SkillsPanel
             classData={classData}
             selected={state.selectedSkills}
             toggle={toggleSkill}
-            activeBuffs={state.activeBuffs}
-            toggleBuff={toggleBuff}
             selectedStacks={state.selectedStacks}
             setStacks={setStacks}
           />
@@ -148,12 +177,27 @@ function Simulator({ state, setState, classData }) {
             selected={state.selectedSpells}
             toggle={toggleSpell}
             availableSpells={availableSpells}
-            activeBuffs={state.activeBuffs}
-            toggleBuff={toggleBuff}
             selectedStacks={state.selectedStacks}
             setStacks={setStacks}
           />
-          <TargetPanelWrapper target={state.target} patchState={patchState} />
+          <ActiveBuffsPanel
+            toggleableBuffs={toggleableBuffs}
+            activeBuffs={state.activeBuffs}
+            toggleBuff={toggleBuff}
+          />
+          <ReligionPanel state={state} patchState={patchState} />
+        </Column>
+
+        {/* ── Right column ── */}
+        <Column>
+          <AttributesPanel attrs={pipeline.finalAttrs} base={classData.baseStats} />
+          <DerivedStatsPanel ds={ds} />
+          <GearPanel
+            gear={state.gear}
+            setGearSlot={setGearSlot}
+            weaponHeldState={state.weaponHeldState}
+            setWeaponHeld={setWeaponHeld}
+          />
           <DebugPanel ctx={ctx} pipeline={pipeline} ds={ds} />
         </Column>
       </div>
@@ -195,6 +239,9 @@ function Column({ children }) {
 // ── Attributes ──
 
 function AttributesPanel({ attrs, base }) {
+  // TODO(Phase 2): hover-over each attribute to see the full breakdown
+  // ("base 11, gear inherent +3, gear mods +2, Power of Sacrifice +15").
+  // Pipeline emits the trace that feeds this (see effect-pipeline.js).
   const order = ["str", "vig", "agi", "dex", "wil", "kno", "res"];
   return (
     <Panel title="Attributes">
@@ -256,7 +303,6 @@ function DerivedStatsPanel({ ds }) {
 }
 
 function DerivedRow({ id, value }) {
-  // Percent vs flat inferred from STAT_META if present; else heuristic.
   const meta = STAT_META[id];
   const isPct = meta?.unit === "percent"
     || ["ppb","mpb","pdr","mdr","actionSpeed","spellCastingSpeed",
@@ -279,6 +325,60 @@ function DerivedRow({ id, value }) {
   );
 }
 
+// ── Gear ──
+
+// Phase 1: functional Weapon Held 3-way toggle + all 11 slots via GearSlot.
+// Phase 2 promotes the toggle into the richer ContextBar (weapon picker +
+// armor readout + dual-wield pill) per plan §3.5.
+function GearPanel({ gear, setGearSlot, weaponHeldState, setWeaponHeld }) {
+  return (
+    <Panel title="Gear">
+      <WeaponHeldToggle held={weaponHeldState} onChange={setWeaponHeld} />
+      <div style={{ marginTop: 8 }}>
+        {ALL_SLOTS.map(slotDef => (
+          <GearSlot
+            key={slotDef.key}
+            slotDef={slotDef}
+            gear={gear}
+            onGearChange={setGearSlot}
+          />
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+function WeaponHeldToggle({ held, onChange }) {
+  const options = [
+    { key: "none",        label: "None" },
+    { key: "weaponSlot1", label: "Slot 1" },
+    { key: "weaponSlot2", label: "Slot 2" },
+  ];
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+      <span style={{ fontSize: 10, color: "var(--sim-text-whisper)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+        Weapon Held
+      </span>
+      <div style={{ display: "inline-flex", gap: 2, marginLeft: "auto" }}>
+        {options.map(o => {
+          const active = held === o.key;
+          return (
+            <button key={o.key} onClick={() => onChange(o.key)}
+              style={{
+                background: active ? "var(--sim-surface-shadow)" : "transparent",
+                border: `1px solid ${active ? "var(--sim-border-focus)" : "var(--sim-border-hairline)"}`,
+                color: active ? "var(--sim-accent-arcane-pale)" : "var(--sim-text-whisper)",
+                padding: "3px 10px", borderRadius: 3, cursor: "pointer",
+                fontFamily: "inherit", fontSize: 10,
+                fontWeight: active ? 600 : 400,
+              }}>{o.label}</button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Perks / Skills / Spells ──
 
 function PerksPanel({ classData, selected, toggle }) {
@@ -295,7 +395,7 @@ function PerksPanel({ classData, selected, toggle }) {
   );
 }
 
-function SkillsPanel({ classData, selected, toggle, activeBuffs, toggleBuff, selectedStacks, setStacks }) {
+function SkillsPanel({ classData, selected, toggle, selectedStacks, setStacks }) {
   return (
     <Panel title={`Skills (${selected.length}/${classData.maxSkills})`}>
       {classData.skills.map(skill => (
@@ -303,8 +403,6 @@ function SkillsPanel({ classData, selected, toggle, activeBuffs, toggleBuff, sel
           ability={skill}
           selected={selected.includes(skill.id)}
           onToggle={() => toggle(skill.id)}
-          active={activeBuffs[skill.id]}
-          onActivate={skill.activation === "toggle" ? () => toggleBuff(skill.id) : null}
           stacks={selectedStacks[skill.id] ?? 0}
           setStacks={skill.stacking ? (n) => setStacks(skill.id, n) : null}
         />
@@ -313,7 +411,7 @@ function SkillsPanel({ classData, selected, toggle, activeBuffs, toggleBuff, sel
   );
 }
 
-function SpellsPanel({ classData, selected, toggle, availableSpells, activeBuffs, toggleBuff, selectedStacks, setStacks }) {
+function SpellsPanel({ classData, selected, toggle, availableSpells, selectedStacks, setStacks }) {
   const availableIds = new Set(availableSpells.map(s => s.id));
   return (
     <Panel title={`Spells (${selected.length})`}>
@@ -326,8 +424,6 @@ function SpellsPanel({ classData, selected, toggle, availableSpells, activeBuffs
             selected={isInMemory}
             grantedLabel={isGranted ? "granted" : null}
             onToggle={() => toggle(spell.id)}
-            active={activeBuffs[spell.id]}
-            onActivate={spell.activation === "toggle" ? () => toggleBuff(spell.id) : null}
             stacks={selectedStacks[spell.id] ?? 0}
             setStacks={spell.stacking ? (n) => setStacks(spell.id, n) : null}
           />
@@ -337,7 +433,7 @@ function SpellsPanel({ classData, selected, toggle, availableSpells, activeBuffs
   );
 }
 
-function AbilityRow({ ability, selected, onToggle, active, onActivate, stacks, setStacks, grantedLabel }) {
+function AbilityRow({ ability, selected, onToggle, stacks, setStacks, grantedLabel }) {
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 8,
@@ -355,12 +451,6 @@ function AbilityRow({ ability, selected, onToggle, active, onActivate, stacks, s
           </span>
         )}
       </span>
-      {onActivate && selected && (
-        <label style={{ fontSize: 9, color: active ? "var(--sim-accent-verdant-life)" : "var(--sim-text-whisper)", cursor: "pointer" }}>
-          <input type="checkbox" checked={!!active} onChange={onActivate} style={{ marginRight: 3 }} />
-          on
-        </label>
-      )}
       {setStacks && selected && (
         <input type="number" min={0} max={ability.stacking.maxStacks} step={1}
           value={stacks}
@@ -380,9 +470,61 @@ function AbilityRow({ ability, selected, onToggle, active, onActivate, stacks, s
   );
 }
 
-// ── Context inputs ──
+// ── Active Buffs ──
 
-function ContextInputsPanel({ state, patchState }) {
+// Phase 1: minimal toggle list for equipped `activation: "toggle"` abilities.
+// Phase 2 replaces this with the sectioned ActiveEffectsHub (Toggles /
+// Stacks / Afterglow + ConditionBadges) per plan §4.U.1.
+function ActiveBuffsPanel({ toggleableBuffs, activeBuffs, toggleBuff }) {
+  if (toggleableBuffs.length === 0) {
+    return (
+      <Panel title="Active Buffs">
+        <div style={{ fontSize: 10, color: "var(--sim-text-whisper)", fontStyle: "italic" }}>
+          No togglable abilities equipped. Select skills or spells with toggle activation to add them here.
+        </div>
+      </Panel>
+    );
+  }
+  return (
+    <Panel title="Active Buffs">
+      {toggleableBuffs.map(({ ability, source }) => {
+        const on = !!activeBuffs[ability.id];
+        return (
+          <div key={ability.id}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "4px 6px", borderBottom: "1px solid var(--sim-border-whisper)",
+              fontSize: 11,
+            }}>
+            <input type="checkbox" checked={on} onChange={() => toggleBuff(ability.id)} />
+            <span style={{
+              flex: 1,
+              color: on ? "var(--sim-accent-verdant-life)" : "var(--sim-text-muted)",
+            }}>
+              {ability.name}
+              <span style={{ fontSize: 9, marginLeft: 6, color: "var(--sim-text-whisper)" }}>
+                {source}{ability.tier != null ? ` · T${ability.tier}` : ""}
+              </span>
+            </span>
+            {ability.duration != null && (
+              <span style={{ fontSize: 9, color: "var(--sim-text-ghost)" }}>{ability.duration}s</span>
+            )}
+          </div>
+        );
+      })}
+    </Panel>
+  );
+}
+
+// ── Live state + Religion ──
+
+function LiveStatePanel({ state, patchState }) {
+  // TODO(Phase 2): HP% slider drives hpScaling (no Warlock consumer yet,
+  // Barbarian Berserker / Sorcerer Elemental Fury will use this).
+  // TODO(Phase 2): States panel — hiding/crouching/blocking/defensive_stance
+  // toggles, derived from equipped abilities' player_state conditions.
+  // TODO(Phase 3): Target status toggles (frostbite / burn / poison /
+  // electrified) driven by equipped abilities' appliesStatus entries.
   return (
     <Panel title="Live State">
       <div style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 11 }}>
@@ -438,7 +580,12 @@ function DebugPanel({ ctx, pipeline, ds }) {
       selectedSpells: ctx.selectedSpells,
       activeBuffs: ctx.activeBuffs,
       selectedStacks: ctx.selectedStacks,
+      weaponHeldState: ctx.weaponHeldState,
+      weaponType: ctx.weaponType,
+      isTwoHanded: ctx.isTwoHanded,
+      isDualWield: ctx.isDualWield,
       hpPercent: ctx.hpPercent,
+      religion: ctx.religion?.id ?? null,
       gearBaselineAttrs: ctx.attrs,
       gearBaselineBonuses: ctx.bonuses,
       finalAttrs: pipeline.finalAttrs,
