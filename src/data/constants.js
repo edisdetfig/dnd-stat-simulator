@@ -1,150 +1,123 @@
-// Game constants and configuration
+// Core constants and v3 enums.
+//
+// Source of truth for membership: docs/ability_data_map_v2.md (the spec).
+// Enum keys are UPPER_CASE for IDE autocomplete; values are the canonical
+// snake_case strings used in data files and serialization.
 
-// Patch / app version — shown in the main app header and on the class picker
-// landing page. Update these when a new Dark and Darker hotfix drops or the
-// simulator version bumps; both callers read from here so they never drift.
-export const GAME_VERSION = {
-  season: "Season 8",
-  hotfix: "Hotfix 112-1",
-};
-export const APP_VERSION = "v0.5.0";
+// ── Attribute & gear primitives (consumed by aggregator.js) ──
 
-// Base stat caps - perks can override these via capOverrides
-export const CAPS = {
-  pdr: 0.65,
-  mdr: 0.65,
-  cdr: 0.65,
-  manualDexterity: 0.55,
-  buffDuration: 1.0,  // 100%
-};
-
-// Combat constants
-export const COMBAT = {
-  BASE_MOVE_SPEED: 300,
-  MOVE_SPEED_CAP: 330,
-  HS_BASE_MULT: 0.5,
-  LIMB_MULT: 0.5,
-  ANTIMAGIC_REDUCTION: 0.20,
-};
-
-// Core attribute keys
 export const CORE_ATTRS = new Set(["str", "vig", "agi", "dex", "wil", "kno", "res"]);
 
-// Rarities - array preserves order, single source of truth
-export const RARITIES = [
-  { id: "poor",      label: "Poor",      color: "#808080", modCount: 0 },
-  { id: "common",    label: "Common",    color: "#c8c8c8", modCount: 0 },
-  { id: "uncommon",  label: "Uncommon",  color: "#56b455", modCount: 1 },
-  { id: "rare",      label: "Rare",      color: "#3b82f6", modCount: 2 },
-  { id: "epic",      label: "Epic",      color: "#a855f7", modCount: 3 },
-  { id: "legendary", label: "Legendary", color: "#f59e0b", modCount: 4 },
-  { id: "unique",    label: "Unique",    color: "#ef4444", modCount: 1 },
+export const ARMOR_SLOTS = [
+  "head", "chest", "back", "hands", "legs", "feet", "ring1", "ring2", "necklace",
 ];
 
-// Derived helpers for rarity
-export const RARITY_BY_ID = Object.fromEntries(RARITIES.map(r => [r.id, r]));
-export const RARITY_ORDER = RARITIES.map(r => r.id);
+// ── Patch-derived constants ──
 
-// Character equipment slots
-export const CHARACTER_SLOTS = [
-  // Weapons (2 loadouts, each with primary + optional secondary)
-  { id: "weaponSlot1Primary",   slotType: "primaryWeapon",   label: "Weapon 1",       category: "weapon" },
-  { id: "weaponSlot1Secondary", slotType: "secondaryWeapon", label: "Weapon 1 Off",   category: "weapon" },
-  { id: "weaponSlot2Primary",   slotType: "primaryWeapon",   label: "Weapon 2",       category: "weapon" },
-  { id: "weaponSlot2Secondary", slotType: "secondaryWeapon", label: "Weapon 2 Off",   category: "weapon" },
+// Verified via docs/health_formula.md: every character's HP gets +10 from
+// the season patch baseline, applied after curve evaluation.
+export const PATCH_HEALTH_BONUS = 10;
 
-  // Armor
-  { id: "head",  slotType: "head",  label: "Head",  category: "armor" },
-  { id: "chest", slotType: "chest", label: "Chest", category: "armor" },
-  { id: "hands", slotType: "hands", label: "Hands", category: "armor" },
-  { id: "legs",  slotType: "legs",  label: "Legs",  category: "armor" },
-  { id: "feet",  slotType: "feet",  label: "Feet",  category: "armor" },
-  { id: "back",  slotType: "back",  label: "Back",  category: "armor" },
+// ── Effect pipeline phases (spec §3 Phase enum) ──
 
-  // Accessories
-  { id: "ring1",    slotType: "ring",     label: "Ring 1",   category: "accessory" },
-  { id: "ring2",    slotType: "ring",     label: "Ring 2",   category: "accessory" },
-  { id: "necklace", slotType: "necklace", label: "Necklace", category: "accessory" },
-];
+export const EFFECT_PHASES = Object.freeze({
+  PRE_CURVE_FLAT:        "pre_curve_flat",
+  ATTRIBUTE_MULTIPLIER:  "attribute_multiplier",
+  POST_CURVE:            "post_curve",
+  MULTIPLICATIVE_LAYER:  "multiplicative_layer",
+  TYPE_DAMAGE_BONUS:     "type_damage_bonus",
+  HEALING_MODIFIER:      "healing_modifier",
+  CAP_OVERRIDE:          "cap_override",
+});
 
-// Derived helpers for slots
-export const SLOT_BY_ID = Object.fromEntries(CHARACTER_SLOTS.map(s => [s.id, s]));
-export const SLOTS_BY_CATEGORY = CHARACTER_SLOTS.reduce((acc, slot) => {
-  if (!acc[slot.category]) acc[slot.category] = [];
-  acc[slot.category].push(slot);
-  return acc;
-}, {});
+// ── Condition types (spec §3 Condition shape) ──
 
-// Target presets for damage calculations
-export const TARGET_PRESETS = [
-  {
-    id: "training_dummy",
-    name: "Training Dummy",
-    pdr: -0.22,
-    mdr: 0.075,
-    headshotDR: 0,
-    description: "Ruins dummy. Negative PDR amplifies physical damage.",
-    verification: "VERIFIED"
-  },
-  {
-    id: "naked_fighter",
-    name: "Naked Fighter",
-    pdr: 0,
-    mdr: 0.03,
-    headshotDR: 0,
-    description: "All 15 stats, no gear. ~0% PDR, ~3% MDR.",
-    verification: "ESTIMATED"
-  },
-  {
-    id: "plate_fighter",
-    name: "Plate Fighter",
-    pdr: 0.42,
-    mdr: 0.15,
-    headshotDR: 0.15,
-    description: "Geared plate Fighter. ~297 AR, helm HS DR.",
-    verification: "ESTIMATED"
-  },
-  {
-    id: "cloth_wizard",
-    name: "Cloth Wizard",
-    pdr: 0.05,
-    mdr: 0.45,
-    headshotDR: 0,
-    description: "Geared cloth caster. High WIL + MR stacking.",
-    verification: "ESTIMATED"
-  },
-];
-
-// Effect phases for spells/buffs/debuffs
-export const EFFECT_PHASES = {
-  PRE_CURVE_FLAT: "pre_curve_flat",           // Before curves, flat additions
-  ATTRIBUTE_MULTIPLIER: "attribute_multiplier", // After attribute sum, before curves
-  POST_CURVE: "post_curve",                    // After curves, derived stat mods
-  TYPE_DAMAGE_BONUS: "type_damage_bonus",      // Damage-type-specific bonus (e.g. +30% dark)
-  DAMAGE_OVER_TIME: "damage_over_time",        // Ongoing damage ticks
-};
-
-// Spell targeting types
-export const TARGETING = {
-  SELF_ONLY: "self_only",
-  ALLY_OR_SELF: "ally_or_self",
-  ENEMY_OR_SELF: "enemy_or_self",
-  ENEMY_ONLY: "enemy_only",
-};
-
-// Fallback major stats for classes that don't define their own
-export const FALLBACK_MAJOR_STATS = [
-  "hp", "ppb", "mpb", "pdr", "mdr", "moveSpeed", "actionSpeed", "spellCastingSpeed"
-];
-
-// All worn (non-weapon) gear slot ids. Name kept as "ARMOR_SLOTS" for
-// legacy reasons — includes accessories so the aggregator counts rings/necklace.
-export const ARMOR_SLOTS = CHARACTER_SLOTS
-  .filter(s => s.category !== "weapon")
-  .map(s => s.id);
-
-export const WEAPON_ONLY = new Set([
-  "weaponDamage", "attackSpeed", "attackPower"
+export const CONDITION_TYPES = new Set([
+  "form_active",
+  "hp_below",
+  "effect_active",
+  "environment",
+  "frenzy_active",
+  "weapon_type",
+  "dual_wield",
+  "player_state",
+  "equipment",
 ]);
 
-export const RARITY_CONFIG = RARITY_BY_ID;
+// ── Trigger events (spec §3 triggers[].event + plan §13.4 on_successful_block) ──
+
+export const TRIGGER_EVENTS = new Set([
+  "on_melee_hit",
+  "on_hit_received",
+  "on_damage_taken",
+  "on_damage_dealt",
+  "on_heal_cast",
+  "on_kill",
+  "on_shield_break",
+  "on_curse_tick",
+  "on_successful_block",
+]);
+
+// ── Status effect types (spec §3 appliesStatus[].type) ──
+
+export const STATUS_TYPES = new Set([
+  "burn",
+  "frostbite",
+  "wet",
+  "electrified",
+  "poison",
+  "bleed",
+  "silence",
+]);
+
+// ── Player states (spec §3 condition `player_state` values) ──
+
+export const PLAYER_STATES = new Set([
+  "hiding",
+  "crouching",
+  "blocking",
+  "defensive_stance",
+  "casting",
+  "reloading",
+  "bow_drawn",
+  "playing_music",
+  "drunk",
+  "dual_casting",
+]);
+
+// ── Weapon types (spec §3 condition `weapon_type` values) ──
+//
+// Includes specific weapon kinds AND virtual categories (two_handed, ranged,
+// unarmed). Specific kinds are matched against the equipped item's
+// `weaponType`. Virtual categories are resolved by the engine: `ranged` via
+// WEAPON_TYPE_CATEGORIES below; `two_handed` / `unarmed` / `instrument` via
+// gear properties (handed-ness, presence of weapon, instrument tag).
+
+export const WEAPON_TYPES = new Set([
+  "axe", "sword", "dagger", "bow", "crossbow", "staff", "blunt",
+  "rapier", "spear", "two_handed", "ranged", "instrument", "unarmed",
+]);
+
+// Map of category → list of specific weapon types that satisfy the category.
+// Only `ranged` is purely weapon-type-derivable. `two_handed`, `unarmed`, and
+// `instrument` depend on gear properties beyond `weaponType` and are resolved
+// by the engine, not by this map.
+export const WEAPON_TYPE_CATEGORIES = Object.freeze({
+  ranged: ["bow", "crossbow"],
+});
+
+// ── Ability targeting (spec §3 ability-level `targeting`) ──
+
+export const TARGETING = Object.freeze({
+  SELF:          "self",
+  ALLY_OR_SELF:  "ally_or_self",
+  ENEMY:         "enemy",
+  ENEMY_OR_SELF: "enemy_or_self",
+});
+
+// Effect-level `target` values (spec §3 effects[].target).
+// Distinct from ability-level TARGETING; party / nearby_* are display-only
+// distinctions in snapshot mode (engine treats them as self).
+export const EFFECT_TARGETS = new Set([
+  "self", "enemy", "party", "nearby_allies", "nearby_enemies",
+]);
