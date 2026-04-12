@@ -68,6 +68,37 @@ export const STAT_META = {
   weaponDamage: { label: "Weapon Damage", unit: "flat", cat: "weapon" },
   magicalDamage: { label: "Magical Damage", unit: "flat", cat: "weapon" },
   magicWeaponDamage: { label: "Magic Weapon Damage", unit: "flat", cat: "weapon" },
+
+  // ── v3 additions (data spec §5) ──
+  // Display-only entries: no gearStat flag — these come from abilities/perks,
+  // not from rolled gear modifiers.
+
+  // Healing modifiers
+  healingMod: { label: "Healing Mod", unit: "percent", cat: "utility" },
+  healingAdd: { label: "Healing Add", unit: "flat", cat: "utility" },
+  recoverableHealth: { label: "Recoverable Health", unit: "flat", cat: "defense" },
+
+  // Defensive layers
+  magicDamageTaken: { label: "Magic Damage Taken", unit: "percent", cat: "defense" },
+  flatDamageReduction: { label: "Flat Damage Reduction", unit: "flat", cat: "defense" },
+  impactResistance: { label: "Impact Resistance", unit: "flat", cat: "defense" },
+  armorRatingMultiplier: { label: "Armor Rating Multiplier", unit: "percent", cat: "defense" },
+
+  // Offensive (per-target / per-context multipliers)
+  typeDamageBonus: { label: "Type Damage Bonus", unit: "percent", cat: "offense" },
+  buffWeaponDamage: { label: "Buff Weapon Damage", unit: "flat", cat: "offense" },
+  headshotPower: { label: "Headshot Power", unit: "percent", cat: "offense" },
+  backstabPower: { label: "Backstab Power", unit: "percent", cat: "offense" },
+  headPenetration: { label: "Head Penetration", unit: "percent", cat: "offense" },
+  impactPower: { label: "Impact Power", unit: "flat", cat: "offense" },
+
+  // Class / spell mechanics
+  curseDurationBonus: { label: "Curse Duration", unit: "percent", cat: "utility" },
+  shapeshiftCastTime: { label: "Shapeshift Cast Time", unit: "percent", cat: "utility" },
+  wildSkillCooldown: { label: "Wild Skill Cooldown", unit: "percent", cat: "utility" },
+  spellChargeMultiplier: { label: "Spell Charge Multiplier", unit: "percent", cat: "utility" },
+  spellCooldownMultiplier: { label: "Spell Cooldown Multiplier", unit: "percent", cat: "utility" },
+  drawSpeed: { label: "Draw Speed", unit: "percent", cat: "utility" },
 };
 
 export const DERIVED_DISPLAY = {
