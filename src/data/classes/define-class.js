@@ -133,6 +133,12 @@ function forEachEffectList(ability, path, fn) {
   }
 }
 
+// all_attributes is a sentinel stat meaning "fan out across the 7 CORE_ATTRS."
+// Only two phases support the fan-out semantically: pre_curve_flat (flat +N)
+// and attribute_multiplier (×(1+N)). Any other phase is almost certainly
+// an authoring bug.
+const ALL_ATTRS_ALLOWED_PHASES = new Set(["pre_curve_flat", "attribute_multiplier"]);
+
 function validateEffect(eff, path, issues) {
   if (!eff || typeof eff !== "object") {
     issues.push(`${path}: effect is not an object`);
@@ -143,6 +149,8 @@ function validateEffect(eff, path, issues) {
   }
   if (!VALID_PHASES.has(eff.phase)) {
     issues.push(`${path}: unknown phase "${eff.phase}"`);
+  } else if (eff.stat === "all_attributes" && !ALL_ATTRS_ALLOWED_PHASES.has(eff.phase)) {
+    issues.push(`${path}: stat "all_attributes" not valid under phase "${eff.phase}" (only pre_curve_flat / attribute_multiplier)`);
   }
   if (eff.condition) validateCondition(eff.condition, `${path}.condition`, issues);
 }

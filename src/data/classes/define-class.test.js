@@ -106,6 +106,27 @@ describe('defineClass — failure modes', () => {
     expect(() => defineClass(cls)).toThrow(/unknown component spell id "ice_bolt"/);
   });
 
+  it('accepts all_attributes under pre_curve_flat and attribute_multiplier', () => {
+    const cls = baseClass();
+    cls.perks.push({
+      id: "shard_flat", type: "perk", name: "Shard Flat",
+      effects: [{ stat: "all_attributes", value: 1, phase: "pre_curve_flat" }],
+    });
+    cls.perks.push({
+      id: "curse_mul", type: "perk", name: "Curse Mul",
+      effects: [{ stat: "all_attributes", value: -0.25, phase: "attribute_multiplier" }],
+    });
+    expect(() => defineClass(cls)).not.toThrow();
+  });
+
+  it('rejects all_attributes under post_curve (or any other phase)', () => {
+    const cls = baseClass();
+    cls.perks[0].effects = [
+      { stat: "all_attributes", value: 5, phase: "post_curve" },
+    ];
+    expect(() => defineClass(cls)).toThrow(/"all_attributes" not valid under phase "post_curve"/);
+  });
+
   it('catches invalid slot type', () => {
     const cls = baseClass();
     cls.skills.push({

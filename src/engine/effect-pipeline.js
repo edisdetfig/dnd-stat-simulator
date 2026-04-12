@@ -54,9 +54,19 @@ export function runEffectPipeline(ctx) {
   }
 
   // pre_curve_flat — core attrs into attrs, rest into bonuses.
+  // "all_attributes" fans out to each of the 7 CORE_ATTRS using effect.value
+  // (the literal authored value, not a hardcoded +1). Used by Soul Collector's
+  // shard bonus, Barbarian War Sacrifice, etc. When any data carries
+  // "+N to all attributes" as a flat addition, authoring it once via
+  // all_attributes is cheaper than 7 explicit entries and keeps class data
+  // terse.
   for (const entry of byPhase[EFFECT_PHASES.PRE_CURVE_FLAT]) {
     const { effect } = entry;
-    if (CORE_ATTRS.has(effect.stat)) {
+    if (effect.stat === "all_attributes") {
+      for (const a of CORE_ATTR_LIST) {
+        finalAttrs[a] = (finalAttrs[a] || 0) + effect.value;
+      }
+    } else if (CORE_ATTRS.has(effect.stat)) {
       finalAttrs[effect.stat] = (finalAttrs[effect.stat] || 0) + effect.value;
     } else {
       finalBonuses[effect.stat] = (finalBonuses[effect.stat] || 0) + effect.value;

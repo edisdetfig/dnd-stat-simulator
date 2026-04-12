@@ -81,26 +81,28 @@ describe('Warlock + Dark Enhancement — type_damage_bonus on dark_magical', () 
 });
 
 describe('Warlock + Soul Collector — stacking darkness shards', () => {
-  it('3 shards: +3 all attributes via pre_curve_flat', () => {
+  it('3 shards: +3 fans out to every CORE_ATTR (pre_curve_flat all_attributes)', () => {
     const { result } = computeFor({
       selectedPerks: ["soul_collector"],
       selectedStacks: { soul_collector: 3 },
     });
     // Each stack emits { stat: "all_attributes", value: 1, phase: "pre_curve_flat" }.
-    // Pipeline routes to CORE_ATTRS only (all_attributes on pre_curve_flat
-    // has no defined behavior per spec §3 — spec says all_attributes is
-    // used with attribute_multiplier). Our engine currently treats
-    // "all_attributes" pre_curve_flat as a bonuses-bucket key.
-    // Check the dark_magical bonus instead — always works.
-    expect(result.typeDamageBonuses.dark_magical).toBeCloseTo(0.99, 6); // 3 × 0.33
+    // With fan-out, every core attribute gains +3 over its baseline.
+    const base = { str: 11, vig: 14, agi: 14, dex: 15, wil: 22, kno: 15, res: 14 };
+    for (const [a, v] of Object.entries(base)) {
+      expect(result.finalAttrs[a], `${a} should be base + 3`).toBe(v + 3);
+    }
+    // Dark magical typeDamageBonus accumulates 3 × 0.33 = 0.99.
+    expect(result.typeDamageBonuses.dark_magical).toBeCloseTo(0.99, 6);
   });
 
-  it('0 shards: no bonus', () => {
+  it('0 shards: no bonus anywhere', () => {
     const { result } = computeFor({
       selectedPerks: ["soul_collector"],
       selectedStacks: { soul_collector: 0 },
     });
     expect(result.typeDamageBonuses.dark_magical).toBeUndefined();
+    expect(result.finalAttrs.str).toBe(11);
   });
 
   it('not selected: no bonus even if stack count is set', () => {
@@ -109,6 +111,7 @@ describe('Warlock + Soul Collector — stacking darkness shards', () => {
       selectedStacks: { soul_collector: 3 },
     });
     expect(result.typeDamageBonuses.dark_magical).toBeUndefined();
+    expect(result.finalAttrs.str).toBe(11);
   });
 });
 
