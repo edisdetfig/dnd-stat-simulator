@@ -4,6 +4,60 @@ Season 8, Hotfix 112-1 (2026-04-09), game version 0.15.134.8480.
 
 ---
 
+## RESOLVED: Health Formula (Max HP Computation)
+
+**Status: VERIFIED (2026-04-10) — 6/6 test points match, Barbarian**
+
+### Formula
+
+```
+healthRating = STR × 0.25 + VIG × 0.75
+baseHealth = evaluate(healthCurve, healthRating)
+finalHP = floor(baseHealth × (1 + sumMHB)) + sumMHA
+```
+
+- `healthRating`: Fractional, never rounded. Includes temporary STR/VIG from buffs (e.g., Power of Sacrifice).
+- `baseHealth`: Piecewise linear lookup from stat_curves.json. Fractional, never rounded.
+- `sumMHB`: Sum of all Max Health Bonus % sources (gear enchants, perks, buffs) as decimal (5% = 0.05).
+- `sumMHA`: Sum of all flat Max Health Add sources (gear enchants, etc.) as integers.
+- `floor()` applies to the percentage product only. Flat MHA is added AFTER floor and is NOT multiplied by MHB%.
+
+### Display
+
+- Detailed stats view: shows `floor()` result (authoritative, matches formula)
+- Simplified stat view: shows `ceil()` of underlying fractional computation (can be +1 higher)
+- **Simulator should use `floor()` as the canonical value**
+
+### Bug in current code
+
+`src/engine/derived-stats.js` line 24 uses `Math.ceil` and does not apply MHB%:
+```js
+s.health = Math.ceil(evaluateCurve(STAT_CURVES.health, s.healthRating)) + (bonuses.maxHealth || 0);
+```
+Should be:
+```js
+s.health = Math.floor(evaluateCurve(STAT_CURVES.health, s.healthRating) * (1 + (bonuses.maxHealthBonus || 0))) + (bonuses.maxHealth || 0);
+```
+
+### Verification Data — 6/6 match
+
+All tests: Barbarian, 2026-04-10.
+
+| # | STR | VIG | HR | Curve | MHB% | MHA | floor(curve × (1+MHB)) + MHA | In-Game | Match |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 20 | 25 | 23.75 | 139.625 | 0% | 0 | 139 | 139 (detail) / 140 (simple) | ✅ |
+| 2 | 22 | 27 | 25.75 | 142.625 | 0% | 0 | 142 | 142 (detail) / 143 (simple) | ✅ |
+| 3 | 22 | 27 | 25.75 | 142.625 | 5% | 0 | 149 | 149 | ✅ |
+| 4 | 22 | 28 | 26.5 | 143.75 | 5% | 0 | 150 | 150 | ✅ |
+| 5 | 22 | 27 | 25.75 | 142.625 | 0% | 6 | 144 | 144 (detail) / 145 (simple) | ✅ |
+| 6 | 22 | 27 | 25.75 | 142.625 | 5% | 6 | 155 | 155 | ✅ |
+
+### Key Finding
+
+Test point 6 confirms MHA is added AFTER the percentage multiply. If MHA were inside the multiply, the result would be `floor((142.625 + 6) × 1.05) = floor(156.056) = 156`, not 155. Actual: `floor(142.625 × 1.05) + 6 = floor(149.756) + 6 = 149 + 6 = 155`. ✅
+
+---
+
 ## RESOLVED: Healing Formula (Magical/Physical/HoT)
 
 **Status: VERIFIED (2026-04-09) — 10/10 test points match**
