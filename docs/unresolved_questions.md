@@ -4,6 +4,58 @@ Season 8, Hotfix 112-1 (2026-04-09), game version 0.15.134.8480.
 
 ---
 
+## OPEN: Health MHB table deviations (8/16)
+
+**Status: UNRESOLVED (2026-04-12) — formula + 14 verified points consistent; 8 MHB-table points deviate by ±1**
+
+The health formula in `docs/health_formula.md` reconciles cleanly with:
+- All 6 no-MHB entries in the Curve Verification table
+- All 3 worked examples (Naked Barbarian = 140, +5% chest = 149, Robust = 149)
+- 8 of the 16 MHB Verification table entries
+
+The remaining 8 MHB table entries deviate by ±1 in a non-systematic direction (4 want +1 over the formula, 4 want -1 under it). Neither alternate rounding (round/ceil), multiplicative MHB stacking ((1+a)(1+b) instead of (1+a+b)), nor partial-stat-from-chest hypotheses reconcile all 16.
+
+### The deviating cases
+
+All Barbarian, base STR 30 VIG 32; +2 STR / +2 VIG when chest is equipped (via sockets). Curve segment [21, 44): `base = 125.5 + (hr − 21) × 1.5`.
+
+| # | Config | HR | base | Formula: `floor(base × (1+mhb)) + 10 + mha` | Doc table says |
+|---|---|---|---|---|---|
+| 2  | +4% weapon                        | 31.5 | 141.25 | floor(146.900)+10 = **156** | 157 |
+| 4  | +5% chest + 4% weapon (9%)        | 33.5 | 144.25 | floor(157.233)+10 = **167** | 166 |
+| 6  | +4% weapon + 6 MHA                | 31.5 | 141.25 | floor(146.900)+10+6 = **162** | 163 |
+| 8  | +5% chest + 4% weapon + 6 MHA (9%)| 33.5 | 144.25 | floor(157.233)+10+6 = **173** | 172 |
+| 9  | Robust 7.5%                       | 31.5 | 141.25 | floor(151.844)+10 = **161** | 162 |
+| 10 | Robust + 6 MHA (7.5%)             | 31.5 | 141.25 | floor(151.844)+10+6 = **167** | 168 |
+| 13 | Robust + 5% chest + 4% wpn + 6 MHA (16.5%) | 33.5 | 144.25 | floor(168.051)+10+6 = **184** | 183 |
+| 15 | Robust + 5% chest + 4% weapon (16.5%)      | 33.5 | 144.25 | floor(168.051)+10 = **178** | 177 |
+
+### What was tried
+
+- Pure `floor` per documented formula: 8/16 MHB cases pass
+- `round` instead of `floor`: swaps which cases fail; still 8/16
+- `ceil` instead of `floor`: all +1-biased cases pass, all -1-biased fail
+- Multiplicative MHB stacking: identical results for the additive cases, no improvement
+- Chest contributes only +2 STR or only +2 VIG: breaks cases that currently pass
+
+### Engine stance
+
+`src/engine/recipes.js` implements the documented formula. 8 passing MHB entries are active tests. 8 deviating entries are captured in `describe.skip()` in `src/engine/recipes.test.js` with exact `docSays` and `formulaGives` values preserved. When re-verification resolves each row, un-skipping is a one-file edit.
+
+### Re-verification protocol
+
+Test in-game with Barbarian, base STR 30 / VIG 32 (unchested), each config below. Record exact displayed HP from the **Detailed** stats view (not the Simplified/rounded view). Correlate with this table.
+
+Gear to slot:
+- Chest: Tri-Pelt Northern Full Tunic (5% MHB, +2 STR +2 VIG sockets)
+- Weapon: Troll's Bane (4% MHB, no STR/VIG)
+- Necklace: Necklace of Peace (+6 Max Health Add)
+- Perk: Robust (measured 7.5%)
+
+For each of the 8 deviating cases: assemble the gear per the Config column, read the Detailed HP. If it matches formulaGives, docs/health_formula.md's table has a typo. If it matches docSays, the formula has an edge-case we haven't captured.
+
+---
+
 ## RESOLVED: Health Formula (Max HP Computation)
 
 **Status: VERIFIED (2026-04-10) — 6/6 test points match, Barbarian**

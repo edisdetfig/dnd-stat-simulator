@@ -14,9 +14,13 @@ export const ARMOR_SLOTS = [
 
 // ── Patch-derived constants ──
 
-// Verified via docs/health_formula.md: every character's HP gets +10 from
-// the season patch baseline, applied after curve evaluation.
+// Verified via docs/health_formula.md.
+// PATCH_HEALTH_BONUS: every character's HP gets +10 from the season patch
+//   baseline, applied after curve evaluation, never scaled by MHB%.
+// HR_STR_WEIGHT / HR_VIG_WEIGHT: weights for healthRating = STR×0.25 + VIG×0.75.
 export const PATCH_HEALTH_BONUS = 10;
+export const HR_STR_WEIGHT = 0.25;
+export const HR_VIG_WEIGHT = 0.75;
 
 // ── Effect pipeline phases (spec §3 Phase enum) ──
 

@@ -47,16 +47,16 @@
     "inputFormula": "str * 0.25 + vig * 0.75",
     "outputUnit": "flat",
     "segments": [
-      { "start": 0,  "end": 15, "startValue": 95.0,  "slope": 2.0 },
-      { "start": 15, "end": 21, "startValue": 125.0, "slope": 1.75 },
-      { "start": 21, "end": 44, "startValue": 135.5, "slope": 1.5 },
-      { "start": 44, "end": 48, "startValue": 170.0, "slope": 1.25 },
-      { "start": 48, "end": 64, "startValue": 175.0, "slope": 1.0 },
-      { "start": 64, "end": 100,"startValue": 191.0, "slope": 0.5 }
+      { "start": 0,  "end": 15, "startValue": 85.0,  "slope": 2.0 },
+      { "start": 15, "end": 21, "startValue": 115.0, "slope": 1.75 },
+      { "start": 21, "end": 44, "startValue": 125.5, "slope": 1.5 },
+      { "start": 44, "end": 48, "startValue": 160.0, "slope": 1.25 },
+      { "start": 48, "end": 64, "startValue": 165.0, "slope": 1.0 },
+      { "start": 64, "end": 100,"startValue": 181.0, "slope": 0.5 }
     ],
     "lowerLimit": null,
     "upperLimit": null,
-    "postCurve": "finalHP = ceil(curve(healthRating)) + maxHealth from gear. Uses ceil(), NOT round(). Verified: HR 22.75 → curve 138.125 → ceil 139 + 6 maxHP = 145 (matches in-game).",
+    "postCurve": "Pre-patch base values. See docs/health_formula.md for the full formula (conditional rounding by MHB, +10 patch bonus and flat MHA applied after rounding).",
     "verification": "verified"
   },
 
