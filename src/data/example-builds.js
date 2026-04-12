@@ -31,17 +31,10 @@ const V3_DEFAULTS = Object.freeze({
 
 // ── Blood Tithe — canonical Warlock dark-plate caster ──
 //
-// Historical verification fixture: with PoS + Bloodstained Blade active,
-// Hit 1 body ≈ 85, head ≈ 131 vs Training Dummy. Every gear item + rolled
-// modifier from the v2 build is preserved to keep damage benchmarks
-// testable once Phase 2 damage display lands.
-//
-// v3 translation: weaponDamage/magicalDamage moved into inherentStats so
-// aggregateGear picks them up (v2 aggregator read top-level fields; v3
-// unifies). weaponType / armorType added where missing so Phase 3
-// weapon_type / equipment conditions work. Skill IDs adjusted to match
-// the v3 Warlock CSV authoring ("spell_memory_i" vs the v2
-// "spell_memory_1").
+// Verification fixture: with PoS + Bloodstained Blade active, Hit 1 body
+// ≈ 85, head ≈ 131 vs Training Dummy (matches damage benchmarks once
+// Phase 3 damage display lands). weaponType / armorType fields support
+// Phase 3 weapon_type / equipment conditions.
 function makeBloodTitheGear() {
   const gear = makeEmptyGear();
 

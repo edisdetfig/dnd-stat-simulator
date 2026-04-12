@@ -68,8 +68,6 @@ const WARLOCK = defineClass({
       name: "Dark Reflection",
       desc: "While active, reflect 15(0.75) dark magical damage to the melee attacker. Does not reflect while on cooldown.",
       activation: "toggle",
-      duration: undefined,      // CSV doesn't specify; display metadata only
-      cooldown: undefined,      // CSV doesn't specify
       triggers: [
         { event: "on_hit_received",
           damage: { damageType: "dark_magical", base: 15, scaling: 0.75 } },
@@ -115,10 +113,11 @@ const WARLOCK = defineClass({
         { event: "on_curse_tick",
           heal: { baseHeal: 2, scaling: 0.15, healType: "magical" },
           // "recoverable health" is conceptually a ghost-health bucket;
-          // for v1 display we treat it as magical healing. Flag for future.
+          // Phase 1 scope treats this as plain magical healing; when a
+          // distinct recoverable-health bucket lands, split it out.
         },
       ],
-      _unverified: "recoverable-health restoration not distinguished from normal heal in v1",
+      _unverified: "recoverable-health restoration not distinguished from normal heal (Phase 1 scope)",
     },
 
     // CSV: warlock.csv L29 — Curse Mastery
@@ -287,7 +286,7 @@ const WARLOCK = defineClass({
           },
         ],
       },
-      _unverified: "shard interaction with in-game 3-cap not enforced by engine; alt-skill slot replacement is display-only in v1",
+      _unverified: "shard interaction with in-game 3-cap not enforced by engine; alt-skill slot replacement is display-only (Phase 1 scope)",
     },
 
     // CSV: warlock.csv L41 — Phantomize
