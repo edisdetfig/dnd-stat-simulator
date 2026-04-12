@@ -299,7 +299,8 @@ export const TIER_COLORS = {
 };
 
 // ---------------------------------------------------------------------------
-// Legacy style objects — hex values migrate to var() in step 3.
+// Shared inline-style objects — reusable css-in-js fragments keyed by role
+// (select, numInput, etc.) that pair with theme tokens via var().
 // ---------------------------------------------------------------------------
 
 export const styles = {

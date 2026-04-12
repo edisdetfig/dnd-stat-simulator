@@ -1,5 +1,4 @@
 // MarginalBadge — colored badge showing slope per input point with hover detail
-// Source: index.old.html lines 1744-1869
 //
 // Exported as a React.memo wrapper. App renders one badge per derived stat
 // (5-7 per class), and without memo each one re-renders on every App state

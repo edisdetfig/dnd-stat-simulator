@@ -1,5 +1,4 @@
 // CurveChart — expandable inline SVG showing full piecewise curve with current position
-// Source: index.old.html lines 1568-1742
 //
 // Exported as a React.memo wrapper. The three props (statId string, ds object,
 // attrs object) come from App.jsx's `computed` useMemo so their references are

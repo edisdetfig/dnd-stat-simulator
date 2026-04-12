@@ -1,5 +1,4 @@
 // GearSlot — collapsible gear slot row that wraps WeaponEditor or ArmorEditor
-// Source: index.old.html lines 1396-1447
 
 import { useState } from 'react';
 import { RARITY_CONFIG } from '../../data/constants.js';

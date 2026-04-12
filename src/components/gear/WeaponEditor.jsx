@@ -1,5 +1,4 @@
 // WeaponEditor — edits a single weapon item (name, rarity, hand type, damage, stats)
-// Source: index.old.html lines 1339-1372
 
 import { RARITY_CONFIG, RARITY_ORDER } from '../../data/constants.js';
 import { styles } from '../../styles/theme.js';

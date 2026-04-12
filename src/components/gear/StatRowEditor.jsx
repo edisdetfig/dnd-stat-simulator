@@ -1,5 +1,4 @@
 // StatRowEditor — single editable stat row (stat select + value input + remove button)
-// Source: index.old.html lines 1281-1309
 
 import { STAT_META, STAT_OPTIONS } from '../../data/stat-meta.js';
 import { styles } from '../../styles/theme.js';

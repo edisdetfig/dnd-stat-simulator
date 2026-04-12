@@ -1,5 +1,4 @@
 // Collapsible — expandable section with title, optional badge
-// Source: index.old.html lines 1481-1493
 
 import { useState } from 'react';
 

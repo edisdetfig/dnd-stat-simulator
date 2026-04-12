@@ -1,5 +1,4 @@
 // ArmorEditor — edits a single armor item (name, rarity, stats)
-// Source: index.old.html lines 1374-1394
 
 import { RARITY_CONFIG, RARITY_ORDER } from '../../data/constants.js';
 import { styles } from '../../styles/theme.js';

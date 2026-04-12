@@ -1,5 +1,4 @@
 // InfoTip — contextual ⓘ micro-tip, hover for explanation
-// Source: index.old.html lines 1503-1529
 
 import { useState } from 'react';
 

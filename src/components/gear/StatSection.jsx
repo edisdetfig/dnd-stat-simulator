@@ -1,5 +1,4 @@
 // StatSection — collapsible group of StatRowEditor rows with add/remove
-// Source: index.old.html lines 1311-1337
 
 import { STAT_META } from '../../data/stat-meta.js';
 import { styles } from '../../styles/theme.js';

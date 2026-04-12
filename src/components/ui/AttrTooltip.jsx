@@ -1,5 +1,4 @@
 // AttrTooltip — hover tooltip showing per-attribute breakdown
-// Source: index.old.html lines 1453-1479
 
 import { useState } from 'react';
 

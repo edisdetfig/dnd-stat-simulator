@@ -1,5 +1,4 @@
 // Panel — styled container with optional uppercase title
-// Source: index.old.html lines 1531-1538
 
 export function Panel({ title, color, children }) {
   return (

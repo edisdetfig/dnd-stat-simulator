@@ -1,5 +1,4 @@
 // TargetEditor — target PDR/MDR/HSDR editor with preset buttons
-// Source: index.old.html lines 1911-1981
 
 import { TARGET_PRESETS } from '../data/constants.js';
 import { styles } from '../styles/theme.js';

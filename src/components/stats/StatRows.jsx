@@ -1,5 +1,4 @@
 // Stat row display primitives — SR, CapSR, SubSR, StatDivider
-// Source: index.old.html lines 1871-1905
 
 import { fmtPct } from '../../utils/format.js';
 import { InfoTip } from '../ui/InfoTip.jsx';
