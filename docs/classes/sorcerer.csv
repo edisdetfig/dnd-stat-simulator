@@ -1,0 +1,159 @@
+Sorcerer - Configuration,,,,,
+Property,Value,,,,
+Class Name,Sorcerer,,,,
+Max Perks,4,,,,
+Max Skills,2,,,,
+Spell Cost Type,cooldown,,,,
+Equippable Armor,"cloth, leather",,,,
+Class Notes,"The Sorcerer can cast spells without a weapon that allows for spell casting, such as the magic staff or spellbook (among others). While casting spells with their hands, the can cast 2 spells simultaneously, one in each hand. Sorcerers are able to merge certain spells, to create ""Merge Spells"", which consume both the individual spells and create a new spell that gets cast. Merge Spells do not cost additional spell memory capacity, and do not have their own cooldowns. The cooldown is determined by how long the cooldown is for the individual spells, as you cannot recast the same merge spell until both of the original spells needed to create the specific merge spell are off cooldown.",,,,
+Base Stats,,,,,
+Attribute,Abbrev,Value,Notes,,
+Strength,STR,10,,,
+Vigor,VIG,10,,,
+Agility,AGI,10,,,
+Dexterity,DEX,18,,,
+Will,WIL,25,,,
+Knowledge,KNO,20,,,
+Resourcefulness,RES,12,,,
+Health (derived),HP,117,,,
+,,,,,
+Perks,,,,,
+Name,Description,Nuances,Sim Notes,,
+Air Mastery,Gain 25% air magic knockback power bonus and 50% air magical damage bonus,,,,
+Apex of Sorcery,"While casting spells, reduce movement speed by 99%, but gain 50% magical damage bonus and 50% spell casting speed.",,,,
+Elemental Fury,"For every 1% of health lost, gain a 0.5% cooldown reduction bonus and 0.25% magical damage bonus.",,We should be able to simulate different character health levels so we can trigger and simulate the different bonuses at different health levels. This isn't the only perk/skill that works in this way.,,
+Innate Talent,"Weh casting spells with bare hands, gain 5 magical power and 10% spell casting speed.",,,,
+Lightning Mastery,"Gain 25% lightning magical damage bonus. Once every 2 seconds while dealing lightning magical damage, inflict eletric shock for 1 seconds, transferring 5 lightning magical damage to the cloasest target within 2m of the primary target.",,,,
+Mana Flow,"For each successful spell cast, gain 5% magical damage bonus. This effect stacks up to 3 times, and resets on the next successful cast.",,,,
+Mana Fold,Reduce all spell cooldowns by 25% but lost 15% spell casting speed.,,,,
+Merged Might,"When casting a merge spell, gain 5 magical power. After casting, gain a 5% move speed bonus for 2 seconds.",,,,
+Spell Sculpting,"Increases the range of all spells by 25% and the area of effect by 25%, but increases the cooldown time by 25%.",,,,
+Spell Stride,Gain 30% move speed bonus while casting two spells simultaneously. ,,"We need to understand how much casting a spell reduces your speed so that we can simulate your move speed while casting, and then we can simulate what your move speed would be while casting two spells at the same time with this perk. To note: the spell casting speed penalty would only apply once. For example, if you are casting one spell, your move speed would be impacted by X, and if you can a second spell at the same time, it would still be X, and not decreased further.",,
+Time Distortion,"Reduces cast time of all spells by 50%, but increases the cooldown time for all spells by 200%",,,,
+,,,,,
+,,,,,
+Skills,,,,,
+Name,Description,Nuances,Sim Notes,,
+Spell Memory 1,Allows 5 spells to be equipped,,,,
+Spell Memory 2,Allows 5 spells to be equipped,,,,
+,,,,,
+,,,,,
+,,,,,
+,,,,,
+,,,,,
+Spells,,,,,
+Tier,Name,Base Cooldown (in seconds),Description,Nuances,Sim Notes
+1,Water Bolt,12,"Launch a condensed water orb, dealing 15(1.0) ice magical damage to targets it touches and inflicting Wet for 2 seconds. The orb stops upon hitting an object or reaching its maximum range and lasts for 12 seconds. Up to 3 water orbs can exist simultaneously. Wet: The target loses 20% move speed bonus and jump height is reduced by 30%.",,"Wet is an affect that can be applied to enemies:
+
+Wet: The target loses 20% move speed bonus and jump height is reduced by 30%."
+1,Stone Skin,12,"Surround yourself with stone for 12 seconds, gaining 10% physical damage reduction and 10% physical damage bonus, but losing 5 additional move speed.",,
+1,Glaciate,12,"Envelop your weapon in ice for 12 seconds. While active, you deal 3(0.5) ice magical damage and inflict Frostbite for 1 seconds on hit. Frostbite: The target loses 5% move speed bonus and 20% action speed.",,"Frostbite is an affect that can be applied to enemies:
+
+Frostbite: The target loses 5% move speed bonus and 20% action speed.
+
+Frostbite effects can vary, and is based on the description provided in the spell that applies it."
+1,Fire Arrow,12,"Fire 3 homing arrows in a radial pattern, each dealing 7(1.0) fire magical damage and inflicting burn over 3 seconds. Burn: the target takes 3(0.5) fire magical damage.",,"Burn is an affect that can be applied to enemies:
+
+Burn: the target takes 3(0.5) fire magical damage.
+
+Burn damage can vary, is based on the description provided in the spell that applies it."
+2,Windblast,15,Deal 10(1.0) air magical damage to the target and push them back.,,
+2,Ice Spear,15,"Fire an ice spear that deals 30(1.0) ice magical damage, piercing and damaging all targets in its path, inflicting Frostbite for 2 seconds. Frostbite: The target loses 20% move speed bonus and 20% action speed.",,"Frostbite is an affect that can be applied to enemies:
+
+Frostbite: The target loses 20% move speed bonus and 20% action speed.
+
+Frostbite effects can vary, and is based on the description provided in the spell that applies it."
+2,Flamestrike,15,Create a fire pillar lasting 3 seconds and dealing 25(1.0) fire magical damage on creation and 10(0.5) fire magical damage per second to enemies inside while inflicting burn over 3 seconds. Burn: the target takes 3(0.5) fire magical damage.,,"Burn is an affect that can be applied to enemies:
+
+Burn: the target takes 3(0.5) fire magical damage.
+
+Burn damage can vary, is based on the description provided in the spell that applies it."
+2,Eruption,15,"Cause a ground explosion, dealing 20(1.0) earth magical damage and lifting all target within the area into the air.",,
+3,Lightning Bolt,18,"Fire a lightning beam for 5 seconds, electrifying the target and dealing 7(.05) lightning magical damage per second. Electrified: The target loses 20% move speed bonus",,"Electrified is an affect that can be applied to enemies. Shocking or Electrifying an enemy applies Electrified to them:
+
+Electrified: The target loses 20% move speed bonus"
+3,Fire Orb,18,"Launch a fire orb forward, dealing 5(0.5) fire magical damage per second to nearby targets. The orb lasts for 6 seconds and deal 30(1.0) fire magical damage to targets it touches. Upon contact, it exploxed, dealing 10(1.0) fire magical damage to nearby targets and inflicting burn over 3 seconds. Burn: the target takes 5(0.5) fire magical damage.",,"Burn is an affect that can be applied to enemies:
+
+Burn: the target takes 5(0.5) fire magical damage.
+
+Burn damage can vary, is based on the description provided in the spell that applies it."
+4,Vortex,21,Create a vortex centered on the caster. Targets touching the vortex take 15(1.0) air magical damage and are pushed back.,,
+4,Lightning Sphere,21,"Surround yourself with an electromagnetic field for 5 seconds, shocking all nearby targets for 5(0.5) lightning magical damage per second. 
+
+In this case, shocking applies Electrified: The target loses 20% move speed bonus.",,"Electrified is an affect that can be applied to enemies. Shocking or Electrifying an enemy applies Electrified to them:
+
+Electrified: The target loses 20% move speed bonus"
+4,Levitation,21,Lift the target into the air and gently lower them back down.,,
+5,Summon Earth Elemental,24,"Summon an Earth Elemental for 18 seconds. The Earth Elemental increases the caster's armor rating by 50 and hurls rocks at nearby enemies, dealing 40(1.0) physical damage.",,
+,,,,,
+,,,,,
+Transformations (if applicable),,,,,
+Form,Scales With,Stat Modifiers,Attacks,Wild Skill,Nuances
+None,,,,,
+Merged Spells,,,,,
+Name,Spell 1,Spell 2,Description,Nuances,Sim Notes
+Aqua Prison,Water Bolt,Levitation,"Launch a water orb that engulfs the target, dealing 15(1.0) ice magical damage, trapping them, and lifting them into the air for 3 seconds. The orb bursts instantly upon taking physical damage, inflicting wet for 2 seconds. Wet: The target loses 20% move speed bonus and jump height is reduced by 30%.",,"Wet is an affect that can be applied to enemies:
+
+Wet: The target loses 20% move speed bonus and jump height is reduced by 30%."
+Electric Dash,Lightning Bolt,Vortex,"Transform into a lightning orb and quickly move to the selected location, electrifying all targets along the path and ealing 10(1.0) lightning magical damage. Upon reaching the destination, unleash a lightning strike, dealing 15(1.0) lightning magical damage to nearby targets. The caster is immune to physical attacks while moving but remains affected by area magic. Electrified: The target loses 20% move speed bonus",,"Electrified is an affect that can be applied to enemies. Shocking or Electrifying an enemy applies Electrified to them:
+
+Electrified: The target loses 20% move speed bonus"
+Elemental Bolt,Water Bolt,Fire Arrow,"Deal 50(1.0) Fire/Ice magical damage to the target, inflicting burn over 3 seconds and frostbite for 2 seconds. Burn: the target takes 3(0.5) fire magical damage. Frostbite: The target loses 20% move speed bonus and 20% action speed.",,"Burn is an affect that can be applied to enemies:
+
+Burn: the target takes 3(0.5) fire magical damage.
+
+Burn damage can vary, is based on the description provided in the spell that applies it.
+
+Frostbite is an affect that can be applied to enemies:
+
+Frostbite: The target loses 20% move speed bonus and 20% action speed.
+
+Frostbite effects can vary, and is based on the description provided in the spell that applies it."
+Flamefrost Spear,Ice Spear,Flamestrike,"Throw a Flamefrost Spear, dealing 30(1.0) fire magical damage and 30(1.0) ice magical damage to the target, inflicting burn over 3 seconds and frostbite for 3 seconds. The spear pierces through targets, dealing damage to all it hits. Burn: the target takes 3(0.5) fire magical damage. Frostbite: The target loses 20% move speed bonus and 20% action speed.",,"Burn is an affect that can be applied to enemies:
+
+Burn: the target takes 3(0.5) fire magical damage.
+
+Burn damage can vary, is based on the description provided in the spell that applies it.
+
+Frostbite is an affect that can be applied to enemies:
+
+Frostbite: The target loses 20% move speed bonus and 20% action speed.
+
+Frostbite effects can vary, and is based on the description provided in the spell that applies it."
+Flamethrower,Fire Arrow,Windblast,"Blast radial flames forward for 5 seconds, dealing 25(1.0) fire magical damage per second and inflicting burn over 3 seconds on targets. Burn: The target takes 3(0.5) fire magical damage.",,"Burn is an affect that can be applied to enemies:
+
+Burn: the target takes 3(0.5) fire magical damage.
+
+Burn damage can vary, is based on the description provided in the spell that applies it."
+Forst Breath,Glaciate,Windblast,"Exhale an icy gust of breath forward, dealing 20(1.0) ice magical damage to all targets and inflicting frostbite for 2 seconds. The affected area remains frozen for 3 seconds, causing tarets on the ice to lose 10% move speed bonus. Frostbite: The target loses 20% move speed bonus and 20% action speed.",,"Frostbite is an affect that can be applied to enemies:
+
+Frostbite: The target loses 20% move speed bonus and 20% action speed.
+
+Frostbite effects can vary, and is based on the description provided in the spell that applies it."
+Frost Lightning,Lightning Bolt,Ice Spear,"Fires a lightning bolt, dealing 15(1.0) lightning magical damage and electrifying for 1 seconds. The bolt freezes shortly after, inflicting 15(1.0) ice magical damage and immobilizing the target for 1.5 seconds. Electrified: The target loses 20% move speed bonus.",,"Electrified is an affect that can be applied to enemies. Shocking or Electrifying an enemy applies Electrified to them:
+
+Electrified: The target loses 20% move speed bonus"
+Icebound,Stone Skin,Glaciate,"Upon casting, become frozen for 6 seconds, becoming immue to all damage and gaining a 50% cooldown reduction bonus. The ice can be shattered by a powerful impact. ",,
+Lightning Storm,Lightning Sphere,Levitation,"Channel for 6 seconds to summon a lightning storm, dealing 10(1.0) lightning magical damage per second and electrifying all targets within the area. Electrified: The target loses 20% move speed bonus.",,"Electrified is an affect that can be applied to enemies. Shocking or Electrifying an enemy applies Electrified to them:
+
+Electrified: The target loses 20% move speed bonus"
+Lightning Vortex,Lightning Sphere,Vortex,"Deal 20(1.0) lightning/air magical damage to all targets within the area, push them back, and electrify them for 2 seconds. Electrified: The target loses 20% move speed bonus.",,"Electrified is an affect that can be applied to enemies. Shocking or Electrifying an enemy applies Electrified to them:
+
+Electrified: The target loses 20% move speed bonus"
+Mud Shield,Water Bolt,Stone Skin,"Create a mud shield in front of the caster for 7 seconds, blocking all damage. The shield remains fixed in its initial direction. ","This only blocks all damage for things that actually get blocked by it, it doens't block everything automatically",
+Plasma Blast,Fire Orb,Lightning Sphere,"After 4 seconds, the caster explodes, inflicting 50(1.0) fire/lightning magical damage to all nearby targets, inflicting burn for 3 seconds, and electrocuting them for 2 seconds. Burn: The target takes 3(0.5) magical damage. Electrified: The target loses 20% move speed bonus.",,"Burn is an affect that can be applied to enemies:
+
+Burn: the target takes 3(0.5) fire magical damage.
+
+Burn damage can vary, is based on the description provided in the spell that applies it.
+
+Electrified is an affect that can be applied to enemies. Shocking or Electrifying an enemy applies Electrified to them:
+
+Electrified: The target loses 20% move speed bonus"
+Summon Lava Elemental,Fire Orb,Summon Earth Elemental,Summon a Lava Elemental for 18 seconds. The Lava Elemental deals 10(0.5) fire magical damage per second to nearby enemies and leaves a trail of lava that deals 10(0.5) fire magical damage per second,,
+Thorn of Earth,Eruption,Levitation,"Erupts a thorn of earth, dealing 30(1.0) earth magical damage to all the targets within the area.",,
+Wall of Fire,Flamestrike,Eruption,"Erupt a wall of fire for 8 seconds, dealing 10(1.0) earth/fire magical damage instantly and 20(1.0) fire magical damage per second to all targets it touches and inflicting burn over 3 seconds. Bur: The target takes 3(0.5) fire magical damage.",,"Burn is an affect that can be applied to enemies:
+
+Burn: the target takes 3(0.5) fire magical damage.
+
+Burn damage can vary, is based on the description provided in the spell that applies it."

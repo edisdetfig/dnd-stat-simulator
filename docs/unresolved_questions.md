@@ -28,17 +28,6 @@ finalHP = floor(baseHealth × (1 + sumMHB)) + sumMHA
 - Simplified stat view: shows `ceil()` of underlying fractional computation (can be +1 higher)
 - **Simulator should use `floor()` as the canonical value**
 
-### Bug in current code
-
-`src/engine/derived-stats.js` line 24 uses `Math.ceil` and does not apply MHB%:
-```js
-s.health = Math.ceil(evaluateCurve(STAT_CURVES.health, s.healthRating)) + (bonuses.maxHealth || 0);
-```
-Should be:
-```js
-s.health = Math.floor(evaluateCurve(STAT_CURVES.health, s.healthRating) * (1 + (bonuses.maxHealthBonus || 0))) + (bonuses.maxHealth || 0);
-```
-
 ### Verification Data — 6/6 match
 
 All tests: Barbarian, 2026-04-10.
@@ -306,17 +295,6 @@ Panther form ignores the character's Action Speed stat entirely and uses a fixed
 3. Enter Panther form with high Action Speed gear
 4. Re-time — should be identical if truly fixed
 5. Record the fixed cycle time
-
----
-
-## Verified Class Base Stats
-
-| Class | DEX | RES | Full Stats |
-|---|---|---|---|
-| Fighter | 15 | 15 | All 15s ✅ |
-| Warlock | 15 | 14 | Full set ✅ |
-| Druid | 12 | 18 | STR 12, VIG 13, AGI 12, DEX 12, WIL 18, KNO 20, RES 18 ✅ |
-| Others | DEX/RES only | | Need full sets |
 
 ---
 
