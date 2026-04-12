@@ -125,3 +125,44 @@ export const TARGETING = Object.freeze({
 export const EFFECT_TARGETS = new Set([
   "self", "enemy", "party", "nearby_allies", "nearby_enemies",
 ]);
+
+// ── UI-oriented constants consumed by existing components ──
+
+export const GAME_VERSION = Object.freeze({
+  season: "Season 8",
+  hotfix: "Hotfix 112-1",
+  build: "0.15.134.8480",
+});
+
+// Rarity modifier counts + display metadata.
+// modCount follows the poor=0/common=0/uncommon=1/rare=2/epic=3/legendary=4
+// mapping from docs/gear_reference.md §1.
+export const RARITY_CONFIG = Object.freeze({
+  poor:      { label: "Poor",      modCount: 0, color: "var(--sim-rarity-poor)" },
+  common:    { label: "Common",    modCount: 0, color: "var(--sim-rarity-common)" },
+  uncommon:  { label: "Uncommon",  modCount: 1, color: "var(--sim-rarity-uncommon)" },
+  rare:      { label: "Rare",      modCount: 2, color: "var(--sim-rarity-rare)" },
+  epic:      { label: "Epic",      modCount: 3, color: "var(--sim-rarity-epic)" },
+  legendary: { label: "Legendary", modCount: 4, color: "var(--sim-rarity-legendary)" },
+  unique:    { label: "Unique",    modCount: 1, color: "var(--sim-rarity-unique)" },
+});
+export const RARITY_ORDER = ["poor", "common", "uncommon", "rare", "epic", "legendary", "unique"];
+
+// Pre-set target profiles for the TargetEditor. PDR/MDR/headshotDR are
+// stored as decimals (0.40 = 40%).
+export const TARGET_PRESETS = Object.freeze([
+  { id: "naked",     name: "Naked",      pdr: -0.22, mdr:  0.00, headshotDR: 0.00,
+    verification: "VERIFIED",
+    description: "Unarmored baseline — AR 0 produces -22% PDR per curve." },
+  { id: "cloth",     name: "Cloth",      pdr:  0.15, mdr:  0.10, headshotDR: 0.00,
+    verification: "ESTIMATED",
+    description: "Typical cloth-wearer (Wizard, Warlock bare)." },
+  { id: "leather",   name: "Leather",    pdr:  0.30, mdr:  0.15, headshotDR: 0.05,
+    verification: "ESTIMATED" },
+  { id: "plate",     name: "Plate",      pdr:  0.50, mdr:  0.20, headshotDR: 0.10,
+    verification: "ESTIMATED",
+    description: "Heavy armor (Fighter, Barbarian, Cleric, Warlock w/ Demon Armor)." },
+  { id: "tank",      name: "Tank",       pdr:  0.65, mdr:  0.45, headshotDR: 0.20,
+    verification: "ESTIMATED",
+    description: "High-DR target with iron will or defense mastery." },
+]);
