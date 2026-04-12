@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "lint": "eslint src"
   },
   "dependencies": {
     "@fontsource/cinzel": "^5.2.8",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@vitest/ui": "^4.1.4",
+    "eslint": "^10.2.0",
     "vitest": "^4.1.4"
   }
 }

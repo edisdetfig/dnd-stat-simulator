@@ -61,19 +61,29 @@ const base = {
   },
 
   stat: {
-    physical:       "#B8942C",   // true gold
-    physicalSoft:   "rgba(184, 148, 44, 0.5)",
-    magical:        "#8B2028",   // dusty blood red
-    magicalSoft:    "rgba(139, 32, 40, 0.5)",
-    healing:        "#D4AC38",   // bright gold (warlock heals through sacrifice)
-    build:          "#B8942C",   // true gold
-    buildBadge:     "rgba(184, 148, 44, 0.145)",
-    weapon:         "#5C5C64",   // steel silver
-    spellcraft:     "#8B2028",   // blood red
-    headshot:       "#D42268",   // hot magenta
-    headshotSoft:   "rgba(212, 34, 104, 0.5)",
-    shapeshift:     "#8A7020",   // aged rust-gold
-    shapeshiftSoft: "rgba(138, 112, 32, 0.5)",
+    damageReadout: {
+      physical:       "#B8942C",   // true gold
+      physicalSoft:   "rgba(184, 148, 44, 0.5)",
+      magical:        "#8B2028",   // dusty blood red
+      magicalSoft:    "rgba(139, 32, 40, 0.5)",
+      healing:        "#D4AC38",   // bright gold (warlock heals through sacrifice)
+      build:          "#B8942C",   // true gold
+      buildBadge:     "rgba(184, 148, 44, 0.145)",
+      weapon:         "#5C5C64",   // steel silver
+      spellcraft:     "#8B2028",   // blood red
+      headshot:       "#D42268",   // hot magenta
+      headshotSoft:   "rgba(212, 34, 104, 0.5)",
+      shapeshift:     "#8A7020",   // aged rust-gold
+      shapeshiftSoft: "rgba(138, 112, 32, 0.5)",
+    },
+    defensive: {
+      physical:     "#b85a5a",
+      physicalSoft: "rgba(184, 90, 90, 0.22)",
+      magical:      "#B8942C",
+      magicalSoft:  "rgba(184, 148, 44, 0.22)",
+      headshot:     "#f59e0b",
+      headshotSoft: "rgba(245, 158, 11, 0.22)",
+    },
   },
 
   damageType: {
@@ -145,26 +155,6 @@ const base = {
     arcanum: {
       core: "#B8942C",     // gold
     },
-    arcane: {
-      core:  "#8B2028",    // blood red
-      pale:  "#c98f92",
-      frost: "#e6c3c5",
-    },
-  },
-
-  state: {
-    active: { bg: "rgba(139, 32, 40, 0.18)", fg: "#e6c3c5", border: "rgba(139, 32, 40, 0.40)" },
-    wip:    { bg: "rgba(184, 148, 44, 0.14)", fg: "#B8942C", border: "rgba(184, 148, 44, 0.38)" },
-    locked: { bg: "rgba(58, 40, 36, 0.28)",   fg: "#7a6a6c", border: "#3a2824" },
-  },
-
-  stat: {
-    physical:     "#b85a5a",
-    physicalSoft: "rgba(184, 90, 90, 0.22)",
-    magical:      "#B8942C",
-    magicalSoft:  "rgba(184, 148, 44, 0.22)",
-    headshot:     "#f59e0b",
-    headshotSoft: "rgba(245, 158, 11, 0.22)",
   },
 
   classIdentity: {

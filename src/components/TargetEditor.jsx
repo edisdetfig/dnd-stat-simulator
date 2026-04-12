@@ -45,9 +45,9 @@ export function TargetEditor({ target, onChange }) {
       {!matchedPreset && <div style={{ fontSize: 9, color: "var(--sim-text-whisper)", marginBottom: 8 }}>Custom target values</div>}
       <div style={{ display: "flex", gap: 8 }}>
         {[
-          { key: "pdr", label: "PDR", color: "var(--sim-stat-physical)", softColor: "var(--sim-stat-physical-soft)", info: "Target Physical Damage Reduction. Negative = amplifies damage. Pen has no effect when negative." },
-          { key: "mdr", label: "MDR", color: "var(--sim-stat-magical)", softColor: "var(--sim-stat-magical-soft)", info: "Target Magical Damage Reduction. Your Magic Pen reduces this." },
-          { key: "headshotDR", label: "HS DR", color: "var(--sim-stat-headshot)", softColor: "var(--sim-stat-headshot-soft)", info: "Target Headshot Damage Reduction. Subtracted from headshot multiplier." },
+          { key: "pdr", label: "PDR", color: "var(--sim-stat-defensive-physical)", softColor: "var(--sim-stat-defensive-physical-soft)", info: "Target Physical Damage Reduction. Negative = amplifies damage. Pen has no effect when negative." },
+          { key: "mdr", label: "MDR", color: "var(--sim-stat-defensive-magical)", softColor: "var(--sim-stat-defensive-magical-soft)", info: "Target Magical Damage Reduction. Your Magic Pen reduces this." },
+          { key: "headshotDR", label: "HS DR", color: "var(--sim-stat-defensive-headshot)", softColor: "var(--sim-stat-defensive-headshot-soft)", info: "Target Headshot Damage Reduction. Subtracted from headshot multiplier." },
         ].map(field => {
           const displayVal = (target[field.key] * 100);
           const displayStr = displayVal === 0 ? "0" : (Number.isInteger(displayVal) ? String(displayVal) : displayVal.toFixed(1).replace(/\.0$/, ''));

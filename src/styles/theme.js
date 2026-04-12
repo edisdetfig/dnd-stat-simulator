@@ -101,20 +101,36 @@ const baseTheme = {
     dim:      { fill: "#555" },
   },
 
+  // Stat colors split by semantic role:
+  //   damageReadout — offensive color system for the damage output UI
+  //     (Phase 3 consumer). Warm offensive palette.
+  //   defensive     — TargetEditor PDR/MDR/HS fields and DR-related UI.
+  // Flat top-level stat.* keys previously collided with TargetEditor
+  // additions; splitting prevents recurrence.
   stat: {
-    physical:       "#f59e0b",
-    physicalSoft:   "rgba(245, 158, 11, 0.5)",
-    magical:        "#a78bfa",
-    magicalSoft:    "rgba(167, 139, 250, 0.5)",
-    healing:    "#4ade80",
-    build:      "#6366f1",
-    buildBadge: "rgba(99, 102, 241, 0.145)",
-    weapon:     "#60a5fa",
-    spellcraft: "#a855f7",
-    headshot:       "#f87171",
-    headshotSoft:   "rgba(248, 113, 113, 0.5)",
-    shapeshift:     "#84cc16",
-    shapeshiftSoft: "rgba(132, 204, 22, 0.5)",
+    damageReadout: {
+      physical:       "#f59e0b",
+      physicalSoft:   "rgba(245, 158, 11, 0.5)",
+      magical:        "#a78bfa",
+      magicalSoft:    "rgba(167, 139, 250, 0.5)",
+      healing:        "#4ade80",
+      build:          "#6366f1",
+      buildBadge:     "rgba(99, 102, 241, 0.145)",
+      weapon:         "#60a5fa",
+      spellcraft:     "#a855f7",
+      headshot:       "#f87171",
+      headshotSoft:   "rgba(248, 113, 113, 0.5)",
+      shapeshift:     "#84cc16",
+      shapeshiftSoft: "rgba(132, 204, 22, 0.5)",
+    },
+    defensive: {
+      physical:       "#f87171",
+      physicalSoft:   "rgba(248, 113, 113, 0.20)",
+      magical:        "#60a5fa",
+      magicalSoft:    "rgba(96, 165, 250, 0.20)",
+      headshot:       "#fbbf24",
+      headshotSoft:   "rgba(251, 191, 36, 0.20)",
+    },
   },
 
   damageType: {
@@ -186,28 +202,6 @@ const baseTheme = {
     arcanum: {
       core: "#6366f1",
     },
-    arcane: {
-      core:  "#6366f1",
-      pale:  "#a5b4fc",
-      frost: "#c7d2fe",
-    },
-  },
-
-  // Landing-page status labels (ClassPicker)
-  state: {
-    active: { bg: "rgba(168, 85, 247, 0.15)", fg: "#c7d2fe", border: "rgba(168, 85, 247, 0.35)" },
-    wip:    { bg: "rgba(245, 158, 11, 0.12)", fg: "#fbbf24", border: "rgba(245, 158, 11, 0.35)" },
-    locked: { bg: "rgba(58, 58, 94, 0.22)",   fg: "#6b7280", border: "#3a3a5e" },
-  },
-
-  // TargetEditor field colors (PDR/MDR/HS with soft variants for tooltip tints)
-  stat: {
-    physical:       "#f87171",
-    physicalSoft:   "rgba(248, 113, 113, 0.20)",
-    magical:        "#60a5fa",
-    magicalSoft:    "rgba(96, 165, 250, 0.20)",
-    headshot:       "#fbbf24",
-    headshotSoft:   "rgba(251, 191, 36, 0.20)",
   },
 
   classIdentity: {

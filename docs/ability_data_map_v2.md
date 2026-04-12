@@ -10,7 +10,7 @@
 >
 > **Changes from architecture review**: (1) `type_damage_bonus` stat field now uses sentinel `"typeDamageBonus"` so `stat` is always a STAT_META key — `damageType` carries the actual type. (2) Trigger damage field renamed `value` → `base` to match `damage[]` array shape. (3) Added ability-level `condition` field — applies to all effects, ANDs with per-effect conditions; eliminates repetition on transformations. (4) Specified `disables[].filter` matching semantics: scalar = equality, array = any-overlap, multiple keys = AND. (5) Specified `cap_override` conflict resolution: highest value wins. (6) Merged `has_buff` into `effect_active` condition type — simulator approximates "target has buff" as "I've cast this buff." (7) Moved `healOnDamage` into `triggers[]` with new `on_damage_dealt` event; `equalToDamage` and `healRadius` added to trigger heal shape.
 >
-> **Changes from v3 (10-class expansion)**: v2 designed against 3 classes; v3 incorporates all 10 from CSV definitions in `docs/classes/`. Added Snapshot Principle (Section 1.5). Added `type: "music"` with `performanceTiers` (Bard). Added `type: "merged_spell"` with `components[]` (Sorcerer). Added `"cooldown"` to `cost.type` enum. Added `weapon_type`, `player_state`, `equipment`, `dual_wield` condition types. Added `stacking` shape with `maxStacks`/`perStack`. Added `hpScaling` on effects for continuous HP-based scaling. Added `appliesStatus[]` and status effect shape. Extended `attribute_multiplier` to per-attribute (not just all_attributes). Added `abilityModifiers[]` for cross-ability modifications. Generalized `afterEffect` from wild skills to all abilities. Expanded `target` to include "party"/"nearby_allies"/"nearby_enemies". Added `casterEffects` on Summon. Replaced `shieldAmount` with `shield: { base, scaling?, damageFilter? }`. Added combat stats to STAT_META (`headshotPower`, `backstabPower`, `armorPenetration`, `impactPower`, etc.). Added `armorRatingMultiplier` for gear-multiplicative effects. Added `consumedOn` display metadata. Added `spellChargeMultiplier` stat. Added `grantsWeapon`/`removesArmor`. Added `castTime`/`range`/`aoeRadius` display metadata. Added `"music"` to slots type. 8 new migration examples.
+> **Changes from v3 (10-class expansion)**: v2 designed against 3 classes; v3 incorporates all 10 from CSV definitions in `docs/classes/`. Added Snapshot Principle (Section 1.5). Added `type: "music"` with `performanceTiers` (Bard). Added `type: "merged_spell"` with `components[]` (Sorcerer). Added `"cooldown"` to `cost.type` enum. Added `weapon_type`, `player_state`, `equipment`, `dual_wield` condition types. Added `stacking` shape with `maxStacks`/`perStack`. Added `hpScaling` on effects for continuous HP-based scaling. Added `appliesStatus[]` and status effect shape. Extended `attribute_multiplier` to per-attribute (not just all_attributes). Added `abilityModifiers[]` for cross-ability modifications. Generalized `afterEffect` from wild skills to all abilities. Expanded `target` to include "party"/"nearby_allies"/"nearby_enemies". Added `casterEffects` on Summon. Replaced `shieldAmount` with `shield: { base, scaling?, damageFilter? }`. Added combat stats to STAT_META (`headshotPower`, `backstabPower`, `armorPenetration`, `impactPower`, etc.). Added `armorRatingMultiplier` for gear-multiplicative effects. Added `consumedOn` display metadata. Added `spellChargeMultiplier` stat. Added `grantsWeapon`/`removesArmor`/`grantsSpells`. Added `castTime`/`range`/`aoeRadius` display metadata. Added `"music"` to slots type. 8 new migration examples.
 
 ---
 
@@ -504,9 +504,22 @@ Ability {
   ]?
 
   // ── Grants ──
+  //
+  // While this ability is selected (passive) or toggled on (toggle/cast),
+  // the player's available equipment / abilities change. Engine treats these
+  // as availability extensions: armor/weapon types unlock; granted spells
+  // become castable without normal selection requirements (e.g., spell memory).
+  //
   grantsArmor:    string[]?                       // ["plate"] — Demon Armor
   grantsWeapon:   string[]?                       // ["spear"] — Ranger Spear Proficiency
   removesArmor:   string[]?                       // ["plate"] — Fighter Slayer
+  grantsSpells:   string[]?                       // ["bolt_of_darkness"] — Warlock Blood Pact
+                                                  // Spell IDs that become castable while this ability is active
+                                                  // WITHOUT being equipped in a spell memory slot. The spell's
+                                                  // own definition (damage, cost, scaling) is used as-is.
+                                                  // Engine: when this ability is active, the listed spells
+                                                  // appear in the available-spells list for UI display and
+                                                  // damage computation.
 
   // ── Passive flags (display-only, not computed by stat pipeline) ──
   //
