@@ -189,37 +189,98 @@ describe('Warlock + Infernal Pledge — post_curve dual DR', () => {
   });
 });
 
+// ── Blood Tithe — canonical example build (precision pinned) ──
+//
+// Every derived value below is pinned to an exact integer / fraction.
+// If any of these drift, the simulator has regressed. Expected values
+// computed from CSV + gear inherent/modifier stats + verified formulas,
+// never captured from runtime output (though cross-checked with a
+// scratch run before pinning).
+//
+// Default perks (demon_armor, shadow_touch, dark_reflection) include
+// NO attribute_multiplier effect — Malice is not selected. So WIL
+// stays at its gear-aggregated value of 38, no multiplier applied.
+//
+// Gear STR contributions (sum): head +3 mod, back +2, hands +2 mod,
+// legs +3 mod, feet +4 inherent, ring1 +3, ring2 +3 = 20 over base 11 = 31.
+// Gear VIG contributions: chest +2 inherent, hands +2 inherent, legs +2
+// inherent = 6 over base 14 = 20.
+// Gear WIL contributions: head +2, chest +3, back +2, hands +3, legs +3,
+// feet +3 = 16 over base 22 = 38.
 describe('Blood Tithe full build — end-to-end', () => {
-  it('loads the example build cleanly and derives finite stats', async () => {
+  async function loadBloodTithe(stateOverrides = {}) {
     const { EXAMPLE_BUILDS } = await import('../../data/example-builds.js');
     const blood = EXAMPLE_BUILDS.find(b => b.id === "blood_tithe").build();
+    const religion = blood.religionId
+      ? RELIGION_BLESSINGS.find(r => r.id === blood.religionId)
+      : null;
+    return computeFor({ ...blood, ...stateOverrides, classData: WARLOCK, religion });
+  }
 
-    const religion = RELIGION_BLESSINGS.find(r => r.id === blood.religionId);
-    const { result, ds } = computeFor({ ...blood, classData: WARLOCK, religion });
-
-    // Every derived stat should be finite.
+  it('every derived stat is finite', async () => {
+    const { ds } = await loadBloodTithe();
     for (const [id, v] of Object.entries(ds)) {
       expect(Number.isFinite(v), `${id} = ${v}`).toBe(true);
     }
+  });
 
-    // WIL is boosted by Malice: 22 + chest's no-WIL + necklace's +2 WIL = 24,
-    // then ×1.15 (Malice) = 27.6.
-    // (chest gives +2 VIG via modifier, necklace gives +2 WIL inherent)
-    expect(result.finalAttrs.wil).toBeCloseTo(27.6, 6);
+  it('attributes with all buffs off: STR 31, VIG 20, WIL 38 (no Malice)', async () => {
+    const { result } = await loadBloodTithe({ activeBuffs: {} });
+    expect(result.finalAttrs.str).toBe(31);
+    expect(result.finalAttrs.vig).toBe(20);
+    expect(result.finalAttrs.wil).toBe(38);
+    expect(result.finalAttrs.dex).toBe(27);
+  });
 
-    // Gear contributes to bonuses: armorRating from chest + head.
-    expect(result.finalBonuses.armorRating).toBeGreaterThan(0);
+  it('HP with all buffs off = 145', async () => {
+    // hr = 31 × 0.25 + 20 × 0.75 = 22.75
+    // curve [21, 44) = 125.5 + (22.75 − 21) × 1.5 = 128.125
+    // mhb = 0 (no MHB gear in build) → ceil(128.125) = 129
+    // mha = 6 (Necklace of Peace) → 129 + 10 + 6 = 145
+    const { ds } = await loadBloodTithe({ activeBuffs: {} });
+    expect(ds.health).toBe(145);
+  });
 
-    // Demon Armor's SCS penalty is present.
+  it('HP as-loaded (PoS + Bloodstained Blade active) = 167', async () => {
+    // PoS pre_curve_flat adds +15 STR and +15 VIG to caster:
+    //   STR 31 + 15 = 46, VIG 20 + 15 = 35
+    //   hr = 46 × 0.25 + 35 × 0.75 = 11.5 + 26.25 = 37.75
+    //   curve [21, 44) = 125.5 + 16.75 × 1.5 = 150.625
+    //   ceil(150.625) = 151 → 151 + 10 + 6 = 167
+    // Bloodstained Blade contributes buffWeaponDamage (not to HP).
+    const { ds } = await loadBloodTithe();
+    expect(ds.health).toBe(167);
+  });
+
+  it('HP with Blood Pact additionally toggled on = 197', async () => {
+    // Replace Blow of Corruption with Blood Pact (maxSkills = 2).
+    // Blood Pact adds +30 maxHealth (post_curve) → mha = 6 + 30 = 36.
+    // With PoS+BSB still on: STR 46, VIG 35 → curve 150.625 → ceil 151
+    //   151 + 10 + 36 = 197.
+    const { ds } = await loadBloodTithe({
+      selectedSkills: ["spell_memory_i", "blood_pact"],
+      activeBuffs: { power_of_sacrifice: true, bloodstained_blade: true, blood_pact: true },
+    });
+    expect(ds.health).toBe(197);
+  });
+
+  it('armor rating sums all armor pieces = 297', async () => {
+    // head 32 + chest 121 + back 19 + hands 43 + legs 44 + feet 38 = 297.
+    // Rings and necklace contribute no AR.
+    const { result } = await loadBloodTithe();
+    expect(result.finalBonuses.armorRating).toBe(297);
+  });
+
+  it('Demon Armor post_curve SCS penalty = -10%', async () => {
+    const { result } = await loadBloodTithe();
     expect(result.finalBonuses.spellCastingSpeed).toBeCloseTo(-0.10, 6);
+  });
 
-    // Antimagic multiplicative layer.
-    expect(result.multiplicativeLayers.magicDamageTaken).toBeCloseTo(0.80, 6);
-
-    // Dark Enhancement type bonus.
-    expect(result.typeDamageBonuses.dark_magical).toBeCloseTo(0.20, 6);
-
-    // Noxulon religion post-curve RIS.
-    expect(result.finalBonuses.regularInteractionSpeed).toBeCloseTo(0.20, 6);
+  it('no religion selected by default → no Noxulon bonus', async () => {
+    // Historical Blood Tithe runs with no religion ("none"). If this
+    // changes, both the example-build and this test need updating
+    // together.
+    const { result } = await loadBloodTithe();
+    expect(result.finalBonuses.regularInteractionSpeed ?? 0).toBeCloseTo(0, 6);
   });
 });

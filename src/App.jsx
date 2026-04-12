@@ -365,6 +365,12 @@ function AbilityRow({ ability, selected, onToggle, active, onActivate, stacks, s
         <input type="number" min={0} max={ability.stacking.maxStacks} step={1}
           value={stacks}
           onChange={(e) => setStacks(Math.max(0, Math.min(ability.stacking.maxStacks, parseInt(e.target.value) || 0)))}
+          // TODO(Phase 2): Warlock darkness-shard sources (Soul Collector,
+          // Spell Predation, Blood Pact) share an in-game 3-shard cap
+          // across all sources, but the engine tracks each independently.
+          // Add a tooltip here noting the shared cap so users don't
+          // silently over-allocate.
+          title={`Stacks (0–${ability.stacking.maxStacks})`}
           style={{ width: 36, fontSize: 10, background: "var(--sim-surface-input)",
             border: "1px solid var(--sim-border-hairline)", color: "var(--sim-text-primary)",
             borderRadius: 2, textAlign: "center" }}
