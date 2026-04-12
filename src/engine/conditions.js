@@ -25,6 +25,9 @@
 
 import { CONDITION_TYPES, WEAPON_TYPE_CATEGORIES } from '../data/constants.js';
 
+// Module-level dedup so a bad condition type only warns once per process
+// rather than flooding logs. Resetable via __INTERNAL__.resetWarnDedup()
+// so vitest's beforeEach can guarantee test isolation.
 const warnedUnknownTypes = new Set();
 
 export function evaluateCondition(condition, ctx) {
@@ -96,4 +99,10 @@ const EVALUATORS = {
 
 // Sanity: dispatch table must match CONDITION_TYPES exactly.
 // Enforced by a vitest test, not at runtime.
-export const __INTERNAL__ = { EVALUATORS, CONDITION_TYPES };
+// resetWarnDedup() lets tests clear the one-shot warn state so fail-closed
+// assertions aren't masked by prior-test seeding.
+export const __INTERNAL__ = {
+  EVALUATORS,
+  CONDITION_TYPES,
+  resetWarnDedup: () => warnedUnknownTypes.clear(),
+};

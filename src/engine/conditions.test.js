@@ -114,6 +114,7 @@ describe('evaluateCondition — known types', () => {
 describe('evaluateCondition — fail-closed behaviour', () => {
   beforeEach(() => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
+    __INTERNAL__.resetWarnDedup();
   });
 
   it('returns false and warns once for unknown condition types', () => {
