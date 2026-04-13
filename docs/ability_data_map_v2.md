@@ -264,6 +264,22 @@ Ability {
   //
   activation:     "passive" | "toggle" | "cast"?
 
+  // ── Apply-mode defaults (for abilities with any target: "either" entry) ──
+  //
+  // When an ability carries any effect or damage entry with target: "either",
+  // the UI shows per-ability "Apply to: [Self] [Enemy]" checkboxes beside the
+  // active toggle. The user's choice writes state.abilityTargetMode[id]; when
+  // unset, the engine falls back to the fields below. Engine-default fallback
+  // (if neither field is authored) is applyToSelf: true, applyToEnemy: false.
+  //
+  // Example (Power of Sacrifice): Warlock self-cast is the common pattern, so
+  // defaults are { true, false }. User flips applyToEnemy on to model casting
+  // on an enemy target simultaneously (12s duration overlaps, legitimate
+  // scenario) — when both are true, "either" entries route to BOTH pipelines.
+  //
+  defaultApplyToSelf:  boolean?
+  defaultApplyToEnemy: boolean?
+
   // ── Ability-level condition ──
   //
   // Optional. When present, applies to ALL effects in this ability.
@@ -316,9 +332,13 @@ Ability {
                                                   // For type_damage_bonus: always "typeDamageBonus" (sentinel — damageType carries the actual type)
       value:      number                          // static value (set to 0 when hpScaling is present)
       phase:      Phase                           // see Phase enum below
-      target:     "self" | "enemy" | "party" | "nearby_allies" | "nearby_enemies"?
+      target:     "self" | "enemy" | "either" | "party" | "nearby_allies" | "nearby_enemies"?
                                                   // default "self"
-                                                  // Snapshot sim: "party"/"nearby_allies" treated as "self"
+                                                  // "self"   → runEffectPipeline (caster)
+                                                  // "enemy"  → runTargetPipeline (enemy, seeded from ctx.target DR values)
+                                                  // "either" → per-ability applyToSelf / applyToEnemy toggles
+                                                  //            decide routing; both true routes to BOTH pipelines
+                                                  // Snapshot sim: "party" / "nearby_allies" treated as "self"
                                                   // (you are your own nearest ally). Distinction for display.
       condition:  Condition?                      // when this effect applies (omit = always)
       damageType: string?                         // for type_damage_bonus phase only — the actual damage type key
@@ -599,7 +619,12 @@ Phase =
   // ── Pipeline phases (processed in sequence by stat derivation) ──
   | "pre_curve_flat"          // Adds to attrs (core attributes) OR to recipe bonus keys
                               // (e.g., armorRating, maxHealthBonus, physicalPower).
+                              // stat: "all_attributes" → fans out to all 7 CORE_ATTRS
+                              // using effect.value (Soul Collector +1/shard, etc.).
                               // Consumed BEFORE computeDerivedStats runs.
+                              //
+                              // defineClass enforces: "all_attributes" is valid ONLY under
+                              // pre_curve_flat and attribute_multiplier; rejected elsewhere.
   | "attribute_multiplier"    // Multiplies attribute values.
                               // stat: "all_attributes" → multiplies ALL 7 core attrs (Curse of Weakness).
                               // stat: "kno" (etc.) → multiplies SINGLE attribute (Wizard Sage +15%).
@@ -692,6 +717,56 @@ CrowdControl {
   immunityAfter:  number?                         // immunity window after CC ends
 }
 ```
+
+### Gear-level triggers (v3 extension)
+
+Gear items may carry a top-level `triggers[]` array — same concept as
+ability triggers but using **bare event names** (no `on_` prefix) to
+distinguish gear-sourced mechanics from class-ability mechanics.
+Anchor case: Spiked Gauntlet's 1 true_physical on melee hit.
+
+```
+GearItem {
+  // ... existing fields (id, slotType, weaponType, armorType,
+  // inherentStats, modifiers, etc.) ...
+
+  triggers: [
+    {
+      on:         string             // GEAR_TRIGGER_EVENTS entry:
+                                     //   "melee_hit" | "melee_hit_received"
+                                     // | "ranged_hit" | "spell_hit"
+                                     // | "kill" | "successful_block" | "successful_dodge"
+      damage:     DamageSource[]?    // additional damage on trigger
+      effects:    Effect[]?          // stat effects applied on trigger
+      conditions: Condition[]?       // gating (e.g., weapon_type)
+      chance:     number?            // proc chance, default 1.0
+      target:     "self" | "enemy" | "either" | ...?
+                                     // default "enemy" for damage, "self" for effects
+    }
+  ]?
+}
+```
+
+`defineGear()` validates event names, condition types, target values,
+and damage.damageType presence at authoring time. Damage-type vocabulary
+is NOT yet enforced (no `DAMAGE_TYPES` registry); flagged in
+`docs/unresolved_questions.md` pending agent4's CSV survey.
+
+Example (Spiked Gauntlet):
+```js
+{
+  id: "spiked_gauntlet",
+  armorType: "plate",
+  triggers: [
+    { on: "melee_hit",
+      damage: [{ damageType: "true_physical", base: 1, trueDamage: true }],
+      target: "enemy" }
+  ]
+}
+```
+
+Phase 1 validates the shape. Phase 3 consumes trigger damage in the
+damage-output UI.
 
 ---
 

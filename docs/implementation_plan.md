@@ -202,18 +202,34 @@ Single input shape for all engine operations. `buildEngineContext(state) → Eng
 
 ### 1.5 Effect pipeline (`src/engine/effect-pipeline.js`)
 ```js
-runEffectPipeline(ctx): PipelineResult
-runTargetPipeline(ctx): TargetPipelineResult  // enemy-targeted effects, for damage calcs
+runEffectPipeline(ctx): PipelineResult       // caster-side
+runTargetPipeline(ctx): TargetPipelineResult // enemy-side
+resolveApplyMode(ability, ctx): { applyToSelf, applyToEnemy }
 ```
+
+Both pipelines are **Phase 1 scope** (target routing is a correctness
+requirement, not a Phase 3 add-on). They share collectors and apply
+identical phase semantics on different seed data — caster seeds from
+gear-baseline attrs/bonuses; enemy seeds from `ctx.target` DR values.
+
+Per-entry routing:
+- `effect.target === "self"`   → self pipeline only
+- `effect.target === "enemy"`  → enemy pipeline only
+- `effect.target === "either"` → per-ability `applyToSelf` /
+   `applyToEnemy` toggles (`ctx.abilityTargetMode[id]` override, else
+   ability defaults). Both true routes to both pipelines simultaneously
+- Missing target / party / nearby_* → treated as self (snapshot principle)
 
 Flow:
 1. Collect effects from all sources (1.6 collectors)
 2. Filter by conditions (ability-level AND effect-level)
-3. Resolve `hpScaling` → static value
-4. Partition by phase:
+3. Partition entries by target into self-queue and enemy-queue
+4. Resolve `hpScaling` → static value
+5. Partition each queue by phase:
    - `cap_override` → `Math.max` per stat
-   - `pre_curve_flat` → CORE_ATTR → attrs, else → bonuses
-   - `attribute_multiplier` → second pass, expands `all_attributes` to 7 per-attr ops
+   - `pre_curve_flat` → CORE_ATTR → attrs, `all_attributes` fans out to
+     all 7 CORE_ATTRS with `effect.value`, else → bonuses
+   - `attribute_multiplier` → expands `all_attributes` to 7 per-attr ops
    - `post_curve` → accumulate
    - `multiplicative_layer` → **stacks multiplicatively** (0.80 × 0.80 = 0.64)
    - `type_damage_bonus` → keyed by damageType
@@ -228,6 +244,17 @@ Flow:
 - `collectors/hp-scaling.js` (no Warlock ability uses it, but infrastructure is ready)
 - `collectors/status.js` (Hellfire burn, if applicable)
 - `collectors/index.js` (barrel)
+
+### 1.6a Gear triggers spec + `defineGear()`
+Gear items can carry a top-level `triggers[]` array (spec §3 extension).
+Seed vocabulary in `GEAR_TRIGGER_EVENTS`: `melee_hit`, `melee_hit_received`,
+`ranged_hit`, `spell_hit`, `kill`, `successful_block`, `successful_dodge`.
+Bare names, distinct from ability-level `TRIGGER_EVENTS` (prefixed with
+`on_`). First anchor: Spiked Gauntlet's 1 true_physical on melee_hit.
+
+`defineGear()` (parallel to `defineClass`) validates shape at authoring
+time. Phase 1 validates structure; Phase 3 wires trigger damage into the
+damage-output UI.
 
 ### 1.7 Build fresh App.jsx
 Delete old `src/App.jsx`. Build new `src/App.jsx` from scratch:
