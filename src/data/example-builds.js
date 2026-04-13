@@ -148,7 +148,11 @@ function makeBloodTitheGear() {
       { stat: "dex",                       value: 2 },
       { stat: "vig",                       value: 2 },
     ],
-    onHitEffects: [{ damage: 1, damageType: "true_physical", trueDamage: true }],
+    triggers: [
+      { on: "melee_hit",
+        damage: [{ damageType: "true_physical", base: 1, trueDamage: true }],
+        target: "enemy" },
+    ],
     modifiers: [
       { stat: "wil",            value: 3 },
       { stat: "str",            value: 2 },

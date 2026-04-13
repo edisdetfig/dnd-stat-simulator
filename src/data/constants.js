@@ -62,6 +62,25 @@ export const TRIGGER_EVENTS = new Set([
   "on_successful_block",
 ]);
 
+// ── Gear triggers (spec §3 gear items — separate vocabulary from ability triggers) ──
+//
+// Gear items carry a top-level triggers[] array whose shape mirrors ability
+// triggers but uses bare event names (no "on_" prefix) and `damage[]` arrays
+// (not a single damage object). First Phase 1 anchor: Spiked Gauntlet's
+// 1 true_physical on melee hit.
+//
+// Seed vocabulary below — agent4's CSV survey across all 10 class CSVs and
+// gear references will refine this; flagged in docs/unresolved_questions.md.
+export const GEAR_TRIGGER_EVENTS = new Set([
+  "melee_hit",
+  "melee_hit_received",
+  "ranged_hit",
+  "spell_hit",
+  "kill",
+  "successful_block",
+  "successful_dodge",
+]);
+
 // ── Status effect types (spec §3 appliesStatus[].type) ──
 
 export const STATUS_TYPES = new Set([

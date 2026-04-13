@@ -4,6 +4,29 @@ Season 8, Hotfix 112-1 (2026-04-09), game version 0.15.134.8480.
 
 ---
 
+## OPEN: Gear trigger vocabulary (seeded with 7 events)
+
+**Status: PHASE 1 SEED — agent4's CSV survey may expand**
+
+`GEAR_TRIGGER_EVENTS` in `src/data/constants.js` seeds the gear-level
+trigger event vocabulary with 7 events: `melee_hit`, `melee_hit_received`,
+`ranged_hit`, `spell_hit`, `kill`, `successful_block`, `successful_dodge`.
+Bare names (no `on_` prefix) distinct from ability-level `TRIGGER_EVENTS`
+which uses prefixed forms (`on_melee_hit` etc.).
+
+Spiked Gauntlet is the Phase 1 anchor case:
+```js
+triggers: [{ on: "melee_hit", damage: [{ damageType: "true_physical", base: 1 }] }]
+```
+
+`defineGear()` validates event names / condition types / target values.
+Damage-type vocabulary NOT enforced (no `DAMAGE_TYPES` registry yet); flag
+for a later pass once agent4's CSV survey documents the full set.
+
+Wiring to the damage readout is Phase 3 scope.
+
+---
+
 ## OPEN: Health MHB table deviations (8/16)
 
 **Status: UNRESOLVED (2026-04-12) — formula + 14 verified points consistent; 8 MHB-table points deviate by ±1**
