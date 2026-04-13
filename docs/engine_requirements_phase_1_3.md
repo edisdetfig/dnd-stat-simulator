@@ -115,6 +115,8 @@ Retire: `backstabPower` (replaced by conditional `physicalDamageBonus` + `player
 12. **Self-damage DoT** — Warlock Dark Offering (10%/s), Warlock Blood Pact Abyssal Flame (1%/s). Author via `passives.selfDamagePerSecond` (display-only) OR via negative-heal HoT targeting self.
 13. **Any-form gating** — Druid Enhanced Wildness "while in any form." Author as `condition: { type: "form_active" }` with no specific `form` value → "any form active." Engine must interpret omitted `form` field as "any."
 14. **Trigger-block own-duration for on-hit debuffs** — Wizard Melt and Cleric Faithfulness apply a timed debuff to a target through a trigger; trigger.effects have no duration field in current shape. Phase 1.3 decides between (a) allow `triggers[i].duration`, or (b) always author via `appliesStatus` with a generic "nameless debuff" status. Currently authored as trigger.effects + desc-prose window.
+15. **Merged-spell cooldown derivation** — `deriveMergedSpellCooldown(mergedSpell, components)`: per CSV Sorcerer Class Notes, a merged spell cannot re-cast until both components are off cooldown. Effective CD ≈ max of components' CDs (gated on both being available). Tracker D.6 covers availability; this row covers derived cooldown surfacing in UI.
+16. **Multi-CC per ability** — Sorcerer Aqua Prison applies BOTH trap (3s) AND lift (3s); current shape is singleton `cc: { type, duration }`. Authored trap-only with lift in desc. Phase 1.3 decides array shape `cc: [{...}, {...}]` or keep singleton + desc.
 
 ---
 
