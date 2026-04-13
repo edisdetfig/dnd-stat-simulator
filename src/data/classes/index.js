@@ -2,9 +2,11 @@
 // Classes register here as their v3 definition files land in src/data/classes/.
 
 import { fighter } from './fighter.js';
+import { barbarian } from './barbarian.js';
 
 export const CLASSES = {
   fighter,
+  barbarian,
 };
 
 export const CLASS_LIST = Object.values(CLASSES);
@@ -20,7 +22,7 @@ export function getClass(id) {
 // lands during Phase 1.2.
 export const CLASS_ROSTER = [
   { id: "fighter",   name: "Fighter",   tagline: "Weapon mastery and defensive stance.",                 color: "var(--sim-class-identity-fighter)",   status: "active" },
-  { id: "barbarian", name: "Barbarian", tagline: "Rage, carnage, and two-handed devastation.",           color: "var(--sim-class-identity-barbarian)", status: "coming_soon" },
+  { id: "barbarian", name: "Barbarian", tagline: "Rage, carnage, and two-handed devastation.",           color: "var(--sim-class-identity-barbarian)", status: "active" },
   { id: "ranger",    name: "Ranger",    tagline: "Precision ranged combat and traps.",                   color: "var(--sim-class-identity-ranger)",    status: "coming_soon" },
   { id: "rogue",     name: "Rogue",     tagline: "Stealth, backstabs, and poisoned weapons.",            color: "var(--sim-class-identity-rogue)",     status: "coming_soon" },
   { id: "wizard",    name: "Wizard",    tagline: "Arcane devastation and elemental mastery.",            color: "var(--sim-class-identity-wizard)",    status: "coming_soon" },
