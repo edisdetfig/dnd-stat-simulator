@@ -371,6 +371,13 @@ Ability {
   stacking: {
     maxStacks:    number                          // UI: stack selector (0–max)
     perStack:     Effect[]                        // effects per single stack; engine multiplies × count
+    label:        string?                         // UI: in-ability label for the stack control
+                                                  // (e.g., "Darkness Shards", "Momentum").
+                                                  // Default "Stacks" when omitted.
+    effectSummary: string?                        // UI: one-line description of a single stack's effect
+                                                  // (e.g., "+1 all attributes, +33% dark magical damage bonus")
+                                                  // Rendered under the row when present. Authored strings in
+                                                  // Phase 1; Phase 2 may derive from perStack[] automatically.
     triggerOn:    string?                         // display: what adds a stack (e.g., "spell_cast", "melee_hit", "kill")
     consumedOn:   string?                         // display: what resets/consumes stacks (e.g., "dark_spell_cast")
     duration:     number?                         // display: stack lifetime before decay

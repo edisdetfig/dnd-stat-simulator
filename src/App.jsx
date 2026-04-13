@@ -149,7 +149,8 @@ function Simulator({ state, setState, classData }) {
         <Column>
           <TargetPanelWrapper target={state.target} patchState={patch} />
           <LiveStatePanel state={state} patchState={patch} />
-          <PerksPanel classData={classData} selected={state.selectedPerks} toggle={togglePerk} />
+          <PerksPanel classData={classData} selected={state.selectedPerks} toggle={togglePerk}
+            selectedStacks={state.selectedStacks} setStacks={setStacks} />
           <SkillsPanel
             classData={classData}
             selected={state.selectedSkills}
