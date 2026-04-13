@@ -80,6 +80,12 @@ Retire: `backstabPower` (replaced by conditional `physicalDamageBonus` + `player
 
 ## C. `src/data/classes/define-class.js` — validator updates
 
+**Display-only passive keys to accept (no stat-pipeline semantics):**
+- `passives.maxChargeMultiplier` — Wizard Spell Overload (numeric).
+- `passives.nextSpellCastTime` — Wizard Intense Focus (numeric).
+
+---
+
 1. **Drop `TRIGGER_EVENTS.has(tr.event)` check** (line 60). Per Convention 4, trigger events are desc prose — no enum enforcement.
 2. **Accept `abilityModifiers[]`** — validate `modify ∈ {duration, cooldown, castTime, range, aoeRadius, cost}`, `mode ∈ {multiply, add}`, `target.tags | target.type | target.id` shape.
 3. **Accept expanded STATUS_TYPES** (plague, blind, freeze) once constants.js updated.
@@ -108,6 +114,7 @@ Retire: `backstabPower` (replaced by conditional `physicalDamageBonus` + `player
 11. **Shared resource pool** across multiple abilities (Warlock Darkness Shards: Soul Collector, Spell Predation, Blood Pact share a 3-cap). Current shape is per-ability `stacking`. Phase 1.3 decides between (a) class-root `classResources` block vs. (b) per-ability stacking with cross-ability consume semantics in desc only.
 12. **Self-damage DoT** — Warlock Dark Offering (10%/s), Warlock Blood Pact Abyssal Flame (1%/s). Author via `passives.selfDamagePerSecond` (display-only) OR via negative-heal HoT targeting self.
 13. **Any-form gating** — Druid Enhanced Wildness "while in any form." Author as `condition: { type: "form_active" }` with no specific `form` value → "any form active." Engine must interpret omitted `form` field as "any."
+14. **Trigger-block own-duration for on-hit debuffs** — Wizard Melt and Cleric Faithfulness apply a timed debuff to a target through a trigger; trigger.effects have no duration field in current shape. Phase 1.3 decides between (a) allow `triggers[i].duration`, or (b) always author via `appliesStatus` with a generic "nameless debuff" status. Currently authored as trigger.effects + desc-prose window.
 
 ---
 

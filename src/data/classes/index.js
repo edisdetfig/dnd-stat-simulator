@@ -6,6 +6,7 @@ import { barbarian } from './barbarian.js';
 import { ranger } from './ranger.js';
 import { rogue } from './rogue.js';
 import { cleric } from './cleric.js';
+import { wizard } from './wizard.js';
 
 export const CLASSES = {
   fighter,
@@ -13,6 +14,7 @@ export const CLASSES = {
   ranger,
   rogue,
   cleric,
+  wizard,
 };
 
 export const CLASS_LIST = Object.values(CLASSES);
@@ -31,7 +33,7 @@ export const CLASS_ROSTER = [
   { id: "barbarian", name: "Barbarian", tagline: "Rage, carnage, and two-handed devastation.",           color: "var(--sim-class-identity-barbarian)", status: "active" },
   { id: "ranger",    name: "Ranger",    tagline: "Precision ranged combat and traps.",                   color: "var(--sim-class-identity-ranger)",    status: "active" },
   { id: "rogue",     name: "Rogue",     tagline: "Stealth, backstabs, and poisoned weapons.",            color: "var(--sim-class-identity-rogue)",     status: "active" },
-  { id: "wizard",    name: "Wizard",    tagline: "Arcane devastation and elemental mastery.",            color: "var(--sim-class-identity-wizard)",    status: "coming_soon" },
+  { id: "wizard",    name: "Wizard",    tagline: "Arcane devastation and elemental mastery.",            color: "var(--sim-class-identity-wizard)",    status: "active" },
   { id: "warlock",   name: "Warlock",   tagline: "Blood magic, curses, and demonic pacts.",              color: "var(--sim-class-identity-warlock)",   status: "coming_soon" },
   { id: "cleric",    name: "Cleric",    tagline: "Divine healing, shields, and holy damage.",            color: "var(--sim-class-identity-cleric)",    status: "active" },
   { id: "druid",     name: "Druid",     tagline: "Shapeshift into beasts; nature's fury and healing.",   color: "var(--sim-class-identity-druid)",     status: "coming_soon" },
