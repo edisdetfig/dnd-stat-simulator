@@ -120,6 +120,10 @@ Retire: `backstabPower` (replaced by conditional `physicalDamageBonus` + `player
 17. **Stacking nested within performanceTiers** — Bard Allegro/Accelerando carry per-tier `stacking.perStack` (tier-specific stack values). Current validator walks only ability-level `stacking.perStack`. Validator must also walk `performanceTiers.{poor,good,perfect}.stacking.perStack`.
 18. **`memoryCost` field on music abilities** — Bard musics carry `memoryCost: N` (Cat 30). Validator accepts field; runtime enforces against equipped Music Memory slot count (Convention: music memory ≠ spell memory).
 19. **`music` slot count validation** — VALID_SLOT_TYPES already includes "music"; ensure the Music Memory skill wiring is end-to-end in the engine/UI (not just validated).
+20. **`disables[]` walker** — Druid Lifebloom Aura disables transformation; Shapeshift Mastery disables spirit-tagged spells. Validator must walk `ability.disables[]` and the runtime selection UI must respect `filter.tags` / `filter.id` / `filter.type`.
+21. **`form.attacks[i].appliesStatus` walker** — Druid Panther Scratch bleed, Rat Infected Fangs plague, Penguin Sharp Beak bleed. Validator currently only walks wildSkill.effects. Add form.attacks[i].appliesStatus to validator traversal.
+22. **`form.attacks[i].frenziedEffect`** — Druid Panther Neckbite silence triggered only while frenzy_active. Validator must walk frenziedEffect.appliesStatus / frenziedEffect.damage / frenziedEffect.effects, gated by `frenzy_active` condition at runtime.
+23. **`condition.type: "effect_active"` resolver** — already in CONDITION_TYPES, but engine must resolve `effectId` lookup at runtime (per-target effect presence). First use: Druid Dreamfire conditional heal for allies with Nature's Touch active.
 
 ---
 
