@@ -8,6 +8,7 @@ import { rogue } from './rogue.js';
 import { cleric } from './cleric.js';
 import { wizard } from './wizard.js';
 import { sorcerer } from './sorcerer.js';
+import { bard } from './bard.js';
 
 export const CLASSES = {
   fighter,
@@ -17,6 +18,7 @@ export const CLASSES = {
   cleric,
   wizard,
   sorcerer,
+  bard,
 };
 
 export const CLASS_LIST = Object.values(CLASSES);
@@ -40,5 +42,5 @@ export const CLASS_ROSTER = [
   { id: "cleric",    name: "Cleric",    tagline: "Divine healing, shields, and holy damage.",            color: "var(--sim-class-identity-cleric)",    status: "active" },
   { id: "druid",     name: "Druid",     tagline: "Shapeshift into beasts; nature's fury and healing.",   color: "var(--sim-class-identity-druid)",     status: "coming_soon" },
   { id: "sorcerer",  name: "Sorcerer",  tagline: "Merged elemental spells and summoned elementals.",     color: "var(--sim-class-identity-sorcerer)",  status: "active" },
-  { id: "bard",      name: "Bard",      tagline: "Musical performance buffs and inspirational play.",    color: "var(--sim-class-identity-bard)",      status: "coming_soon" },
+  { id: "bard",      name: "Bard",      tagline: "Musical performance buffs and inspirational play.",    color: "var(--sim-class-identity-bard)",      status: "active" },
 ];

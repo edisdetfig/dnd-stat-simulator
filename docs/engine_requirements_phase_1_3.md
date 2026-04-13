@@ -117,6 +117,9 @@ Retire: `backstabPower` (replaced by conditional `physicalDamageBonus` + `player
 14. **Trigger-block own-duration for on-hit debuffs** — Wizard Melt and Cleric Faithfulness apply a timed debuff to a target through a trigger; trigger.effects have no duration field in current shape. Phase 1.3 decides between (a) allow `triggers[i].duration`, or (b) always author via `appliesStatus` with a generic "nameless debuff" status. Currently authored as trigger.effects + desc-prose window.
 15. **Merged-spell cooldown derivation** — `deriveMergedSpellCooldown(mergedSpell, components)`: per CSV Sorcerer Class Notes, a merged spell cannot re-cast until both components are off cooldown. Effective CD ≈ max of components' CDs (gated on both being available). Tracker D.6 covers availability; this row covers derived cooldown surfacing in UI.
 16. **Multi-CC per ability** — Sorcerer Aqua Prison applies BOTH trap (3s) AND lift (3s); current shape is singleton `cc: { type, duration }`. Authored trap-only with lift in desc. Phase 1.3 decides array shape `cc: [{...}, {...}]` or keep singleton + desc.
+17. **Stacking nested within performanceTiers** — Bard Allegro/Accelerando carry per-tier `stacking.perStack` (tier-specific stack values). Current validator walks only ability-level `stacking.perStack`. Validator must also walk `performanceTiers.{poor,good,perfect}.stacking.perStack`.
+18. **`memoryCost` field on music abilities** — Bard musics carry `memoryCost: N` (Cat 30). Validator accepts field; runtime enforces against equipped Music Memory slot count (Convention: music memory ≠ spell memory).
+19. **`music` slot count validation** — VALID_SLOT_TYPES already includes "music"; ensure the Music Memory skill wiring is end-to-end in the engine/UI (not just validated).
 
 ---
 
