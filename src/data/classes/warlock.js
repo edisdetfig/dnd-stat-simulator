@@ -315,6 +315,7 @@ const WARLOCK = defineClass({
       duration: 60,
       stacking: {
         maxStacks: 10,
+        desc: "Channel seconds — +5% physical damage bonus, +5% magical damage bonus per stack",
         perStack: [
           { stat: "physicalDamageBonus", value: 0.05, phase: "post_curve" },
           { stat: "magicalDamageBonus", value: 0.05, phase: "post_curve" },
