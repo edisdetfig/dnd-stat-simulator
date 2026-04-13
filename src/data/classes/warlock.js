@@ -180,8 +180,7 @@ const WARLOCK = defineClass({
       activation: "passive",
       stacking: {
         maxStacks: 3,
-        label: "Darkness Shards",
-        effectSummary: "+1 all attributes, +33% dark magical damage bonus",
+        desc: "Darkness Shards — +1 all attributes, +33% dark magical damage bonus per shard",
         perStack: [
           { stat: "all_attributes", value: 1, phase: "pre_curve_flat" },
           { stat: "typeDamageBonus", value: 0.33, phase: "type_damage_bonus", damageType: "dark_magical" },
@@ -259,8 +258,7 @@ const WARLOCK = defineClass({
       // NOT enforce this — user is responsible (snapshot principle).
       stacking: {
         maxStacks: 3,
-        label: "Darkness Shards",
-        effectSummary: "+1 all attributes, +33% dark magical damage bonus",
+        desc: "Darkness Shards — +1 all attributes, +33% dark magical damage bonus per shard",
         perStack: [
           { stat: "all_attributes", value: 1, phase: "pre_curve_flat" },
           { stat: "typeDamageBonus", value: 0.33, phase: "type_damage_bonus", damageType: "dark_magical" },
@@ -450,8 +448,7 @@ const WARLOCK = defineClass({
       ],
       stacking: {
         maxStacks: 3,
-        label: "Darkness Shards",
-        effectSummary: "+1 all attributes, +33% dark magical damage bonus",
+        desc: "Darkness Shards — +1 all attributes, +33% dark magical damage bonus per shard",
         perStack: [
           { stat: "all_attributes", value: 1, phase: "pre_curve_flat", target: "self" },
           { stat: "typeDamageBonus", value: 0.33, phase: "type_damage_bonus", damageType: "dark_magical", target: "self" },

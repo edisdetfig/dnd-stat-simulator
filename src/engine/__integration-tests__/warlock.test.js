@@ -37,7 +37,7 @@ function selfAndTarget(stateOverrides = {}) {
 describe('Warlock — naked baseline', () => {
   it('HP matches CSV target (122)', () => {
     const { ds } = computeFor();
-    expect(ds.health).toBe(122);
+    expect(ds.health.value).toBe(122);
   });
 
   it('attributes match CSV baseStats unchanged', () => {
@@ -170,7 +170,7 @@ describe('Warlock + Blood Pact (active) — core buffs + grantsSpells', () => {
       selectedSkills: ["blood_pact"],
       activeBuffs: { blood_pact: true },
     });
-    expect(withBP.ds.health - baseline.ds.health).toBe(30);
+    expect(withBP.ds.health.value - baseline.ds.health.value).toBe(30);
   });
 
   it('Blood Pact inactive: no buffs', () => {
@@ -260,8 +260,8 @@ describe('Blood Tithe full build — end-to-end', () => {
 
   it('every derived stat is finite', async () => {
     const { ds } = await loadBloodTithe();
-    for (const [id, v] of Object.entries(ds)) {
-      expect(Number.isFinite(v), `${id} = ${v}`).toBe(true);
+    for (const [id, stat] of Object.entries(ds)) {
+      expect(Number.isFinite(stat.value), `${id} = ${stat.value}`).toBe(true);
     }
   });
 
@@ -279,7 +279,7 @@ describe('Blood Tithe full build — end-to-end', () => {
     // mhb = 0 (no MHB gear in build) → ceil(128.125) = 129
     // mha = 6 (Necklace of Peace) → 129 + 10 + 6 = 145
     const { ds } = await loadBloodTithe({ activeBuffs: {} });
-    expect(ds.health).toBe(145);
+    expect(ds.health.value).toBe(145);
   });
 
   it('HP as-loaded (PoS + Bloodstained Blade active) = 167', async () => {
@@ -290,7 +290,7 @@ describe('Blood Tithe full build — end-to-end', () => {
     //   ceil(150.625) = 151 → 151 + 10 + 6 = 167
     // Bloodstained Blade contributes buffWeaponDamage (not to HP).
     const { ds } = await loadBloodTithe();
-    expect(ds.health).toBe(167);
+    expect(ds.health.value).toBe(167);
   });
 
   it('HP with Blood Pact additionally toggled on = 197', async () => {
@@ -302,7 +302,7 @@ describe('Blood Tithe full build — end-to-end', () => {
       selectedSkills: ["spell_memory_i", "blood_pact"],
       activeBuffs: { power_of_sacrifice: true, bloodstained_blade: true, blood_pact: true },
     });
-    expect(ds.health).toBe(197);
+    expect(ds.health.value).toBe(197);
   });
 
   it('armor rating sums all armor pieces = 297', async () => {

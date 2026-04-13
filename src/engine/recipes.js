@@ -5,11 +5,11 @@
 //
 // A recipe is one of two forms — they DO NOT mix:
 //
-//   1. `compute` form. Single function, full control. The runner calls
-//      compute(attrs, bonuses, { capOverrides }) and returns its result.
-//      No other fields run. Use for stats with non-standard math
-//      (health's conditional rounding, PDR's AR multiplier, MDR's two-stage
-//      curve) and for passthrough stats that aren't curve-driven.
+//   1. `compute` form. Single function, full control. Returns either a
+//      plain number or `{ value, rawValue?, cap? }`. The runner
+//      normalizes. Use for stats with non-standard math (health's
+//      conditional rounding, PDR's AR multiplier, MDR's two-stage curve)
+//      and for passthrough stats that aren't curve-driven.
 //
 //   2. Declarative form. Builds from these fields, in this order:
 //        rawCurve = curveKey ? evaluateCurve(STAT_CURVES[curveKey],
@@ -17,13 +17,22 @@
 //                            : 0
 //        scaled   = rawCurve * outputMultiplier(bonuses)        // default *1
 //        rounded  = ROUND[rounding](scaled)                     // default identity
-//        final    = rounded + postCurveAdds(bonuses)            // default +0
-//        capped   = min(final, capOverrides[id] ?? cap)         // if cap set
+//        raw      = rounded + postCurveAdds(bonuses)            // default +0
 //
-// `compute` is mutually exclusive with curveKey/inputFormula/postCurveAdds/
-// outputMultiplier/rounding/cap. If compute is set, the runner uses ONLY it.
+// Uniform cap step applies AFTER either form: when recipe.cap or
+// capOverrides[id] is set, the value is Math.min'd to the cap and the
+// result carries `rawValue` and `cap` so UI can render overflow
+// indicators.
 //
 // Cap precedence: `capOverrides[id]` (if set) wins over `recipe.cap`.
+//
+// ── Return shape ──
+//
+// runRecipe returns `{ value, rawValue?, cap? }`:
+//   • value     — the effective number consumers use in math and display
+//   • rawValue  — pre-cap value (only present when a cap applies)
+//   • cap       — the cap that applied (may equal value if at or above)
+// computeDerivedStats returns `{ [statId]: DerivedStat }` with the same shape.
 
 import { evaluateCurve, STAT_CURVES } from './curves.js';
 import { PATCH_HEALTH_BONUS, HR_STR_WEIGHT, HR_VIG_WEIGHT } from '../data/constants.js';
@@ -31,19 +40,28 @@ import { PATCH_HEALTH_BONUS, HR_STR_WEIGHT, HR_VIG_WEIGHT } from '../data/consta
 const ROUND = { floor: Math.floor, ceil: Math.ceil, round: Math.round };
 
 export function runRecipe(id, recipe, attrs, bonuses, capOverrides = {}) {
-  if (recipe.compute) return recipe.compute(attrs, bonuses, { capOverrides });
+  let result;
+  if (recipe.compute) {
+    const computed = recipe.compute(attrs, bonuses, { capOverrides });
+    result = typeof computed === "number" ? { value: computed } : { ...computed };
+  } else {
+    const inputVal = recipe.inputFormula ? recipe.inputFormula(attrs, bonuses) : 0;
+    const curveVal = recipe.curveKey
+      ? evaluateCurve(STAT_CURVES[recipe.curveKey], inputVal)
+      : 0;
+    const mult = recipe.outputMultiplier ? recipe.outputMultiplier(bonuses) : 1;
+    let value = curveVal * mult;
+    if (recipe.rounding && ROUND[recipe.rounding]) value = ROUND[recipe.rounding](value);
+    if (recipe.postCurveAdds) value += recipe.postCurveAdds(bonuses);
+    result = { value };
+  }
 
-  const inputVal = recipe.inputFormula ? recipe.inputFormula(attrs, bonuses) : 0;
-  const curveVal = recipe.curveKey
-    ? evaluateCurve(STAT_CURVES[recipe.curveKey], inputVal)
-    : 0;
-  const mult = recipe.outputMultiplier ? recipe.outputMultiplier(bonuses) : 1;
-  let value = curveVal * mult;
-  if (recipe.rounding && ROUND[recipe.rounding]) value = ROUND[recipe.rounding](value);
-  if (recipe.postCurveAdds) value += recipe.postCurveAdds(bonuses);
   const cap = capOverrides[id] ?? recipe.cap;
-  if (cap != null) value = Math.min(value, cap);
-  return value;
+  if (cap != null) {
+    const raw = result.value;
+    result = { value: Math.min(raw, cap), rawValue: raw, cap };
+  }
+  return result;
 }
 
 export function computeDerivedStats(attrs, bonuses, capOverrides = {}) {
@@ -74,31 +92,30 @@ export const DERIVED_STAT_RECIPES = {
 
   // PDR. armorRatingMultiplier (Fighter Defense Mastery +15%) scales gear
   // armorRating before the curve. additionalArmorRating is a flat add to AR
-  // that is NOT scaled by the multiplier.
+  // that is NOT scaled by the multiplier. Default cap 70% (Fighter Defense
+  // Mastery raises to 75% via cap_override). Cap applied by runRecipe.
   pdr: {
     cap: 0.70,
-    compute: (attrs, bonuses, { capOverrides }) => {
+    compute: (attrs, bonuses) => {
       const arMult = 1 + (bonuses.armorRatingMultiplier || 0);
       const totalAR = (bonuses.armorRating || 0) * arMult
                     + (bonuses.additionalArmorRating || 0);
       const raw = evaluateCurve(STAT_CURVES.armorRatingToPDR, totalAR);
-      const withFlat = raw + (bonuses.physicalDamageReduction || 0);
-      const cap = capOverrides.pdr ?? 0.70;
-      return Math.min(withFlat, cap);
+      return raw + (bonuses.physicalDamageReduction || 0);
     },
   },
 
   // MDR. Two-stage curve: WIL → magicResistance, then total MR → MDR.
   // Gear adds flat MR on top of the WIL-derived MR before the second curve.
+  // Default cap 65% per data/stat_curves.json source of truth (Barbarian Iron
+  // Will raises to 75% via cap_override). Cap applied by runRecipe.
   mdr: {
-    cap: 0.70,
-    compute: (attrs, bonuses, { capOverrides }) => {
+    cap: 0.65,
+    compute: (attrs, bonuses) => {
       const baseMR = evaluateCurve(STAT_CURVES.willToMagicResistance, attrs.wil);
       const totalMR = baseMR + (bonuses.magicResistance || 0);
       const raw = evaluateCurve(STAT_CURVES.magicResistanceToMDR, totalMR);
-      const withFlat = raw + (bonuses.magicalDamageReduction || 0);
-      const cap = capOverrides.mdr ?? 0.70;
-      return Math.min(withFlat, cap);
+      return raw + (bonuses.magicalDamageReduction || 0);
     },
   },
 

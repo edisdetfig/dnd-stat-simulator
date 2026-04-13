@@ -4,16 +4,20 @@
 //   - selection checkbox
 //   - name with desc-tooltip on hover (+ tier pill if present, +
 //     optional "granted" pill for spells made available via grantsSpells)
-//   - optional stacking control with authored label + per-stack summary
+//   - optional stacking control. When the ability's stacking block
+//     carries `desc`, the string is both the input's hover tooltip and
+//     rendered as an italic sub-line beneath the row.
 //
-// The per-ability "on/off" toggle (activation: "toggle") and the
-// "either"-target self/enemy checkboxes live in the Active Buffs panel.
+// Spec rule: every human-readable display string is authored as `desc`.
+// One field name, one rule (applies here via ability.desc and
+// ability.stacking.desc).
 
 import { HoverTip } from '../ui/HoverTip.jsx';
 
 export function AbilityRow({ ability, selected, onToggle, stacks, setStacks, grantedLabel }) {
   const stacking = ability.stacking;
   const showStacking = setStacks && selected && stacking;
+  const stackDesc = stacking?.desc;
   return (
     <div style={{
       padding: "4px 6px", borderBottom: "1px solid var(--sim-border-whisper)",
@@ -38,46 +42,39 @@ export function AbilityRow({ ability, selected, onToggle, stacks, setStacks, gra
         </span>
         {showStacking && (
           <StackControl
-            label={stacking.label ?? "Stacks"}
             max={stacking.maxStacks}
             value={stacks}
             onChange={setStacks}
+            desc={stackDesc}
           />
         )}
       </div>
-      {showStacking && stacking.effectSummary && (
+      {showStacking && stackDesc && (
         <div style={{
           fontSize: 9, color: "var(--sim-text-whisper)",
           marginLeft: 24, marginTop: 2, fontStyle: "italic",
         }}>
-          per stack: {stacking.effectSummary}
+          {stackDesc}
         </div>
       )}
     </div>
   );
 }
 
-function StackControl({ label, max, value, onChange }) {
+function StackControl({ max, value, onChange, desc }) {
   return (
-    <label style={{
-      display: "inline-flex", alignItems: "center", gap: 5,
-      fontSize: 9, color: "var(--sim-text-whisper)",
-      letterSpacing: "0.05em", textTransform: "uppercase",
-    }}>
-      {label}
-      <input type="number" min={0} max={max} step={1}
-        value={value}
-        onChange={(e) => onChange(Math.max(0, Math.min(max, parseInt(e.target.value) || 0)))}
-        // TODO(Phase 2): Warlock darkness-shard sources (Soul Collector,
-        // Spell Predation, Blood Pact) share an in-game 3-shard cap
-        // across all sources; the engine tracks each independently.
-        title={`${label} (0–${max})`}
-        style={{
-          width: 36, fontSize: 10, background: "var(--sim-surface-input)",
-          border: "1px solid var(--sim-border-hairline)", color: "var(--sim-text-primary)",
-          borderRadius: 2, textAlign: "center", textTransform: "none", letterSpacing: "normal",
-        }}
-      />
-    </label>
+    <input type="number" min={0} max={max} step={1}
+      value={value}
+      onChange={(e) => onChange(Math.max(0, Math.min(max, parseInt(e.target.value) || 0)))}
+      // TODO(Phase 2): Warlock darkness-shard sources (Soul Collector,
+      // Spell Predation, Blood Pact) share an in-game 3-shard cap across
+      // all sources; the engine tracks each independently.
+      title={desc ?? `Stacks (0–${max})`}
+      style={{
+        width: 36, fontSize: 10, background: "var(--sim-surface-input)",
+        border: "1px solid var(--sim-border-hairline)", color: "var(--sim-text-primary)",
+        borderRadius: 2, textAlign: "center",
+      }}
+    />
   );
 }
