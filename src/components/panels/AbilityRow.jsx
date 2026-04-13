@@ -2,12 +2,14 @@
 //
 // Renders:
 //   - selection checkbox
-//   - name (+ tier pill if present, + optional "granted" pill for
-//     spells made available via grantsSpells)
+//   - name with desc-tooltip on hover (+ tier pill if present, +
+//     optional "granted" pill for spells made available via grantsSpells)
 //   - optional stacking control with authored label + per-stack summary
 //
 // The per-ability "on/off" toggle (activation: "toggle") and the
 // "either"-target self/enemy checkboxes live in the Active Buffs panel.
+
+import { HoverTip } from '../ui/HoverTip.jsx';
 
 export function AbilityRow({ ability, selected, onToggle, stacks, setStacks, grantedLabel }) {
   const stacking = ability.stacking;
@@ -20,15 +22,19 @@ export function AbilityRow({ ability, selected, onToggle, stacks, setStacks, gra
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <input type="checkbox" checked={selected} onChange={onToggle} />
         <span style={{ flex: 1, color: selected ? "var(--sim-text-primary)" : "var(--sim-text-muted)" }}>
-          {ability.name}
-          {ability.tier != null && (
-            <span style={{ fontSize: 9, marginLeft: 6, color: "var(--sim-text-whisper)" }}>T{ability.tier}</span>
-          )}
-          {grantedLabel && (
-            <span style={{ fontSize: 9, marginLeft: 6, color: "var(--sim-accent-arcane-pale)", fontStyle: "italic" }}>
-              {grantedLabel}
+          <HoverTip title={ability.name} text={ability.desc}>
+            <span style={{ cursor: ability.desc ? "help" : "default" }}>
+              {ability.name}
+              {ability.tier != null && (
+                <span style={{ fontSize: 9, marginLeft: 6, color: "var(--sim-text-whisper)" }}>T{ability.tier}</span>
+              )}
+              {grantedLabel && (
+                <span style={{ fontSize: 9, marginLeft: 6, color: "var(--sim-accent-arcane-pale)", fontStyle: "italic" }}>
+                  {grantedLabel}
+                </span>
+              )}
             </span>
-          )}
+          </HoverTip>
         </span>
         {showStacking && (
           <StackControl
