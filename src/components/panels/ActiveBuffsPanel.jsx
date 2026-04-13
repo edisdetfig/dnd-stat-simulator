@@ -90,6 +90,24 @@ function ActiveBuffRow({ ability, source, on, onToggle, abilityTargetMode, setAb
           </label>
         </div>
       )}
+
+      {on && ability.shield && <ShieldLine shield={ability.shield} />}
+    </div>
+  );
+}
+
+// TODO(Phase 3): replace with full shield display system (damage absorption
+// math, visual, shield-break trigger wiring). Phase 1.1 text-only stopgap.
+function ShieldLine({ shield }) {
+  const { base, scaling, damageFilter } = shield;
+  const scalingStr = scaling ? ` (+${scaling} scaling)` : "";
+  const filterStr  = damageFilter ? ` ${damageFilter}` : "";
+  return (
+    <div style={{
+      fontSize: 10, color: "var(--sim-accent-arcane-pale)",
+      marginTop: 3, marginLeft: 24, fontStyle: "italic",
+    }}>
+      Active Shield: {base}{scalingStr}{filterStr} damage absorbed
     </div>
   );
 }
