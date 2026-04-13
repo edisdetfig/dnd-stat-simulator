@@ -91,6 +91,33 @@ describe('Warlock + Dark Enhancement — type_damage_bonus on dark_magical', () 
   });
 });
 
+describe('Warlock + Spell Predation — cast-spell stacking', () => {
+  // Regression for the stacking gate bug: Spell Predation is
+  // activation: "cast" and never appears in activeAbilityIds. Pre-fix,
+  // its selected stack count silently produced no effect.
+  it('3 shards applied from selectedStacks alone (no activeBuffs required)', () => {
+    const { result } = computeFor({
+      selectedSpells: ["spell_predation"],
+      selectedStacks: { spell_predation: 3 },
+      // NO activeBuffs entry for spell_predation.
+    });
+    const base = { str: 11, vig: 14, agi: 14, dex: 15, wil: 22, kno: 15, res: 14 };
+    for (const [a, v] of Object.entries(base)) {
+      expect(result.finalAttrs[a], `${a} should be base + 3`).toBe(v + 3);
+    }
+    expect(result.typeDamageBonuses.dark_magical).toBeCloseTo(0.99, 6);
+  });
+
+  it('not selected: no contribution even with stack count set', () => {
+    const { result } = computeFor({
+      selectedSpells: [],
+      selectedStacks: { spell_predation: 3 },
+    });
+    expect(result.finalAttrs.str).toBe(11);
+    expect(result.typeDamageBonuses.dark_magical).toBeUndefined();
+  });
+});
+
 describe('Warlock + Soul Collector — stacking darkness shards', () => {
   it('3 shards: +3 fans out to every CORE_ATTR (pre_curve_flat all_attributes)', () => {
     const { result } = computeFor({

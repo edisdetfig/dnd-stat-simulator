@@ -1,9 +1,16 @@
 // Yields stacking effects — one entry per stack level selected.
 //
 // An ability with `stacking: { maxStacks, perStack: Effect[] }` yields
-// `perStack.length × selectedStacks[abilityId]` entries. If the parent
-// ability isn't active (selectedPerks / activeBuffs / activeForm), its
-// stacks are ignored.
+// `perStack.length × selectedStacks[abilityId]` entries, provided the
+// ability is **selected / equipped** (in selectedPerks, selectedSkills,
+// or selectedSpells).
+//
+// Active-toggle state is NOT required. Stacks are user-declared resource
+// state per the snapshot principle: the engine trusts the declared count.
+// This matters for cast-activation abilities (e.g., Spell Predation)
+// which never appear in activeAbilityIds — they're one-shot casts that
+// leave behind shard state. Previously gating on isAbilityActive silently
+// dropped their contributions.
 //
 // Independent-pool note: Warlock has multiple abilities that track
 // "darkness shards" (Soul Collector, Spell Predation, Blood Pact shard
@@ -13,16 +20,13 @@
 // A future "class-level resource pool" primitive is planned once a
 // second class demonstrates the same pattern.
 
-import { isAbilityActive } from '../conditions.js';
-
 export function collectStackingEffects(ctx) {
   const out = [];
   const selected = ctx.selectedStacks ?? {};
 
-  for (const ability of enumerateStackables(ctx)) {
+  for (const ability of enumerateEquippedStackables(ctx)) {
     const count = selected[ability.id] ?? 0;
     if (count <= 0) continue;
-    if (!isAbilityActive(ability.id, ctx)) continue;
 
     const perStack = ability.stacking.perStack;
     if (!Array.isArray(perStack)) continue;
@@ -36,16 +40,22 @@ export function collectStackingEffects(ctx) {
   return out;
 }
 
-function enumerateStackables(ctx) {
+function enumerateEquippedStackables(ctx) {
+  const selectedPerks  = new Set(ctx.selectedPerks  ?? []);
+  const selectedSkills = new Set(ctx.selectedSkills ?? []);
+  const selectedSpells = new Set(ctx.selectedSpells ?? []);
+
   const out = [];
-  const visit = (list) => {
+  const visit = (list, selectedSet) => {
     if (!Array.isArray(list)) return;
     for (const ability of list) {
-      if (ability?.stacking?.maxStacks > 0) out.push(ability);
+      if (ability?.stacking?.maxStacks > 0 && selectedSet.has(ability.id)) {
+        out.push(ability);
+      }
     }
   };
-  visit(ctx.classData?.perks);
-  visit(ctx.classData?.skills);
-  visit(ctx.classData?.spells);
+  visit(ctx.classData?.perks,  selectedPerks);
+  visit(ctx.classData?.skills, selectedSkills);
+  visit(ctx.classData?.spells, selectedSpells);
   return out;
 }

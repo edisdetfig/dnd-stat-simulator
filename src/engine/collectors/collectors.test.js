@@ -148,12 +148,34 @@ describe('collectStackingEffects', () => {
     expect(collectStackingEffects(ctx)).toHaveLength(0);
   });
 
-  it('yields nothing when parent ability is not active', () => {
+  it('yields nothing when parent ability is not selected/equipped', () => {
     const ctx = ctxOf({ perks: [stackingPerk] }, {
       selectedPerks: [],                      // NOT selected
       selectedStacks: { soul_collector: 3 },
     });
     expect(collectStackingEffects(ctx)).toHaveLength(0);
+  });
+
+  it('cast-activation abilities contribute stacks without any active toggle', () => {
+    // Spell Predation is a cast spell — never appears in activeAbilityIds.
+    // Pre-fix, collector's isAbilityActive gate silently dropped its stacks.
+    const predation = {
+      id: "spell_predation", type: "spell", name: "Spell Predation",
+      activation: "cast",
+      stacking: {
+        maxStacks: 3,
+        perStack: [{ stat: "str", value: 1, phase: "pre_curve_flat" }],
+      },
+    };
+    const ctx = ctxOf(
+      { spells: [predation] },
+      {
+        selectedSpells: ["spell_predation"],
+        // NO activeBuffs entry — cast spells don't have one.
+        selectedStacks: { spell_predation: 3 },
+      },
+    );
+    expect(collectStackingEffects(ctx)).toHaveLength(3);
   });
 
   it('tracks independent stacking on multiple abilities (no shared pool)', () => {
@@ -169,7 +191,7 @@ describe('collectStackingEffects', () => {
       { perks: [stackingPerk], spells: [secondary] },
       {
         selectedPerks: ["soul_collector"],
-        activeBuffs: { spell_predation: true },
+        selectedSpells: ["spell_predation"],
         selectedStacks: { soul_collector: 3, spell_predation: 3 },
       },
     );
