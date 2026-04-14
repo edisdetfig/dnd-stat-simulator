@@ -76,7 +76,7 @@ export const druid = ({
         {
           desc: "Fires on heal landed — target gains +5 physical power for 3s.",
           effects: [
-            { stat: "physicalPower", value: 5, phase: "post_curve", target: "ally_or_self" },
+            { stat: "physicalPower", value: 5, phase: "post_curve", target: "self" },
           ],
         },
       ],
@@ -232,10 +232,10 @@ export const druid = ({
       duration: { base: 12, type: "buff" },
       heal: {
         baseHeal: 15, scaling: 0.25, healType: "physical",
-        isHot: true, tickRate: 1, target: "ally_or_self",
+        isHot: true, tickRate: 1, target: "self",
       },
       effects: [
-        { stat: "recoverableHealth", value: 15, phase: "post_curve", target: "ally_or_self" },
+        { stat: "recoverableHealth", value: 15, phase: "post_curve", target: "self" },
       ],
       passives: { instantCast: true },
     },
@@ -251,8 +251,8 @@ export const druid = ({
       tags: ["nature"],
       duration: { base: 10, type: "buff" },
       effects: [
-        { stat: "armorRating", value: 50, phase: "pre_curve_flat", target: "ally_or_self" },
-        { stat: "headshotDamageReduction", value: 0.10, phase: "post_curve", target: "ally_or_self" },
+        { stat: "armorRating", value: 50, phase: "pre_curve_flat", target: "self" },
+        { stat: "headshotDamageReduction", value: 0.10, phase: "post_curve", target: "self" },
       ],
     },
 
@@ -394,12 +394,12 @@ export const druid = ({
       tags: ["nature"],
       duration: { base: 8, type: "buff" },
       effects: [
-        { stat: "all_attributes", value: 3, phase: "pre_curve_flat", target: "ally_or_self" },
-        { stat: "recoverableHealth", value: 20, phase: "post_curve", target: "ally_or_self" },
+        { stat: "all_attributes", value: 3, phase: "pre_curve_flat", target: "self" },
+        { stat: "recoverableHealth", value: 20, phase: "post_curve", target: "self" },
       ],
       heal: {
         baseHeal: 15, scaling: 0.5, healType: "magical",
-        isHot: true, tickRate: 1, target: "ally_or_self",
+        isHot: true, tickRate: 1, target: "self",
       },
       passives: { cannotCastOnSelf: true },
     },

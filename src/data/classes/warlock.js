@@ -349,11 +349,11 @@ export const warlock = ({
       tags: ["evil"],
       duration: { base: 12, type: "buff" },
       damage: [
-        { base: 3, scaling: 0, damageType: "evil_magical", isDot: true, tickRate: 1, target: "enemy_or_self" },
+        { base: 3, scaling: 0, damageType: "evil_magical", isDot: true, tickRate: 1, target: "either" },
       ],
       effects: [
-        { stat: "str", value: 15, phase: "pre_curve_flat", target: "enemy_or_self" },
-        { stat: "vig", value: 15, phase: "pre_curve_flat", target: "enemy_or_self" },
+        { stat: "str", value: 15, phase: "pre_curve_flat", target: "either" },
+        { stat: "vig", value: 15, phase: "pre_curve_flat", target: "either" },
       ],
     },
 
@@ -399,13 +399,13 @@ export const warlock = ({
       tags: ["blood"],
       duration: { base: 20, type: "buff" },
       effects: [
-        { stat: "buffWeaponDamage", value: 5, phase: "post_curve", target: "ally_or_self" },
+        { stat: "buffWeaponDamage", value: 5, phase: "post_curve", target: "self" },
       ],
       triggers: [
         {
           desc: "Fires each weapon swing by the buffed target — 3 evil_magical self-damage.",
           damage: [
-            { base: 3, scaling: 0, damageType: "evil_magical", target: "ally_or_self" },
+            { base: 3, scaling: 0, damageType: "evil_magical", target: "self" },
           ],
         },
       ],
@@ -524,8 +524,8 @@ export const warlock = ({
         {
           desc: "Fires on shield break (max absorb reached) — +30% dark_magical typeDamageBonus and +50% SCS for next dark spell within 6s (window desc-only).",
           effects: [
-            { stat: "typeDamageBonus", value: 0.30, phase: "type_damage_bonus", damageType: "dark_magical", target: "ally_or_self" },
-            { stat: "spellCastingSpeed", value: 0.50, phase: "post_curve", target: "ally_or_self" },
+            { stat: "typeDamageBonus", value: 0.30, phase: "type_damage_bonus", damageType: "dark_magical", target: "self" },
+            { stat: "spellCastingSpeed", value: 0.50, phase: "post_curve", target: "self" },
           ],
         },
       ],

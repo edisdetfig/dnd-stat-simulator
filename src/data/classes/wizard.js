@@ -411,9 +411,9 @@ export const wizard = ({
       targeting: "ally_or_self",
       duration: { base: 6, type: "buff" },
       effects: [
-        { stat: "moveSpeedBonus", value: 0.05, phase: "post_curve", target: "ally_or_self" },
-        { stat: "actionSpeed", value: 0.10, phase: "post_curve", target: "ally_or_self" },
-        { stat: "spellCastingSpeed", value: 0.10, phase: "post_curve", target: "ally_or_self" },
+        { stat: "moveSpeedBonus", value: 0.05, phase: "post_curve", target: "self" },
+        { stat: "actionSpeed", value: 0.10, phase: "post_curve", target: "self" },
+        { stat: "spellCastingSpeed", value: 0.10, phase: "post_curve", target: "self" },
       ],
     },
 
@@ -450,7 +450,7 @@ export const wizard = ({
       targeting: "ally_or_self",
       duration: { base: 4, type: "buff" },
       effects: [
-        { stat: "moveSpeedBonus", value: 0.05, phase: "post_curve", target: "ally_or_self" },
+        { stat: "moveSpeedBonus", value: 0.05, phase: "post_curve", target: "self" },
       ],
       passives: { invisibility: true },
     },

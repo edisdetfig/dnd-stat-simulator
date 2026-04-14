@@ -301,7 +301,7 @@ export const cleric = ({
       targeting: "ally_or_self",
       duration: { base: 30, type: "buff", tags: ["blessing"] },
       effects: [
-        { stat: "all_attributes", value: 2, phase: "pre_curve_flat", target: "ally_or_self" },
+        { stat: "all_attributes", value: 2, phase: "pre_curve_flat", target: "self" },
       ],
     },
 
@@ -313,7 +313,7 @@ export const cleric = ({
       activation: "cast",
       cost: { type: "charges", value: 4 },
       targeting: "ally_or_self",
-      heal: { baseHeal: 20, scaling: 0.8, healType: "magical", target: "ally_or_self" },
+      heal: { baseHeal: 20, scaling: 0.8, healType: "magical", target: "self" },
     },
 
     {
@@ -326,7 +326,7 @@ export const cleric = ({
       targeting: "ally_or_self",
       duration: { base: 12, type: "buff" },
       effects: [
-        { stat: "buffWeaponDamage", value: 5, phase: "post_curve", target: "ally_or_self" },
+        { stat: "buffWeaponDamage", value: 5, phase: "post_curve", target: "self" },
       ],
     },
 
@@ -372,7 +372,7 @@ export const cleric = ({
       // target creature type. Author both blocks with creature-type condition on
       // the damage entry.
       targeting: "ally_or_self",
-      heal: { baseHeal: 35, scaling: 0.8, healType: "magical", target: "ally_or_self" },
+      heal: { baseHeal: 35, scaling: 0.8, healType: "magical", target: "self" },
       damage: [
         {
           base: 100, scaling: 0.8, damageType: "divine_magical", target: "enemy",
