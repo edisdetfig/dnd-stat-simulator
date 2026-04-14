@@ -43,7 +43,6 @@ Ordered by pipeline production. Each contract notes where it is produced and whe
 
   activeBuffs: Set<string>,
   activeForm: string | null,
-  activeTransformation: string | null,
   activeSummons: Set<string>,
   activeAfterEffects: Set<string>,
   activeWildSkill: string | null,

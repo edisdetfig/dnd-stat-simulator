@@ -292,7 +292,7 @@ export const warlock = ({
       activation: "cast",
       targeting: "self",
       tags: ["demon", "buff"],
-      condition: { type: "form_active", form: "demon" },
+      condition: { type: "form_active", form: "blood_pact" },
       duration: { base: 15, type: "buff" },
       triggers: [
         {
@@ -324,7 +324,7 @@ export const warlock = ({
       activation: "cast",
       targeting: "self",
       tags: ["demon"],
-      condition: { type: "form_active", form: "demon" },
+      condition: { type: "form_active", form: "blood_pact" },
       // State-change action — exits the Blood Pact transformation. No stat
       // effects; the form removal is the full mechanic.
     },
@@ -580,7 +580,7 @@ export const warlock = ({
       // While in demon form, Bolt of Darkness is castable bare-handed.
       grantsSpells: ["bolt_of_darkness"],
       form: {
-        formId: "demon",
+        formId: "blood_pact",
         scalesWith: "wil",
         // No form-unique attacks — regular unarmed melee applies. Form-gated
         // skills (exploitation_strike, exit_demon_form) live in skills[] and
@@ -588,9 +588,9 @@ export const warlock = ({
         attacks: [],
       },
       effects: [
-        { stat: "maxHealth", value: 30, phase: "pre_curve_flat", condition: { type: "form_active", form: "demon" } },
-        { stat: "armorRating", value: 50, phase: "pre_curve_flat", condition: { type: "form_active", form: "demon" } },
-        { stat: "magicResistance", value: 50, phase: "pre_curve_flat", condition: { type: "form_active", form: "demon" } },
+        { stat: "maxHealth", value: 30, phase: "pre_curve_flat", condition: { type: "form_active", form: "blood_pact" } },
+        { stat: "armorRating", value: 50, phase: "pre_curve_flat", condition: { type: "form_active", form: "blood_pact" } },
+        { stat: "magicResistance", value: 50, phase: "pre_curve_flat", condition: { type: "form_active", form: "blood_pact" } },
       ],
       // Abyssal Flame AoE to nearby enemies while in form.
       triggers: [
@@ -599,7 +599,7 @@ export const warlock = ({
           damage: [
             { base: 2, scaling: 0.25, damageType: "magical", isDot: true, tickRate: 1, target: "nearby_enemies" },
           ],
-          condition: { type: "form_active", form: "demon" },
+          condition: { type: "form_active", form: "blood_pact" },
         },
       ],
       // Ability-local stacking (no `resource` pointer) per D.11: this is a
