@@ -47,3 +47,35 @@ describe('STAT_META v3 additions (spec §5)', () => {
     expect(STAT_META.armorPenetration).toBeDefined();
   });
 });
+
+describe('STAT_META Phase 1.3 §B additions', () => {
+  // 13 stat keys added to support class-data effects that were already
+  // authored (fighter.swift, ranger, bard, druid, wizard, cleric, etc.).
+  // See docs/engine_requirements_phase_1_3.md rows 62–78.
+  const phase13bKeys = [
+    "armorMovePenaltyReduction", "knockbackResistance", "shoutDurationBonus",
+    "potionPotency", "headshotPenetration", "projectileSpeed", "switchingSpeed",
+    "burnDurationAdd", "drunkDurationBonus", "knockbackPowerBonus",
+    "shapeshiftTimeReduction", "wildSkillCooldownReduction", "spellMemoryRecovery",
+  ];
+
+  for (const key of phase13bKeys) {
+    it(`includes "${key}"`, () => {
+      expect(STAT_META[key], `missing Phase 1.3 §B stat "${key}"`).toBeDefined();
+    });
+  }
+
+  // Convention 13: duration-modifier stats carry `direction` and `tag`.
+  const durationModifiers = [
+    { key: "shoutDurationBonus", direction: "caster", tag: "shout" },
+    { key: "burnDurationAdd", direction: "caster", tag: "burn" },
+    { key: "drunkDurationBonus", direction: "receiver", tag: "drunk" },
+  ];
+
+  for (const { key, direction, tag } of durationModifiers) {
+    it(`"${key}" carries direction="${direction}" and tag="${tag}"`, () => {
+      expect(STAT_META[key].direction).toBe(direction);
+      expect(STAT_META[key].tag).toBe(tag);
+    });
+  }
+});

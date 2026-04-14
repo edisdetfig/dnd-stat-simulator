@@ -99,6 +99,31 @@ export const STAT_META = {
   spellChargeMultiplier: { label: "Spell Charge Multiplier", unit: "percent", cat: "utility" },
   spellCooldownMultiplier: { label: "Spell Cooldown Multiplier", unit: "percent", cat: "utility" },
   drawSpeed: { label: "Draw Speed", unit: "percent", cat: "utility" },
+
+  // ── Phase 1.3 §B additions ──
+  // Duration-modifier entries carry `direction` ("caster" | "receiver") and
+  // `tag` (status-effect name) per vocabulary Convention 13.
+
+  // Offense
+  headshotPenetration: { label: "Headshot Penetration", unit: "percent", cat: "offense" },
+  knockbackPowerBonus: { label: "Knockback Power", unit: "percent", cat: "offense" },
+
+  // Defense
+  knockbackResistance: { label: "Knockback Resistance", unit: "percent", cat: "defense" },
+
+  // Utility
+  armorMovePenaltyReduction: { label: "Armor Move Penalty Reduction", unit: "percent", cat: "utility" },
+  potionPotency: { label: "Potion Potency", unit: "percent", cat: "utility" },
+  projectileSpeed: { label: "Projectile Speed", unit: "percent", cat: "utility" },
+  switchingSpeed: { label: "Switching Speed", unit: "percent", cat: "utility" },
+  shapeshiftTimeReduction: { label: "Shapeshift Time Reduction", unit: "percent", cat: "utility" },
+  wildSkillCooldownReduction: { label: "Wild Skill Cooldown Reduction", unit: "percent", cat: "utility" },
+  spellMemoryRecovery: { label: "Spell Memory Recovery", unit: "flat", cat: "utility" },
+
+  // Duration modifiers (Convention 13: direction + tag)
+  shoutDurationBonus: { label: "Shout Duration", unit: "percent", cat: "utility", direction: "caster", tag: "shout" },
+  burnDurationAdd: { label: "Burn Duration Add", unit: "flat", cat: "utility", direction: "caster", tag: "burn" },
+  drunkDurationBonus: { label: "Drunk Duration", unit: "percent", cat: "utility", direction: "receiver", tag: "drunk" },
 };
 
 export const DERIVED_DISPLAY = {
