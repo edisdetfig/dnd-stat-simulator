@@ -283,6 +283,58 @@ export const warlock = ({
       },
       passives: { selfDamagePerSecond: 0.10 },
     },
+
+    {
+      id: "exploitation_strike",
+      type: "skill",
+      name: "Exploitation Strike",
+      desc: "Cast to gain the Exploitation Strike buff (tooltip: 2s; in-game base ~15s). While active, your unarmed attacks deal +20(1.0) evil magical damage and heal you for 10% of the target's maximum health.",
+      activation: "cast",
+      targeting: "self",
+      tags: ["demon", "buff"],
+      condition: { type: "form_active", form: "demon" },
+      duration: { base: 15, type: "buff" },
+      appliesStatus: [
+        {
+          type: "exploitation_strike",
+          target: "self",
+          duration: { base: 15, type: "buff" },
+        },
+      ],
+      triggers: [
+        {
+          event: "on_melee_hit",
+          condition: {
+            type: "all",
+            conditions: [
+              { type: "effect_active", effectId: "exploitation_strike" },
+              { type: "weaponType", weaponType: "unarmed" },
+            ],
+          },
+          damage: [
+            { base: 20, scaling: 1.0, damageType: "evil_magical", target: "enemy" },
+          ],
+          passives: { lifestealOfTargetMaxHp: 0.10 },
+          desc: "Per unarmed hit while buff active — +20(1.0) evil magical + heal 10% of target's max HP.",
+        },
+      ],
+      _unverified: {
+        tooltipMismatch: "Tooltip says 2s; in-game base is ~15s (measured 18s with +20% buffDurationBonus). Authored to the in-game base.",
+      },
+    },
+
+    {
+      id: "exit_demon_form",
+      type: "skill",
+      name: "Exit Demon Form",
+      desc: "Return to human form. No stat changes.",
+      activation: "cast",
+      targeting: "self",
+      tags: ["demon"],
+      condition: { type: "form_active", form: "demon" },
+      // State-change action — exits the Blood Pact transformation. No stat
+      // effects; the form removal is the full mechanic.
+    },
   ],
 
   spells: [
@@ -537,23 +589,10 @@ export const warlock = ({
       form: {
         formId: "demon",
         scalesWith: "wil",
-        attacks: [
-          {
-            name: "Exploitation Strike",
-            desc: "Bare-hand attack dealing 20(1.0) evil magical damage, applying a 2s bleed-like debuff, and healing the caster for 10% of the target's maximum health.",
-            damage: [
-              { base: 20, scaling: 1.0, damageType: "evil_magical", target: "enemy" },
-            ],
-            passives: {
-              lifestealOfTargetMaxHp: 0.10,
-              debuffDuration: 2,
-            },
-          },
-          {
-            name: "Exit Demon Form",
-            desc: "Return to human form. No stat changes.",
-          },
-        ],
+        // No form-unique attacks — regular unarmed melee applies. Form-gated
+        // skills (exploitation_strike, exit_demon_form) live in skills[] and
+        // are referenced via passives.altSkills.
+        attacks: [],
       },
       effects: [
         { stat: "maxHealth", value: 30, phase: "pre_curve_flat", condition: { type: "form_active", form: "demon" } },
@@ -586,9 +625,6 @@ export const warlock = ({
         selfDamagePerSecond: 0.01,
         altSkills: ["exploitation_strike", "exit_demon_form"],
         irreversibleUntilContractEnds: true,
-      },
-      _unverified: {
-        exploitationStrikeStructural: "Authored as form-attack entry, but semantically is a cast-activated self-buff named 'Exploitation Strike' that modifies bare-hand attacks (+20(1.0) evil magical + heal 10% target max HP per hit). Tooltip says 2s duration but in-game base appears to be 15s (measured as 18s with +20% buffDurationBonus). Restructure pending — needs D.14 named-status shape with abilityModifiers on bare-hand attacks.",
       },
     },
   ],

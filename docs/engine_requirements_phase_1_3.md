@@ -206,5 +206,4 @@ Litmus test: when the panel is built, it should be "list enemy attacks → for e
 
 | Ref | Note |
 |---|---|
-| Warlock.BloodPact.ExploitationStrike | CSV phrases the 2s window as "additional evil magical damage for 2 seconds" without naming a status — authored as `passives.debuffDuration` metadata. Phase 1.3 may formalize as a nameless debuff with `appliesStatus`. |
 | Mending Grove duration | CSV omits. Flagged `_unverified`. |
