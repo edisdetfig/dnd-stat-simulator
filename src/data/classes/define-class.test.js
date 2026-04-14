@@ -162,6 +162,53 @@ describe('defineClass — nested effect lists', () => {
     expect(() => defineClass(cls)).toThrow(/afterEffect\.effects\[0\]:.*unknown phase "alien_phase"/);
   });
 
+  it('accepts valid abilityModifiers[]', () => {
+    const cls = baseClass();
+    cls.perks.push({
+      id: "sculpt",
+      type: "perk",
+      name: "Spell Sculpting",
+      abilityModifiers: [
+        { target: { type: "spell" }, modify: "range", value: 0.25, mode: "multiply" },
+        { target: { tags: ["curse"] }, modify: "duration", value: 0.30, mode: "multiply" },
+        { target: { id: "hide" }, modify: "cooldown", value: -30, mode: "add" },
+      ],
+    });
+    expect(() => defineClass(cls)).not.toThrow();
+  });
+
+  it('rejects unknown abilityModifiers.modify field', () => {
+    const cls = baseClass();
+    cls.perks[0].abilityModifiers = [
+      { target: { type: "spell" }, modify: "gibberish", value: 0.25, mode: "multiply" },
+    ];
+    expect(() => defineClass(cls)).toThrow(/abilityModifiers\[0\]: unknown modify "gibberish"/);
+  });
+
+  it('rejects unknown abilityModifiers.mode', () => {
+    const cls = baseClass();
+    cls.perks[0].abilityModifiers = [
+      { target: { type: "spell" }, modify: "range", value: 0.25, mode: "divide" },
+    ];
+    expect(() => defineClass(cls)).toThrow(/abilityModifiers\[0\]: unknown mode "divide"/);
+  });
+
+  it('rejects abilityModifiers.target without exactly one of tags|type|id', () => {
+    const cls = baseClass();
+    cls.perks[0].abilityModifiers = [
+      { target: {}, modify: "range", value: 0.25, mode: "multiply" },
+    ];
+    expect(() => defineClass(cls)).toThrow(/abilityModifiers\[0\]\.target: must set exactly one of/);
+  });
+
+  it('rejects non-numeric abilityModifiers.value', () => {
+    const cls = baseClass();
+    cls.perks[0].abilityModifiers = [
+      { target: { type: "spell" }, modify: "range", value: "big", mode: "multiply" },
+    ];
+    expect(() => defineClass(cls)).toThrow(/abilityModifiers\[0\]: value must be a number/);
+  });
+
   it('validates effects nested inside stacking.perStack', () => {
     const cls = baseClass();
     cls.perks.push({

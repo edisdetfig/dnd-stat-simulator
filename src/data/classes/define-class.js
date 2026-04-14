@@ -19,6 +19,9 @@ const VALID_PHASES = new Set(Object.values(EFFECT_PHASES));
 const VALID_SLOT_TYPES = new Set(["spell", "shapeshift", "music"]);
 const ABILITY_CONTAINERS = ["perks", "skills", "spells", "transformations", "musics", "mergedSpells"];
 
+const VALID_MODIFIER_FIELDS = new Set(["duration", "cooldown", "castTime", "range", "aoeRadius", "cost"]);
+const VALID_MODIFIER_MODES = new Set(["multiply", "add"]);
+
 export function defineClass(classData) {
   const issues = [];
   const classId = classData?.id ?? "<unknown>";
@@ -58,6 +61,12 @@ export function defineClass(classData) {
       ability.triggers.forEach((tr, i) => {
         const tPath = `${path}.triggers[${i}]`;
         if (tr?.condition) validateCondition(tr.condition, `${tPath}.condition`, issues);
+      });
+    }
+
+    if (Array.isArray(ability.abilityModifiers)) {
+      ability.abilityModifiers.forEach((mod, i) => {
+        validateAbilityModifier(mod, `${path}.abilityModifiers[${i}]`, issues);
       });
     }
 
@@ -153,6 +162,35 @@ function validateEffect(eff, path, issues) {
     issues.push(`${path}: unknown target "${eff.target}"`);
   }
   if (eff.condition) validateCondition(eff.condition, `${path}.condition`, issues);
+}
+
+function validateAbilityModifier(mod, path, issues) {
+  if (!mod || typeof mod !== "object") {
+    issues.push(`${path}: abilityModifier is not an object`);
+    return;
+  }
+  if (!VALID_MODIFIER_FIELDS.has(mod.modify)) {
+    issues.push(`${path}: unknown modify "${mod.modify}"`);
+  }
+  if (!VALID_MODIFIER_MODES.has(mod.mode)) {
+    issues.push(`${path}: unknown mode "${mod.mode}"`);
+  }
+  if (typeof mod.value !== "number") {
+    issues.push(`${path}: value must be a number`);
+  }
+  const t = mod.target;
+  if (!t || typeof t !== "object") {
+    issues.push(`${path}.target: target is not an object`);
+  } else {
+    const hasTags = Array.isArray(t.tags);
+    const hasType = typeof t.type === "string";
+    const hasId = typeof t.id === "string";
+    if (Number(hasTags) + Number(hasType) + Number(hasId) !== 1) {
+      issues.push(`${path}.target: must set exactly one of { tags: string[] } | { type: string } | { id: string }`);
+    } else if (hasTags && !t.tags.every(s => typeof s === "string")) {
+      issues.push(`${path}.target.tags: must be string[]`);
+    }
+  }
 }
 
 function validateCondition(cond, path, issues) {
