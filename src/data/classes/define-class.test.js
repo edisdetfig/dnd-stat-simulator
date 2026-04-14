@@ -6,7 +6,12 @@ function baseClass() {
   return {
     id: "stub",
     name: "Stub",
-    baseStats: { str: 10, vig: 10, agi: 10, dex: 10, wil: 10, kno: 10, res: 10 },
+    baseAttributes: { str: 10, vig: 10, agi: 10, dex: 10, wil: 10, kno: 10, res: 10 },
+    baseHealth: 110,
+    maxPerks: 4,
+    maxSkills: 2,
+    armorRestrictions: ["cloth", "leather"],
+    spellCost: { type: "none" },
     perks: [
       {
         id: "robust",
@@ -165,6 +170,68 @@ describe('defineClass — failure modes', () => {
     const cls = baseClass();
     cls.perks[0].effects[0].stat = "ghostStat";
     expect(() => defineClass(cls)).toThrow(/\[defineClass:stub\] perks\[0\]\.effects\[0\]:/);
+  });
+});
+
+describe('defineClass — class-root schema', () => {
+  it('rejects unknown attribute in baseAttributes', () => {
+    const cls = baseClass();
+    cls.baseAttributes.fake = 10;
+    expect(() => defineClass(cls)).toThrow(/baseAttributes: unknown attribute "fake"/);
+  });
+
+  it('rejects non-numeric baseAttributes value', () => {
+    const cls = baseClass();
+    cls.baseAttributes.str = "strong";
+    expect(() => defineClass(cls)).toThrow(/baseAttributes\.str: value must be a number/);
+  });
+
+  it('rejects missing baseHealth', () => {
+    const cls = baseClass();
+    delete cls.baseHealth;
+    expect(() => defineClass(cls)).toThrow(/baseHealth: must be a number/);
+  });
+
+  it('rejects non-numeric maxPerks / maxSkills', () => {
+    const cls = baseClass();
+    cls.maxPerks = "four";
+    expect(() => defineClass(cls)).toThrow(/maxPerks: must be a number/);
+  });
+
+  it('rejects non-string entries in armorRestrictions', () => {
+    const cls = baseClass();
+    cls.armorRestrictions = ["cloth", 42];
+    expect(() => defineClass(cls)).toThrow(/armorRestrictions: must be string\[\]/);
+  });
+
+  it('accepts class-root spellCost.type "none" for martial classes', () => {
+    const cls = baseClass();
+    cls.spellCost = { type: "none" };
+    expect(() => defineClass(cls)).not.toThrow();
+  });
+
+  it('rejects unknown spellCost.type', () => {
+    const cls = baseClass();
+    cls.spellCost = { type: "mana" };
+    expect(() => defineClass(cls)).toThrow(/spellCost: unknown type "mana"/);
+  });
+
+  it('accepts valid classResources shape', () => {
+    const cls = baseClass();
+    cls.classResources = { darkness_shards: { maxStacks: 3, desc: "Shared pool." } };
+    expect(() => defineClass(cls)).not.toThrow();
+  });
+
+  it('rejects classResources entry missing maxStacks', () => {
+    const cls = baseClass();
+    cls.classResources = { darkness_shards: { desc: "Shared pool." } };
+    expect(() => defineClass(cls)).toThrow(/classResources\.darkness_shards\.maxStacks: must be a number/);
+  });
+
+  it('rejects classResources entry missing desc', () => {
+    const cls = baseClass();
+    cls.classResources = { darkness_shards: { maxStacks: 3 } };
+    expect(() => defineClass(cls)).toThrow(/classResources\.darkness_shards\.desc: must be a string/);
   });
 });
 

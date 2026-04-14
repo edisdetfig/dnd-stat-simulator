@@ -22,11 +22,17 @@ const ABILITY_CONTAINERS = ["perks", "skills", "spells", "transformations", "mus
 const VALID_MODIFIER_FIELDS = new Set(["duration", "cooldown", "castTime", "range", "aoeRadius", "cost"]);
 const VALID_MODIFIER_MODES = new Set(["multiply", "add"]);
 const VALID_COST_TYPES = new Set(["health", "charges", "cooldown"]);
+// Class-root spellCost accepts "none" as a sentinel for classes with no
+// spell-cost mechanism (Fighter, Bard, Barbarian, Rogue, Ranger); ability-
+// level cost remains strictly {health, charges, cooldown}.
+const VALID_SPELLCOST_TYPES = new Set([...VALID_COST_TYPES, "none"]);
 const VALID_DURATION_TYPES = new Set(["buff", "debuff", "other"]);
 
 export function defineClass(classData) {
   const issues = [];
   const classId = classData?.id ?? "<unknown>";
+
+  validateClassRoot(classData, issues);
 
   const abilities = collectAbilities(classData);
 
@@ -93,6 +99,72 @@ export function defineClass(classData) {
 
   reportIssues(classId, issues);
   return classData;
+}
+
+function validateClassRoot(cls, issues) {
+  if (!cls || typeof cls !== "object") {
+    issues.push(`<root>: class data is not an object`);
+    return;
+  }
+
+  const ba = cls.baseAttributes;
+  if (!ba || typeof ba !== "object") {
+    issues.push(`baseAttributes: missing or not an object`);
+  } else {
+    for (const [key, val] of Object.entries(ba)) {
+      if (!CORE_ATTRS.has(key)) {
+        issues.push(`baseAttributes: unknown attribute "${key}"`);
+      }
+      if (typeof val !== "number") {
+        issues.push(`baseAttributes.${key}: value must be a number`);
+      }
+    }
+  }
+
+  if (typeof cls.baseHealth !== "number") {
+    issues.push(`baseHealth: must be a number`);
+  }
+  if (typeof cls.maxPerks !== "number") {
+    issues.push(`maxPerks: must be a number`);
+  }
+  if (typeof cls.maxSkills !== "number") {
+    issues.push(`maxSkills: must be a number`);
+  }
+
+  if (cls.armorRestrictions != null) {
+    if (!Array.isArray(cls.armorRestrictions) ||
+        !cls.armorRestrictions.every(s => typeof s === "string")) {
+      issues.push(`armorRestrictions: must be string[]`);
+    }
+  }
+
+  if (cls.spellCost != null) {
+    if (typeof cls.spellCost !== "object") {
+      issues.push(`spellCost: must be an object`);
+    } else if (!VALID_SPELLCOST_TYPES.has(cls.spellCost.type)) {
+      issues.push(`spellCost: unknown type "${cls.spellCost.type}"`);
+    }
+  }
+
+  if (cls.classResources != null) {
+    if (typeof cls.classResources !== "object" || Array.isArray(cls.classResources)) {
+      issues.push(`classResources: must be an object map of { [id]: { maxStacks, desc } }`);
+    } else {
+      for (const [id, res] of Object.entries(cls.classResources)) {
+        const rPath = `classResources.${id}`;
+        if (!res || typeof res !== "object") {
+          issues.push(`${rPath}: resource entry must be an object`);
+          continue;
+        }
+        if (typeof res.maxStacks !== "number") {
+          issues.push(`${rPath}.maxStacks: must be a number`);
+        }
+        if (typeof res.desc !== "string") {
+          issues.push(`${rPath}.desc: must be a string`);
+        }
+      }
+    }
+  }
 }
 
 function collectAbilities(classData) {
