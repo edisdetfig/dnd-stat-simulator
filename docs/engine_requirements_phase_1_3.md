@@ -108,15 +108,41 @@ Retire: `backstabPower` (replaced by conditional `physicalDamageBonus` + `player
 5. **`cost.type: "cooldown"` dispatcher**: Sorcerer's per-spell cooldown model as the unified cost path.
 6. **Merged spell availability derivation** (`deriveAvailableMergedSpells`): cross-references `merged_spell.components` against `selectedSpells`.
 7. **`post_cap_multiplicative_layer`** in damage pipeline: multiplies AFTER capped DR. Anchor: `warlock.antimagic`.
-8. **Condition exclusion semantics** — e.g., Warlock Antimagic applies to all magic damage *except divine*. Simplest authoring: desc prose only (no structural exclusion). Phase 1.3 may choose to add a `condition.type: "damageType_exclude"` or keep display-only.
-9. **Status stacking** within `appliesStatus[]` — e.g., Rogue Poisoned Weapon maxStacks=5 per-hit stacking on the poison status. Currently shape supports ability-level `stacking`, not status-level. Phase 1.3 decides: author-level `stacking` block, or per-status `stacking`.
+8. **Condition exclusion semantics** — e.g., Warlock Antimagic applies to all magic damage *except divine*. **LOCKED (D.8):** extend existing `condition.type: "damageType"` to accept `exclude: string[]` (or array-valued `damageType` with inversion). No new condition type. Evaluator takes optional `ctx.incomingDamageType`: when present, condition resolves precisely (per-attack use case); when absent, aggregate stat-panel display still credits the layer and surfaces the exclusion via tooltip qualifier generated mechanically from the `exclude` list. Same data shape serves both the aggregate stat panel and the future per-attack incoming-damage panel (see Section G).
+9. **Status stacking** within `appliesStatus[]` — e.g., Rogue Poisoned Weapon maxStacks=5 per-hit stacking on the poison status. **LOCKED (D.9):** per-status stacking. `appliesStatus[i]` accepts `maxStacks: number` (already authored in Rogue Poisoned Weapon) and optionally a full `stacking: { maxStacks, triggerOn, consumedOn, perStack }` block with the same schema as ability-level stacking. Absence of `maxStacks` is the signal for maxStacks=1 (single-application, no stack slider). Engine: status-level ctx provides `stackCount` to damage scaling and effects within that status, independent of ability-level `ctx.stackCount`. Validator walks `appliesStatus[i].stacking` and `appliesStatus[i].maxStacks`. UI: LiveStatePanel surfaces a per-status stack slider when `maxStacks > 1`, distinct from ability-level sliders.
+
+Inter-source stacking (e.g., same status type from two same-class, same-form abilities) is a render-time question, not an authoring-shape question. Default: each `appliesStatus[i]` is a source-scoped independent instance; display sums contributions. Cross-class / cross-form combinations are out of scope per build (one class, one form at a time).
 10. **Primitive curve damage formula** for Druid form attacks (`druid.unresolved_questions.md:Druid Form Attack Damage Formula`). Engine math gap — author data best-faith, flag `_unverified`.
-11. **Shared resource pool** across multiple abilities (Warlock Darkness Shards: Soul Collector, Spell Predation, Blood Pact share a 3-cap). Current shape is per-ability `stacking`. Phase 1.3 decides between (a) class-root `classResources` block vs. (b) per-ability stacking with cross-ability consume semantics in desc only.
-12. **Self-damage DoT** — Warlock Dark Offering (10%/s), Warlock Blood Pact Abyssal Flame (1%/s). Author via `passives.selfDamagePerSecond` (display-only) OR via negative-heal HoT targeting self.
+11. **Shared resource pool** across multiple abilities (Warlock Darkness Shards: Soul Collector, Spell Predation, Blood Pact share a 3-cap). **LOCKED (D.11):** split by nature of the value.
+
+    - **Live pools** → new class-root `classResources: { [id]: { maxStacks, desc } }` block. Abilities that read the live pool use `stacking: { resource: "<id>", perStack: [...] }` (replaces inline `maxStacks`).
+    - **Ability-local snapshots / per-ability accumulators** → existing ability-local `stacking: { maxStacks, perStack: [...] }` shape, unchanged. No `resource` pointer.
+
+    Presence/absence of `stacking.resource` is the switch. Warlock migration: add `classResources.darkness_shards { maxStacks: 3 }` to class root; Soul Collector migrates to `stacking.resource: "darkness_shards"`; Blood Pact keeps ability-local `stacking` (snapshot-on-activation semantic emerges naturally from the snapshot model — no engine concept of "freeze" needed); Spell Predation remains desc-only producer reference.
+
+    Validator: walks `classResources`; validates `stacking.resource` resolves. Engine: `ctx.classResources[id].count` populated from a single shared slider per resource; per-ability `ctx.stackCount` independent (unchanged). UI: LiveStatePanel renders "Class Resources" section with one slider per defined resource (always visible for that class); ability-local stack sliders remain under their abilities.
+
+    Rationale: the Blood-Pact-plus-Soul-Collector scenario requires two independent counters (live pool 0–3 AND locked-in snapshot 0–3, up to +6 all attrs / +198% dark at full stack). One shared slider cannot represent this. Two sliders (one resource + one ability-local) match the distinct game-state values exactly.
+12. **Self-damage DoT** — Warlock Dark Offering (10%/s), Warlock Blood Pact demon form (1%/s). **LOCKED (D.12):** distinguish by mechanic nature.
+
+    - **Costs** (unmitigated flat % max HP drain): author as `passives.selfDamagePerSecond: number` on the ability. Engine aggregator sums across active abilities; derived stats expose `selfHpDrainRate` (percent) and `selfHpDrainPerSecond` (flat = rate × maxHealth). Stat panel renders a "Self HP Drain /s" row when nonzero; tooltip lists contributing abilities.
+    - **Mitigated self-damage** (future — damage that respects DR/resistances/type bonuses): author as `damage[{ ..., target: "self", isDot: true }]`. Same damage pipeline as outgoing, just self-targeted.
+
+    Warlock's existing `passives.selfDamagePerSecond` entries (Dark Offering 0.10, Blood Pact 0.01) are correct as-is under the "cost" shape; no migration. Author picks which shape based on whether defenses apply in-game.
 13. **Any-form gating** — Druid Enhanced Wildness "while in any form." Author as `condition: { type: "form_active" }` with no specific `form` value → "any form active." Engine must interpret omitted `form` field as "any."
-14. **Trigger-block own-duration for on-hit debuffs** — Wizard Melt and Cleric Faithfulness apply a timed debuff to a target through a trigger; trigger.effects have no duration field in current shape. Phase 1.3 decides between (a) allow `triggers[i].duration`, or (b) always author via `appliesStatus` with a generic "nameless debuff" status. Currently authored as trigger.effects + desc-prose window.
+14. **Trigger-block own-duration for on-hit debuffs** — Wizard Melt and Cleric Faithfulness apply a timed debuff to a target through a trigger; trigger.effects have no duration field in current shape. **LOCKED (D.14):** allow `triggers[i].duration: { base, type, tags? }` — same schema as ability-level `duration` and `appliesStatus[i].duration`.
+
+    Authoring rule (falls out of data, no memo needed): **named in-game status → `appliesStatus[]`; nameless timed trigger effect → `triggers[i].duration + effects[]`.**
+
+    Migration: Wizard Melt gets `duration: { base: 2, type: "debuff" }`; Cleric Faithfulness gets `duration: { base: 1, type: "debuff" }`. Warlock Exploitation Strike (F-item — Blood Pact form attack "2s bleed-like debuff") also authored via this shape — resolves the `passives.debuffDuration` placeholder.
+
+    Validator walks `triggers[i].duration`. Effect evaluator treats trigger-scoped effects as target-applied debuffs with the trigger's duration; direction-modifier math (Convention 13) applies per standard rules. Snapshot semantics: toggle on = effects applied indefinitely; duration is display metadata for tooltip + modifier math only.
 15. **Merged-spell cooldown derivation** — `deriveMergedSpellCooldown(mergedSpell, components)`: per CSV Sorcerer Class Notes, a merged spell cannot re-cast until both components are off cooldown. Effective CD ≈ max of components' CDs (gated on both being available). Tracker D.6 covers availability; this row covers derived cooldown surfacing in UI.
-16. **Multi-CC per ability** — Sorcerer Aqua Prison applies BOTH trap (3s) AND lift (3s); current shape is singleton `cc: { type, duration }`. Authored trap-only with lift in desc. Phase 1.3 decides array shape `cc: [{...}, {...}]` or keep singleton + desc.
+16. **Multi-CC per ability** — Sorcerer Aqua Prison applies BOTH trap (3s) AND lift (3s); current shape is singleton `cc: { type, duration }`. **LOCKED (D.16):** `cc` becomes an array — `cc: [{ type, duration, tags? }, ...]`. Single-CC abilities author as `cc: [{...}]`.
+
+    Rationale: consistency with other multi-entry blocks (`damage[]`, `appliesStatus[]`, `effects[]`, `triggers[]`); accurate tooltip rendering per-entry; duration-modifier math (e.g., `trapDurationBonus`) surfaces correctly per-entry; future target-CC conditions read `ctx.target.cc[]` as an array without migration; future stat-functional CCs can carry their own `effects[]` per entry.
+
+    Migration scope: one-pass authoring sweep wrapping all existing singleton `cc:` usages in `[...]` plus authoring Aqua Prison's lift. Validator walks `cc[]` as an array. Current-simulator impact: primarily display/tooltip fidelity — CC doesn't modify caster stats today, but the shape is future-proofed.
 17. **Stacking nested within performanceTiers** — Bard Allegro/Accelerando carry per-tier `stacking.perStack` (tier-specific stack values). Current validator walks only ability-level `stacking.perStack`. Validator must also walk `performanceTiers.{poor,good,perfect}.stacking.perStack`.
 18. **`memoryCost` field on music abilities** — Bard musics carry `memoryCost: N` (Cat 30). Validator accepts field; runtime enforces against equipped Music Memory slot count (Convention: music memory ≠ spell memory).
 19. **`music` slot count validation** — VALID_SLOT_TYPES already includes "music"; ensure the Music Memory skill wiring is end-to-end in the engine/UI (not just validated).
@@ -141,6 +167,25 @@ Retire: `backstabPower` (replaced by conditional `physicalDamageBonus` + `player
 - Active-summon toggles (Warlock Hydra, Evil Eye; Sorcerer Earth Elemental, Lava Elemental; Druid Treant).
 - `capOverrides` visualization — e.g., PDR overflow beyond 75% when Fighter Defense Mastery selected.
 - Weapon-held selector must surface new WEAPON_TYPES (one_handed, shield, spellbook, firearm).
+
+---
+
+## G. Deferred feature — Incoming-damage panel (new, separate from Target)
+
+Context: Target Panel is for *outgoing* damage (damage we deal). A new, separate panel will render *incoming* damage — "how much damage will class X / build Y do to me" — rendering each enemy attack row through our defenses.
+
+Architectural constraint for Phase 1.3: **the data shape and engine pipeline must support this panel with zero rework when the panel is built later.** Only the panel UI is deferred.
+
+Requirements:
+- **Enemy-attack evaluation contract.** Engine accepts `ctx.incomingDamageType`, `ctx.incomingTrueDamage`, `ctx.incomingTags[]`, `ctx.incomingSource` (class/ability id for future filtering) and evaluates every defensive condition against those. Defensive `post_curve` / `post_cap_multiplicative_layer` / type-resistance effects resolve per-attack.
+- **Default enemy-build presets.** Per-class default attacks (melee + key abilities with typical damage numbers). Later, users point at a specific shareable-build URL.
+- **Same damage formulas, attacker POV.** `damage.js` must be callable with roles swapped — the enemy's attacker-side scaling + our defender-side mitigation. Formula purity keeps this cheap.
+- **No new condition types for per-type exclusions.** `damageType` condition with `exclude` (D.8) is the canonical pattern.
+- **Authoring continues unchanged.** Class authors already write attacks with `damageType`, `tags`, `trueDamage` — no new fields needed on the attacker side.
+
+Deferred (build with the panel, not now): the panel component, default-build presets, shareable-build pointer plumbing.
+
+Litmus test: when the panel is built, it should be "list enemy attacks → for each, set ctx → call existing damage pipeline → render result." No new engine paths.
 
 ---
 
