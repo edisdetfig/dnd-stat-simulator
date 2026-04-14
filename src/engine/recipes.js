@@ -92,10 +92,10 @@ export const DERIVED_STAT_RECIPES = {
 
   // PDR. equippedArmorRatingBonus (Fighter Defense Mastery +15%) scales gear
   // armorRating before the curve. additionalArmorRating is a flat add to AR
-  // that is NOT scaled by the bonus. Default cap 70% (Fighter Defense
+  // that is NOT scaled by the bonus. Default cap 65% (Fighter Defense
   // Mastery raises to 75% via cap_override). Cap applied by runRecipe.
   pdr: {
-    cap: 0.70,
+    cap: 0.65,
     compute: (attrs, bonuses) => {
       const arMult = 1 + (bonuses.equippedArmorRatingBonus || 0);
       const totalAR = (bonuses.armorRating || 0) * arMult
