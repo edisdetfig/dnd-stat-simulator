@@ -158,6 +158,7 @@ Inter-source stacking (e.g., same status type from two same-class, same-form abi
 23. **`condition.type: "effect_active"` resolver** — already in CONDITION_TYPES, but engine must resolve `effectId` lookup at runtime (per-target effect presence). First use: Druid Dreamfire conditional heal for allies with Nature's Touch active.
 24. **Compound conditions `all` / `any`** (LOCKED D.24). Condition evaluator recursively evaluates `condition.conditions[]` and combines via AND (`all`) or OR (`any`). Leaves resolve via existing condition dispatch. No depth limit; authors keep depth shallow for readability. Retires the prior workaround of authoring parallel effects each gated by one leg of the intended conjunction. First use: Fighter Sword Mastery (`weapon_type: sword` + `player_state: defensive_stance`). Validator walks inner conditions identically to top-level. UI: no new controls — existing state/weapon/equipment toggles cover all leaves.
 25. **`post_curve_multiplicative` phase** (LOCKED D.25). Applies after all `post_curve` additives on a given stat: `stat_final = (base + Σ post_curve additives) × Π (1 + post_curve_multiplicative values)`. In-game verified on Fighter Veteran Instinct PDR (`+10% of current value` = ×1.10). Aggregator needs to track per-stat multiplicative bucket separately from additive `post_curve` bucket. Order: curve → pre_curve_flat → attribute_multiplier (applied to attrs pre-curve) → curve eval → post_curve adds → post_curve_multiplicatives → `cap_override` / cap clamp → used by damage formulas. Distinct from `post_cap_multiplicative_layer` (damage-side). Existing `multiplicative_layer` (pre-cap damage-side) remains in constants for Phase 1.3 cleanup review — verify whether to retire in favor of the three clearly-named phases.
+26. **`flatDamageReduction` damage-pipeline consumption** — stat aggregates via `post_curve` phase from perks (Cleric Perseverance +2 flat). Damage pipeline must subtract `defender.flatDamageReduction` as the final step of every incoming damage calculation, after all percent layers (capped MDR/PDR, `post_cap_multiplicative_layer`, type resistances). Floor at 0. STAT_META already defines `flatDamageReduction` (unit: flat, cat: defense); authoring shape already in use on Cleric Perseverance. Anchor: `cleric.perseverance`. Feeds Section G incoming-damage panel — every enemy attack row renders through this final subtraction. No aggregate-stat-panel display change (it's a flat defender stat, already surfaced via STAT_META).
 
 ---
 
@@ -202,7 +203,6 @@ Litmus test: when the panel is built, it should be "list enemy attacks → for e
 | Ref | Note |
 |---|---|
 | Warlock.BloodPact.ExploitationStrike | CSV phrases the 2s window as "additional evil magical damage for 2 seconds" without naming a status — authored as `passives.debuffDuration` metadata. Phase 1.3 may formalize as a nameless debuff with `appliesStatus`. |
-| Warlock.Antimagic | "Except against divine magic" is desc-only. Phase 1.3 decides structural exclusion vs. display-only (tracker D.8). |
 | Warlock.BlowOfCorruption | Curse tag unverified in CSV — authored without `curse` tag (simplest faithful). Curse Mastery extension TBD in-game. |
 | Warlock.RayOfDarkness | CSV omits channel duration. Authored 5s placeholder; flagged `_unverified`. |
 | Warlock.LifeDrain | "Portion of damage" lifesteal % unresolved in CSV. Authored as `passives.lifestealPortion: true` (flag), numeric TBD. |
@@ -212,8 +212,6 @@ Litmus test: when the panel is built, it should be "list enemy attacks → for e
 | V36 | Druid Rat form has no primary scaling attribute (CSV omits). Authored with `scalesWith: null`. |
 | Mending Grove duration | CSV omits. Flagged `_unverified`. |
 | Sorcerer baseline HP | CSV says 117; formula gives 115. Authored to CSV value; flagged `_unverified`. |
-| Brewmaster drunk-extension | Coordinator noted in-game verification pending — does it extend duration or only remove detrimental parts? Authored as extension. |
 | Blow of Corruption curse tag | Flagged for in-game verification — may or may not be curse-tagged for Curse Mastery. Authored without curse tag (simplest faithful to CSV). |
 | Zap damage type | `light_magical` vs `lightning_magical` — authored as `light_magical` per verified distinct type. |
 | Life Drain lifesteal percentage | Unresolved in csv. Authored with `healingMod`-driven lifesteal in desc prose; numeric value left as best-faith. |
-| Veteran Instinct "+10% of current value" | Simplest faithful author: +10% flat `physicalDamageReduction` (`post_curve`). Multiplicative-of-current semantics flagged `_unverified`. |

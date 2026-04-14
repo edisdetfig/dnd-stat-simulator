@@ -91,13 +91,13 @@ export const warlock = ({
       desc: "Gain 20% magical damage reduction except against divine magic. Applied as a separate multiplicative layer after capped MDR.",
       activation: "passive",
       effects: [
-        // post_cap_multiplicative_layer: ×0.80 on incoming magic damage.
-        // Exclusion ("except divine") is desc-only per tracker D.8.
-        { stat: "magicDamageTaken", value: 0.80, phase: "post_cap_multiplicative_layer" },
+        {
+          stat: "magicDamageTaken",
+          value: 0.80,
+          phase: "post_cap_multiplicative_layer",
+          condition: { type: "damageType", exclude: ["divine_magical"] },
+        },
       ],
-      _unverified: {
-        divineExclusion: "Divine-magic exclusion is desc-only until Phase 1.3 decides structural form (tracker D.8).",
-      },
     },
 
     {
