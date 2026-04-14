@@ -232,7 +232,6 @@ export const warlock = ({
       desc: "Your next physical attack deals 12(1.0) evil magical damage to the target and reduces their incoming physical and magical healing by 80% for 12 seconds.",
       activation: "cast",
       targeting: "enemy",
-      // Curse tag unverified — authored without per tracker F (simplest faithful).
       duration: { base: 12, type: "debuff" },
       damage: [
         { base: 12, scaling: 1.0, damageType: "evil_magical", target: "enemy" },
@@ -241,9 +240,6 @@ export const warlock = ({
         { stat: "incomingPhysicalHealing", value: -0.80, phase: "post_curve", target: "enemy" },
         { stat: "incomingMagicalHealing", value: -0.80, phase: "post_curve", target: "enemy" },
       ],
-      _unverified: {
-        curseTag: "CSV does not confirm curse-tagging; Curse Mastery extension TBD in-game.",
-      },
     },
 
     {

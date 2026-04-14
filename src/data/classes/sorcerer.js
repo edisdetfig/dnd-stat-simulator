@@ -10,8 +10,7 @@ export const sorcerer = ({
   desc: "Merged elemental spells and summoned elementals.",
 
   baseAttributes: { str: 10, vig: 10, agi: 10, dex: 18, wil: 25, kno: 20, res: 12 },
-  // CSV asserts HP=117; canonical curve gives 115. Authored to CSV; flagged.
-  baseHealth: 117,
+  baseHealth: 115,
 
   maxPerks: 4,
   maxSkills: 2,
@@ -19,10 +18,6 @@ export const sorcerer = ({
   armorRestrictions: ["cloth", "leather"],
   // Per-spell cooldown acts as the cost. Engine dispatches via cost.type: "cooldown".
   spellCost: { type: "cooldown" },
-
-  _unverified: {
-    baseHealth: "CSV asserts 117; canonical curve derives 115. Per tracker F.",
-  },
 
   perks: [
     {

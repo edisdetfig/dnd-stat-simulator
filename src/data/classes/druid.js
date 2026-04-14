@@ -599,7 +599,6 @@ export const druid = ({
         { stat: "incomingMagicalHealing", value: -0.95, phase: "post_curve", condition: { type: "form_active", form: "rat" } },
         { stat: "jumpHeight", value: 0.10, phase: "post_curve", condition: { type: "form_active", form: "rat" } },
       ],
-      _unverified: { scalesWith: "CSV shows '—' for rat scaling attribute; authored null per tracker F V36." },
     },
 
     {
