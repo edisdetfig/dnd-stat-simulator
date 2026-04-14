@@ -37,6 +37,35 @@ describe('defineClass — happy path', () => {
     expect(() => defineClass(cls)).not.toThrow();
   });
 
+  it('accepts Phase 1.3 STATUS_TYPES additions (plague, blind, freeze)', () => {
+    const cls = baseClass();
+    cls.skills.push({
+      id: "infected_fangs",
+      type: "skill",
+      name: "Infected Fangs",
+      appliesStatus: [
+        { type: "plague", duration: { base: 3, type: "debuff" } },
+        { type: "blind",  duration: { base: 2, type: "debuff" } },
+        { type: "freeze", duration: { base: 2, type: "debuff" } },
+      ],
+    });
+    expect(() => defineClass(cls)).not.toThrow();
+  });
+
+  it('accepts creature_type condition', () => {
+    const cls = baseClass();
+    cls.perks.push({
+      id: "undead_slaying",
+      type: "perk",
+      name: "Undead Slaying",
+      effects: [
+        { stat: "physicalDamageBonus", value: 0.15, phase: "post_curve",
+          condition: { type: "creature_type", value: "undead" } },
+      ],
+    });
+    expect(() => defineClass(cls)).not.toThrow();
+  });
+
   it('accepts CORE_ATTRS (str, wil) as effect stats', () => {
     const cls = baseClass();
     cls.perks.push({
