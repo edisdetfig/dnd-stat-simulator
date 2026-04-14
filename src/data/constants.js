@@ -97,6 +97,9 @@ export const STATUS_TYPES = new Set([
   "poison",
   "bleed",
   "silence",
+  "plague",
+  "blind",
+  "freeze",
 ]);
 
 // ── Player states (spec §3 condition `player_state` values) ──

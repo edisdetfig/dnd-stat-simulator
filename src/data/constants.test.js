@@ -72,11 +72,14 @@ describe('membership sets', () => {
     ]) expect(TRIGGER_EVENTS.has(e)).toBe(true);
   });
 
-  it('STATUS_TYPES contains the seven spec statuses', () => {
-    for (const s of ["burn", "frostbite", "wet", "electrified", "poison", "bleed", "silence"]) {
+  it('STATUS_TYPES contains the ten spec statuses', () => {
+    for (const s of [
+      "burn", "frostbite", "wet", "electrified", "poison", "bleed", "silence",
+      "plague", "blind", "freeze",
+    ]) {
       expect(STATUS_TYPES.has(s)).toBe(true);
     }
-    expect(STATUS_TYPES.size).toBe(7);
+    expect(STATUS_TYPES.size).toBe(10);
   });
 
   it('PLAYER_STATES contains all ten spec states', () => {
