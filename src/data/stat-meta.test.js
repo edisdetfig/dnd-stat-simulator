@@ -30,7 +30,7 @@ describe('STAT_META v3 additions (spec §5)', () => {
   const v3Keys = [
     "healingMod", "healingAdd", "magicDamageTaken", "curseDurationBonus",
     "recoverableHealth",
-    "typeDamageBonus", "buffWeaponDamage", "headshotPower", "backstabPower",
+    "typeDamageBonus", "buffWeaponDamage", "headshotPower",
     "headPenetration", "impactPower", "impactResistance",
     "equippedArmorRatingBonus", "spellChargeMultiplier", "spellCooldownMultiplier",
     "flatDamageReduction", "drawSpeed",

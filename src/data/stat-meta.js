@@ -88,7 +88,6 @@ export const STAT_META = {
   typeDamageBonus: { label: "Type Damage Bonus", unit: "percent", cat: "offense" },
   buffWeaponDamage: { label: "Buff Weapon Damage", unit: "flat", cat: "offense" },
   headshotPower: { label: "Headshot Power", unit: "percent", cat: "offense" },
-  backstabPower: { label: "Backstab Power", unit: "percent", cat: "offense" },
   headPenetration: { label: "Head Penetration", unit: "percent", cat: "offense" },
   impactPower: { label: "Impact Power", unit: "flat", cat: "offense" },
 
