@@ -581,14 +581,13 @@ export const warlock = ({
       grantsSpells: ["bolt_of_darkness"],
       form: {
         formId: "blood_pact",
-        scalesWith: "wil",
         // No form-unique attacks — regular unarmed melee applies. Form-gated
         // skills (exploitation_strike, exit_demon_form) live in skills[] and
         // are referenced via passives.altSkills.
         attacks: [],
       },
       effects: [
-        { stat: "maxHealth", value: 30, phase: "pre_curve_flat", condition: { type: "form_active", form: "blood_pact" } },
+        { stat: "maxHealth", value: 30, phase: "post_curve", condition: { type: "form_active", form: "blood_pact" } },
         { stat: "armorRating", value: 50, phase: "pre_curve_flat", condition: { type: "form_active", form: "blood_pact" } },
         { stat: "magicResistance", value: 50, phase: "pre_curve_flat", condition: { type: "form_active", form: "blood_pact" } },
       ],
