@@ -53,11 +53,7 @@ export const cleric = ({
       effects: [
         {
           stat: "str", value: 10, phase: "pre_curve_flat",
-          // TODO(Phase 1.3 §A): retarget to "alcohol_consumed" once PLAYER_STATES
-          // enum splits alcohol_consumed from drunk. Brewmaster removes drunk,
-          // so firing on "drunk" is semantically wrong — the perk needs to fire
-          // whenever ale is drunk, regardless of debuff state.
-          condition: { type: "player_state", state: "drunk" },
+          condition: { type: "player_state", state: "alcohol_consumed" },
         },
         { stat: "drunkDurationBonus", value: 0.50, phase: "post_curve" },
       ],
