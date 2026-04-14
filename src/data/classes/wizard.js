@@ -286,7 +286,6 @@ export const wizard = ({
       targeting: "enemy",
       tags: ["arcane"],
       damage: [
-        // damageType authored as light_magical per vocab Cat 6 (distinct from lightning_magical).
         { base: 18, scaling: 1.0, damageType: "light_magical", target: "enemy" },
       ],
       appliesStatus: [
@@ -297,7 +296,6 @@ export const wizard = ({
           desc: "Burn — 1(0.5) fire magical per tick for 1s.",
         },
       ],
-      _unverified: { damageType: "light_magical vs lightning_magical — per tracker F." },
     },
 
     {

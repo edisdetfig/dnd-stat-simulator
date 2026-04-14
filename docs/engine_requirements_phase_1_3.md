@@ -213,5 +213,4 @@ Litmus test: when the panel is built, it should be "list enemy attacks → for e
 | Mending Grove duration | CSV omits. Flagged `_unverified`. |
 | Sorcerer baseline HP | CSV says 117; formula gives 115. Authored to CSV value; flagged `_unverified`. |
 | Blow of Corruption curse tag | Flagged for in-game verification — may or may not be curse-tagged for Curse Mastery. Authored without curse tag (simplest faithful to CSV). |
-| Zap damage type | `light_magical` vs `lightning_magical` — authored as `light_magical` per verified distinct type. |
 | Life Drain lifesteal percentage | Unresolved in csv. Authored with `healingMod`-driven lifesteal in desc prose; numeric value left as best-faith. |
