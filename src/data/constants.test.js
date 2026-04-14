@@ -32,7 +32,9 @@ describe('frozen enums', () => {
     expect(EFFECT_PHASES.PRE_CURVE_FLAT).toBe("pre_curve_flat");
     expect(EFFECT_PHASES.ATTRIBUTE_MULTIPLIER).toBe("attribute_multiplier");
     expect(EFFECT_PHASES.POST_CURVE).toBe("post_curve");
+    expect(EFFECT_PHASES.POST_CURVE_MULTIPLICATIVE).toBe("post_curve_multiplicative");
     expect(EFFECT_PHASES.MULTIPLICATIVE_LAYER).toBe("multiplicative_layer");
+    expect(EFFECT_PHASES.POST_CAP_MULTIPLICATIVE_LAYER).toBe("post_cap_multiplicative_layer");
     expect(EFFECT_PHASES.TYPE_DAMAGE_BONUS).toBe("type_damage_bonus");
     expect(EFFECT_PHASES.HEALING_MODIFIER).toBe("healing_modifier");
     expect(EFFECT_PHASES.CAP_OVERRIDE).toBe("cap_override");

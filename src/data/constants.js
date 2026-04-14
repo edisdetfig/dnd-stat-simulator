@@ -25,13 +25,15 @@ export const HR_VIG_WEIGHT = 0.75;
 // ── Effect pipeline phases (spec §3 Phase enum) ──
 
 export const EFFECT_PHASES = Object.freeze({
-  PRE_CURVE_FLAT:        "pre_curve_flat",
-  ATTRIBUTE_MULTIPLIER:  "attribute_multiplier",
-  POST_CURVE:            "post_curve",
-  MULTIPLICATIVE_LAYER:  "multiplicative_layer",
-  TYPE_DAMAGE_BONUS:     "type_damage_bonus",
-  HEALING_MODIFIER:      "healing_modifier",
-  CAP_OVERRIDE:          "cap_override",
+  PRE_CURVE_FLAT:              "pre_curve_flat",
+  ATTRIBUTE_MULTIPLIER:        "attribute_multiplier",
+  POST_CURVE:                  "post_curve",
+  POST_CURVE_MULTIPLICATIVE:   "post_curve_multiplicative",
+  MULTIPLICATIVE_LAYER:        "multiplicative_layer",
+  POST_CAP_MULTIPLICATIVE_LAYER: "post_cap_multiplicative_layer",
+  TYPE_DAMAGE_BONUS:           "type_damage_bonus",
+  HEALING_MODIFIER:            "healing_modifier",
+  CAP_OVERRIDE:                "cap_override",
 });
 
 // ── Condition types (spec §3 Condition shape) ──
