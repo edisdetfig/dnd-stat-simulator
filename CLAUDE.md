@@ -20,17 +20,10 @@ ACCURACY FIRST:
 - The user has the game open — suggest specific in-game tests for any unknown.
 
 When starting a session: read relevant knowledge files, summarize current state, ask what to work on.
-When implementing a curve: write it as a pure function, unit test against verification_test_points.md, then integrate.
+When implementing a curve: write it as a pure function, unit-test against the verified test points in docs/damage_formulas.md / docs/healing_verification.md, then integrate.
 When a discrepancy is found: document it in unresolved_questions.md with a testing protocol.
 
 # Architecture & Key Files
-
-ARCHITECTURE:
-- Single-page React application. Pure functions for all stat curves.
-- Data flows one direction: Gear → Attributes → Curves → Derived Stats → Damage.
-- Game data (curves, class/gear/spell/perk definitions) stored as .json files, loaded at runtime. Currently local; will eventually be fetched from an external server. Never hardcode game values in application logic.
-- User-specific data (saved builds, presets) stored via window.storage API.
-- Class-agnostic design: class stats, perks, spells, equippable armor are all data-driven.
 
 KNOWLEDGE FILE LAYOUT:
 - data/stat_curves.json — all 17 piecewise curve definitions (stable, patch-only changes)
@@ -38,8 +31,6 @@ KNOWLEDGE FILE LAYOUT:
 - docs/season8_constants.md — global caps, derived stat formulas, season changes, balance notes
 - docs/unresolved_questions.md — open unknowns, resolved findings, and testing protocols
 - docs/healing_verification.md — verified healing formula with test points
-- docs/simulator_architecture.md — app design, data flow, component structure, build phases
-- docs/data_schemas.md — JSON schemas for classes, items, builds
 
 # Notes
 
@@ -51,23 +42,33 @@ KNOWLEDGE FILE LAYOUT:
 
 **Stack:** Vite + React 19. Single-page character simulator. Deploys to GitHub Pages via `.github/workflows/static.yml` on push to `main`.
 
+**Phase status (2026-04-14):** Engine mid-rebuild (Phase 1.3 Section D). Class data is v3-native across all 10 classes. Non-load-bearing pre-v3 engine code has been archived out of the project; only verified-math files (`curves.js`, `damage.js`, `recipes.js`) remain in `src/engine/`. The simulator UI does not currently run — `App.jsx` imports resolve to archived paths and will be re-wired during Phase D.0.3/D.0.4.
+
 **Source layout:**
-- `src/App.jsx` — main simulator UI (state, layout, stat rendering)
-- `src/components/` — extracted UI (gear editors, stat rows, curve charts, target editor, panels)
-- `src/data/` — constants, stat metadata, classes, religions, gear defaults
-- `src/engine/` — `aggregator.js`, `curves.js`, `derived-stats.js`, `damage.js`, `tests.js`
-- `src/utils/format.js`, `src/styles/theme.js` — formatters and shared styles
-- `data/stat_curves.json` — verified piecewise curves (patch-only changes)
+- `src/App.jsx` — main simulator UI (currently broken; pending re-wire to the rebuilt engine)
+- `src/components/` — gear editors, panels, curve charts
+- `src/data/classes/` — v3 class data (10 classes, all fully authored)
+- `src/data/constants.js` — enums (EFFECT_PHASES, CONDITION_TYPES, STATUS_TYPES, PLAYER_STATES, WEAPON_TYPES, TARGETING, EFFECT_TARGETS, etc.)
+- `src/data/stat-meta.js` — canonical stat registry with direction/tag metadata for duration modifiers
+- `src/engine/curves.js` — piecewise curve evaluation + 17 curves
+- `src/engine/damage.js` — verified damage formulas
+- `src/engine/recipes.js` — HP / PPB / MPB / PDR / MDR derived-stat recipes + `RECIPE_IDS` registry (distinct from STAT_META — the two-namespace model)
+- `data/stat_curves.json` — verified piecewise curve definitions (patch-only changes)
 
 **Commands:**
 ```bash
 source ~/.nvm/nvm.sh    # WSL: load nvm before npm commands
+npm install             # first time only
 npm run dev             # Vite dev server
 npm run build           # Production build -> dist/
+npm test                # Run vitest
 ```
 
-**Primary test class:** Warlock. Fighter is a stub (one perk, no skills/spells).
+**Tracker + architecture docs:**
+- `docs/engine_requirements_phase_1_3.md` — §A–G engine feature tracker (27 §D rows)
+- `docs/vocabulary.md` — controlled vocabulary (enum values, conventions, tags, direction semantics)
+- `docs/shape_examples.md` — class-agnostic worked examples of v3 ability patterns
 
-**Spell effect model:** spells and perks use the `EFFECT_PHASES` enum from `src/data/constants.js` — `PRE_CURVE_FLAT`, `ATTRIBUTE_MULTIPLIER`, `POST_CURVE`, `TYPE_DAMAGE_BONUS`, `DAMAGE_OVER_TIME`. Effects are applied in the computed `useMemo` in `App.jsx`. Perk-based stat-cap raises (e.g., Fighter Defense Mastery) use the `capOverrides` pattern — see `src/engine/derived-stats.js`.
-
-**Debug:** the "Copy Debug JSON" button next to the Tests row serializes class/religion/gear/buffs/attrs/derived stats to the clipboard. Paste that when reporting a numeric discrepancy — it's the fastest way to diagnose a pipeline bug.
+**Two-namespace stat model:**
+- STAT_META keys = gear/perk additive contributions (e.g., `physicalDamageReductionBonus`, `maxHealthBonus`)
+- `RECIPE_IDS` entries = recipe outputs / cap-override targets (e.g., `pdr`, `mdr`, `hp`). Short recipe IDs are valid under `effect.stat` only when `phase === "cap_override"`; the validator enforces this.
