@@ -93,12 +93,13 @@ describe('membership sets', () => {
     expect(PLAYER_STATES.size).toBe(13);
   });
 
-  it('WEAPON_TYPES contains all 13 weapon kinds and virtual categories', () => {
+  it('WEAPON_TYPES contains all 17 weapon kinds and virtual categories', () => {
     for (const w of [
       "axe", "sword", "dagger", "bow", "crossbow", "staff", "blunt",
-      "rapier", "spear", "two_handed", "ranged", "instrument", "unarmed",
+      "rapier", "spear", "two_handed", "one_handed", "ranged", "instrument",
+      "unarmed", "shield", "spellbook", "firearm",
     ]) expect(WEAPON_TYPES.has(w)).toBe(true);
-    expect(WEAPON_TYPES.size).toBe(13);
+    expect(WEAPON_TYPES.size).toBe(17);
   });
 
   it('EFFECT_TARGETS contains the six effect-level target values', () => {

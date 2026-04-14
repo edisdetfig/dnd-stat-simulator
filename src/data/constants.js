@@ -130,7 +130,8 @@ export const PLAYER_STATES = new Set([
 
 export const WEAPON_TYPES = new Set([
   "axe", "sword", "dagger", "bow", "crossbow", "staff", "blunt",
-  "rapier", "spear", "two_handed", "ranged", "instrument", "unarmed",
+  "rapier", "spear", "two_handed", "one_handed", "ranged", "instrument",
+  "unarmed", "shield", "spellbook", "firearm",
 ]);
 
 // Map of category → list of specific weapon types that satisfy the category.
