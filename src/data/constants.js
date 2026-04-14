@@ -132,6 +132,7 @@ export const WEAPON_TYPE_CATEGORIES = Object.freeze({
 
 export const TARGETING = Object.freeze({
   SELF:          "self",
+  ALLY:          "ally",
   ALLY_OR_SELF:  "ally_or_self",
   ENEMY:         "enemy",
   ENEMY_OR_SELF: "enemy_or_self",

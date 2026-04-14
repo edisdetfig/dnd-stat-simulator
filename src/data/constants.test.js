@@ -43,6 +43,7 @@ describe('frozen enums', () => {
   it('TARGETING is frozen and maps to spec literals', () => {
     expect(Object.isFrozen(TARGETING)).toBe(true);
     expect(TARGETING.SELF).toBe("self");
+    expect(TARGETING.ALLY).toBe("ally");
     expect(TARGETING.ALLY_OR_SELF).toBe("ally_or_self");
     expect(TARGETING.ENEMY).toBe("enemy");
     expect(TARGETING.ENEMY_OR_SELF).toBe("enemy_or_self");

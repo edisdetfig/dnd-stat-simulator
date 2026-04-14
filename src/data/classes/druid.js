@@ -390,7 +390,7 @@ export const druid = ({
       desc: "Sprout a tree of life on a target, granting 3 all attributes and granting 20 additional recoverable health over 8 seconds. Also heals the target for 15(0.5) health over 8 seconds. Cannot cast on self.",
       activation: "cast",
       cost: { type: "charges", value: 2 },
-      targeting: "ally_or_self",
+      targeting: "ally",
       tags: ["nature"],
       duration: { base: 8, type: "buff" },
       effects: [
@@ -401,7 +401,6 @@ export const druid = ({
         baseHeal: 15, scaling: 0.5, healType: "magical",
         isHot: true, tickRate: 1, target: "self",
       },
-      passives: { cannotCastOnSelf: true },
     },
   ],
 
