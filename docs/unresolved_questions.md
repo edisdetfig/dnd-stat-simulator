@@ -265,18 +265,21 @@ RIS Rating = DEX × 0.25 + RES × 0.75
 
 ---
 
-## UNRESOLVED: Life Drain Heal Percentage
+## RESOLVED: Life Drain Heal Percentage = 100% (pre-MDR)
 
-**Status: UNKNOWN**
+**Status: VERIFIED (2026-04-13) — single data point; holds at observed MPB level**
 
-Life Drain heals "a portion" of outgoing damage (before target MDR). The percentage is not documented.
+Life Drain heals the caster for **100% of pre-MDR damage dealt** per tick.
 
-### Testing Protocol
-1. Warlock with Life Drain, known MPB/spell damage stats
-2. Cast on dummy, record damage floater AND HP gained per tick
-3. Ratio = HP gained / damage floater
-4. Repeat with Vampirism — should see heal × 1.2
-5. Test with 0 Magical Healing to confirm MH doesn't affect it
+### Evidence
+- Ruins dummy (MDR 7.5%, verified 2026-04-08)
+- Caster: Warlock with +5 magical damage spellbook
+- Observed: 6 damage per tick post-MDR, 7 HP healed per tick (55 → 101 HP over channel)
+- Back-solve: `floor(7 × 0.925) = 6` ✓ → raw pre-MDR damage ≈ 7, heal ratio = 7/7 = 100%
+
+### Outstanding
+- Re-test at a higher MPB level to confirm 100% holds across the damage range (not just at one point). Expectation: heal scales 1:1 with pre-MDR damage regardless of MPB.
+- Vampirism interaction: expected heal × 1.2 per `healingMod: 0.20`.
 
 ---
 

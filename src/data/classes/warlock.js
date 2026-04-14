@@ -437,11 +437,10 @@ export const warlock = ({
       damage: [
         { base: 5, scaling: 0.25, damageType: "evil_magical", isDot: true, tickRate: 1, target: "enemy", label: "per second" },
       ],
-      // "Portion" of damage dealt → lifesteal %. CSV leaves numeric unresolved.
-      passives: { lifestealPortion: true },
-      _unverified: {
-        lifestealPortion: "CSV says 'a portion of the damage dealt' — exact % unresolved (tracker F).",
-      },
+      // Heals caster for 100% of pre-MDR damage dealt. Derived from single
+      // in-game data point (2026-04-13): 6 damage post-Ruins-MDR-7.5% ≈ 7
+      // pre-MDR, 7 HP healed → 100%. Confirm at higher MPB levels if needed.
+      passives: { lifestealOnDamage: 1.0 },
     },
 
     {

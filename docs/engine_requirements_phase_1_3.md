@@ -118,7 +118,11 @@ Rename (completed 2026-04-13): `armorRatingMultiplier` → `equippedArmorRatingB
 9. **Status stacking** within `appliesStatus[]` — e.g., Rogue Poisoned Weapon maxStacks=5 per-hit stacking on the poison status. **LOCKED (D.9):** per-status stacking. `appliesStatus[i]` accepts `maxStacks: number` (already authored in Rogue Poisoned Weapon) and optionally a full `stacking: { maxStacks, triggerOn, consumedOn, perStack }` block with the same schema as ability-level stacking. Absence of `maxStacks` is the signal for maxStacks=1 (single-application, no stack slider). Engine: status-level ctx provides `stackCount` to damage scaling and effects within that status, independent of ability-level `ctx.stackCount`. Validator walks `appliesStatus[i].stacking` and `appliesStatus[i].maxStacks`. UI: LiveStatePanel surfaces a per-status stack slider when `maxStacks > 1`, distinct from ability-level sliders.
 
 Inter-source stacking (e.g., same status type from two same-class, same-form abilities) is a render-time question, not an authoring-shape question. Default: each `appliesStatus[i]` is a source-scoped independent instance; display sums contributions. Cross-class / cross-form combinations are out of scope per build (one class, one form at a time).
-10. **Primitive curve damage formula** for Druid form attacks (`druid.unresolved_questions.md:Druid Form Attack Damage Formula`). Engine math gap — author data best-faith, flag `_unverified`.
+10. **Primitive curve damage formula** for Druid form attacks. Engine pipeline for form attacks routes through the `shapeshiftPrimitive` curve instead of the weapon-damage formula. Wiki-sourced formula:
+    ```
+    damage = (primitiveCurve(attr) × primitiveMultiplier + primitiveAdd) × (1 + PowerBonus)
+    ```
+    Where `attr` is the form's scaling attribute (STR for Bear, AGI for Panther/Wolf/Penguin, null for Rat), `primitiveMultiplier` and `primitiveAdd` map to the attack's `{ scaling, base }` fields respectively, `PowerBonus` is PPB for physical damage types and MPB for magical. Current form-attack data shape is correct (`base = primitiveAdd`, `scaling = primitiveMultiplier`); engine just needs the form-attack branch in `damage.js`. Curve data lives in `data/stat_curves.json` as `shapeshiftPrimitive` (78 segments from wiki LaTeX). Anchor: all Druid form attacks. Wiki-sourced, not independently in-game verified — testing protocol in `docs/unresolved_questions.md` ("Druid Form Attack Damage Formula").
 11. **Shared resource pool** across multiple abilities (Warlock Darkness Shards: Soul Collector, Spell Predation, Blood Pact share a 3-cap). **LOCKED (D.11):** split by nature of the value.
 
     - **Live pools** → new class-root `classResources: { [id]: { maxStacks, desc } }` block. Abilities that read the live pool use `stacking: { resource: "<id>", perStack: [...] }` (replaces inline `maxStacks`).
@@ -203,7 +207,4 @@ Litmus test: when the panel is built, it should be "list enemy attacks → for e
 | Ref | Note |
 |---|---|
 | Warlock.BloodPact.ExploitationStrike | CSV phrases the 2s window as "additional evil magical damage for 2 seconds" without naming a status — authored as `passives.debuffDuration` metadata. Phase 1.3 may formalize as a nameless debuff with `appliesStatus`. |
-| Warlock.LifeDrain | "Portion of damage" lifesteal % unresolved in CSV. Authored as `passives.lifestealPortion: true` (flag), numeric TBD. |
-| V1 | Druid form attack damage formula — engine math gap. Author data best-faith; flag `_unverified`. |
 | Mending Grove duration | CSV omits. Flagged `_unverified`. |
-| Life Drain lifesteal percentage | Unresolved in csv. Authored with `healingMod`-driven lifesteal in desc prose; numeric value left as best-faith. |
