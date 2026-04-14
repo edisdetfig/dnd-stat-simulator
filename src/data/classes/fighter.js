@@ -118,7 +118,7 @@ export const fighter = ({
       effects: [
         {
           stat: "actionSpeed", value: 0.10, phase: "post_curve",
-          condition: { type: "dual_wield" },
+          condition: { type: "weapon_type", weaponType: "dual_wield" },
         },
       ],
     },
@@ -195,11 +195,11 @@ export const fighter = ({
       effects: [
         {
           stat: "weaponDamage", value: 5, phase: "post_curve",
-          condition: { type: "dual_wield" },
+          condition: { type: "weapon_type", weaponType: "dual_wield" },
         },
         {
           stat: "moveSpeed", value: 10, phase: "post_curve",
-          condition: { type: "dual_wield" },
+          condition: { type: "weapon_type", weaponType: "dual_wield" },
         },
       ],
     },

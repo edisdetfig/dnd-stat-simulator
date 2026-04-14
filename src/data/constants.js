@@ -43,9 +43,7 @@ export const CONDITION_TYPES = new Set([
   "hp_below",
   "effect_active",
   "environment",
-  "frenzy_active",
   "weapon_type",
-  "dual_wield",
   "player_state",
   "equipment",
   "creature_type",
@@ -104,20 +102,22 @@ export const PLAYER_STATES = new Set([
   "dual_casting",
   "in_combat",
   "behind_target",
+  "frenzy_active",
 ]);
 
 // ── Weapon types (spec §3 condition `weapon_type` values) ──
 //
 // Includes specific weapon kinds AND virtual categories (two_handed, ranged,
-// unarmed). Specific kinds are matched against the equipped item's
+// unarmed, dual_wield). Specific kinds are matched against the equipped item's
 // `weaponType`. Virtual categories are resolved by the engine: `ranged` via
-// WEAPON_TYPE_CATEGORIES below; `two_handed` / `unarmed` / `instrument` via
-// gear properties (handed-ness, presence of weapon, instrument tag).
+// WEAPON_TYPE_CATEGORIES below; `two_handed` / `unarmed` / `instrument` /
+// `dual_wield` via gear properties (handed-ness, presence of weapon, instrument
+// tag, presence of weapons in both hands).
 
 export const WEAPON_TYPES = new Set([
   "axe", "sword", "dagger", "bow", "crossbow", "staff", "blunt",
   "rapier", "spear", "two_handed", "one_handed", "ranged", "instrument",
-  "unarmed", "shield", "spellbook", "firearm",
+  "unarmed", "shield", "spellbook", "firearm", "dual_wield",
 ]);
 
 // Map of category → list of specific weapon types that satisfy the category.

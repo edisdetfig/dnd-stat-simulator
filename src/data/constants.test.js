@@ -56,13 +56,13 @@ describe('frozen enums', () => {
 });
 
 describe('membership sets', () => {
-  it('CONDITION_TYPES contains all thirteen spec types', () => {
+  it('CONDITION_TYPES contains all eleven spec types', () => {
     for (const t of [
-      "form_active", "hp_below", "effect_active", "environment", "frenzy_active",
-      "weapon_type", "dual_wield", "player_state", "equipment",
+      "form_active", "hp_below", "effect_active", "environment",
+      "weapon_type", "player_state", "equipment",
       "creature_type", "damage_type", "all", "any",
     ]) expect(CONDITION_TYPES.has(t)).toBe(true);
-    expect(CONDITION_TYPES.size).toBe(13);
+    expect(CONDITION_TYPES.size).toBe(11);
   });
 
   it('STATUS_TYPES contains the ten spec statuses', () => {
@@ -75,24 +75,24 @@ describe('membership sets', () => {
     expect(STATUS_TYPES.size).toBe(10);
   });
 
-  it('PLAYER_STATES contains all thirteen spec states', () => {
+  it('PLAYER_STATES contains all fourteen spec states', () => {
     for (const s of [
       "hiding", "crouching", "defensive_stance", "casting",
       "reloading", "bow_drawn", "playing_music", "performing",
       "drunk", "alcohol_consumed", "dual_casting",
-      "in_combat", "behind_target",
+      "in_combat", "behind_target", "frenzy_active",
     ]) expect(PLAYER_STATES.has(s)).toBe(true);
     expect(PLAYER_STATES.has("blocking")).toBe(false);
-    expect(PLAYER_STATES.size).toBe(13);
+    expect(PLAYER_STATES.size).toBe(14);
   });
 
-  it('WEAPON_TYPES contains all 17 weapon kinds and virtual categories', () => {
+  it('WEAPON_TYPES contains all 18 weapon kinds and virtual categories', () => {
     for (const w of [
       "axe", "sword", "dagger", "bow", "crossbow", "staff", "blunt",
       "rapier", "spear", "two_handed", "one_handed", "ranged", "instrument",
-      "unarmed", "shield", "spellbook", "firearm",
+      "unarmed", "shield", "spellbook", "firearm", "dual_wield",
     ]) expect(WEAPON_TYPES.has(w)).toBe(true);
-    expect(WEAPON_TYPES.size).toBe(17);
+    expect(WEAPON_TYPES.size).toBe(18);
   });
 
   it('EFFECT_TARGETS contains the six effect-level target values', () => {
