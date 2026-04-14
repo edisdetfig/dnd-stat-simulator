@@ -67,6 +67,7 @@ describe('STAT_META Phase 1.3 §B additions', () => {
 
   // Convention 13: duration-modifier stats carry `direction` and `tag`.
   const durationModifiers = [
+    { key: "curseDurationBonus", direction: "caster", tag: "curse" },
     { key: "shoutDurationBonus", direction: "caster", tag: "shout" },
     { key: "burnDurationAdd", direction: "caster", tag: "burn" },
     { key: "drunkDurationBonus", direction: "receiver", tag: "drunk" },
