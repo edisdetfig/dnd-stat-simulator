@@ -99,9 +99,14 @@ const EVALUATORS = {
   // TODO(Phase 1.3 §B): real semantics — match ctx.targetCreatureType against c.value.
   creature_type: () => false,
 
-  // TODO(Phase 1.3 §B): real semantics — accept c.damageType (value/array) + optional
-  // c.exclude[]; evaluate against the current damage event's type.
-  damageType: () => false,
+  // TODO(Phase 1.3 §B): evaluate c.damageType (value|array) + c.exclude[]
+  // against ctx.incomingDamageType. For now, fail-open on aggregate case
+  // per D.8 locked semantics ("when ctx.incomingDamageType absent, aggregate
+  // stat-panel display still credits the layer").
+  damage_type: (c, ctx) => {
+    if (ctx?.incomingDamageType == null) return true;
+    return true; // defer strict evaluation until §B
+  },
 
   // TODO(Phase 1.3 §B): compound — AND c.conditions[] via evaluateCondition recursion.
   all: () => false,

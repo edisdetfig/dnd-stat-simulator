@@ -102,7 +102,7 @@ export const warlock = ({
           stat: "magicDamageTaken",
           value: 0.80,
           phase: "post_cap_multiplicative_layer",
-          condition: { type: "damageType", exclude: ["divine_magical"] },
+          condition: { type: "damage_type", exclude: ["divine_magical"] },
         },
       ],
     },

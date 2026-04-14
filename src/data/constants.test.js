@@ -59,7 +59,7 @@ describe('membership sets', () => {
     for (const t of [
       "form_active", "hp_below", "effect_active", "environment", "frenzy_active",
       "weapon_type", "dual_wield", "player_state", "equipment",
-      "creature_type", "damageType", "all", "any",
+      "creature_type", "damage_type", "all", "any",
     ]) expect(CONDITION_TYPES.has(t)).toBe(true);
     expect(CONDITION_TYPES.size).toBe(13);
   });

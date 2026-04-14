@@ -49,7 +49,7 @@ export const CONDITION_TYPES = new Set([
   "player_state",
   "equipment",
   "creature_type",
-  "damageType",
+  "damage_type",
   "all",
   "any",
 ]);
