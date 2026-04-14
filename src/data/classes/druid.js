@@ -18,10 +18,6 @@ export const druid = ({
   armorRestrictions: ["cloth", "leather"],
   spellCost: { type: "charges" },
 
-  _unverified: {
-    baseHealth: "CSV omits Druid HP; authored 120 by HR interpolation (HR=12.75). Pending in-game verification.",
-  },
-
   perks: [
     {
       id: "dreamwalk",
@@ -359,7 +355,6 @@ export const druid = ({
         desc: "Treant — fights alongside caster; empowered in water.",
       },
       passives: { environmentBonus: "water" },
-      _unverified: { treantDamage: "CSV omits base damage; authored 0/0 placeholder." },
     },
 
     {

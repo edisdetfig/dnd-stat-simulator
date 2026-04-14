@@ -617,7 +617,6 @@ export const sorcerer = ({
           desc: "Frostbite — −20% MS bonus and −20% AS.",
         },
       ],
-      _unverified: { damageSplit: "CSV says '50 Fire/Ice magical'; authored as 25 per element. Total 50 interpretation pending." },
     },
 
     {
@@ -849,7 +848,6 @@ export const sorcerer = ({
           desc: "Electrified — −20% MS bonus.",
         },
       ],
-      _unverified: { damageSplit: "CSV says '50 fire/lightning magical'; authored as 25 per element." },
     },
 
     {
@@ -909,7 +907,6 @@ export const sorcerer = ({
           desc: "Burn — 3(0.5) fire magical per tick for 3s.",
         },
       ],
-      _unverified: { damageSplit: "CSV says '10 earth/fire magical instantly'; authored as 5 per element." },
     },
   ],
 
