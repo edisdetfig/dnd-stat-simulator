@@ -95,6 +95,19 @@ const EVALUATORS = {
     const slotPresent = !!(ctx.gearEquipment?.[c.slot]);
     return c.equipped ? slotPresent : !slotPresent;
   },
+
+  // TODO(Phase 1.3 §B): real semantics — match ctx.targetCreatureType against c.value.
+  creature_type: () => false,
+
+  // TODO(Phase 1.3 §B): real semantics — accept c.damageType (value/array) + optional
+  // c.exclude[]; evaluate against the current damage event's type.
+  damageType: () => false,
+
+  // TODO(Phase 1.3 §B): compound — AND c.conditions[] via evaluateCondition recursion.
+  all: () => false,
+
+  // TODO(Phase 1.3 §B): compound — OR c.conditions[] via evaluateCondition recursion. Reserved.
+  any: () => false,
 };
 
 // Sanity: dispatch table must match CONDITION_TYPES exactly.

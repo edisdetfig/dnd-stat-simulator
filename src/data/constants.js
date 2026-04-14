@@ -48,6 +48,10 @@ export const CONDITION_TYPES = new Set([
   "dual_wield",
   "player_state",
   "equipment",
+  "creature_type",
+  "damageType",
+  "all",
+  "any",
 ]);
 
 // ── Trigger events (spec §3 triggers[].event + plan §13.4 on_successful_block) ──
