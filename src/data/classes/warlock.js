@@ -294,13 +294,6 @@ export const warlock = ({
       tags: ["demon", "buff"],
       condition: { type: "form_active", form: "demon" },
       duration: { base: 15, type: "buff" },
-      appliesStatus: [
-        {
-          type: "exploitation_strike",
-          target: "self",
-          duration: { base: 15, type: "buff" },
-        },
-      ],
       triggers: [
         {
           event: "on_melee_hit",
