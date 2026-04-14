@@ -54,20 +54,6 @@ export const CONDITION_TYPES = new Set([
   "any",
 ]);
 
-// ── Trigger events (spec §3 triggers[].event + plan §13.4 on_successful_block) ──
-
-export const TRIGGER_EVENTS = new Set([
-  "on_melee_hit",
-  "on_hit_received",
-  "on_damage_taken",
-  "on_damage_dealt",
-  "on_heal_cast",
-  "on_kill",
-  "on_shield_break",
-  "on_curse_tick",
-  "on_successful_block",
-]);
-
 // ── Gear triggers (spec §3 gear items — separate vocabulary from ability triggers) ──
 //
 // Gear items carry a top-level triggers[] array whose shape mirrors ability

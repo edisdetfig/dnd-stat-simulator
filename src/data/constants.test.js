@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   CORE_ATTRS, ARMOR_SLOTS, PATCH_HEALTH_BONUS,
-  EFFECT_PHASES, CONDITION_TYPES, TRIGGER_EVENTS,
+  EFFECT_PHASES, CONDITION_TYPES,
   STATUS_TYPES, PLAYER_STATES, WEAPON_TYPES,
   WEAPON_TYPE_CATEGORIES, TARGETING, EFFECT_TARGETS,
 } from './constants.js';
@@ -62,14 +62,6 @@ describe('membership sets', () => {
       "creature_type", "damageType", "all", "any",
     ]) expect(CONDITION_TYPES.has(t)).toBe(true);
     expect(CONDITION_TYPES.size).toBe(13);
-  });
-
-  it('TRIGGER_EVENTS contains spec events plus on_successful_block', () => {
-    for (const e of [
-      "on_melee_hit", "on_hit_received", "on_damage_taken", "on_damage_dealt",
-      "on_heal_cast", "on_kill", "on_shield_break", "on_curse_tick",
-      "on_successful_block",
-    ]) expect(TRIGGER_EVENTS.has(e)).toBe(true);
   });
 
   it('STATUS_TYPES contains the ten spec statuses', () => {
