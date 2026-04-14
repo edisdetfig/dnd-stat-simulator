@@ -22,6 +22,7 @@ const ABILITY_CONTAINERS = ["perks", "skills", "spells", "transformations", "mus
 const VALID_MODIFIER_FIELDS = new Set(["duration", "cooldown", "castTime", "range", "aoeRadius", "cost"]);
 const VALID_MODIFIER_MODES = new Set(["multiply", "add"]);
 const VALID_COST_TYPES = new Set(["health", "charges", "cooldown"]);
+const VALID_DURATION_TYPES = new Set(["buff", "debuff", "other"]);
 
 export function defineClass(classData) {
   const issues = [];
@@ -66,6 +67,8 @@ export function defineClass(classData) {
     }
 
     if (ability.cost != null) validateCost(ability.cost, `${path}.cost`, issues);
+
+    forEachDuration(ability, path, (dur, durPath) => validateDuration(dur, durPath, issues));
 
     if (Array.isArray(ability.abilityModifiers)) {
       ability.abilityModifiers.forEach((mod, i) => {
@@ -142,6 +145,31 @@ function forEachEffectList(ability, path, fn) {
   }
 }
 
+// Walks every duration block reachable from an ability. Scoped to paths the
+// existing tree already traverses (ability root, appliesStatus, afterEffect,
+// summon, wildSkill, cc, performanceTiers). Deeper paths (form.attacks,
+// triggers) are §D walker scope.
+function forEachDuration(ability, path, fn) {
+  const visit = (dur, where) => { if (dur != null) fn(dur, where); };
+
+  visit(ability.duration, `${path}.duration`);
+  if (ability.afterEffect)       visit(ability.afterEffect.duration, `${path}.afterEffect.duration`);
+  if (ability.summon)            visit(ability.summon.duration,      `${path}.summon.duration`);
+  if (ability.form?.wildSkill)   visit(ability.form.wildSkill.duration, `${path}.form.wildSkill.duration`);
+  if (ability.cc)                visit(ability.cc.duration,          `${path}.cc.duration`);
+
+  if (Array.isArray(ability.appliesStatus)) {
+    ability.appliesStatus.forEach((st, i) => visit(st?.duration, `${path}.appliesStatus[${i}].duration`));
+  }
+  if (ability.performanceTiers) {
+    for (const tier of ["poor", "good", "perfect"]) {
+      const t = ability.performanceTiers[tier];
+      if (!t) continue;
+      visit(t.duration, `${path}.performanceTiers.${tier}.duration`);
+    }
+  }
+}
+
 // all_attributes is a sentinel stat meaning "fan out across the 7 CORE_ATTRS."
 // Only two phases support the fan-out semantically: pre_curve_flat (flat +N)
 // and attribute_multiplier (×(1+N)). Any other phase is almost certainly
@@ -165,6 +193,24 @@ function validateEffect(eff, path, issues) {
     issues.push(`${path}: unknown target "${eff.target}"`);
   }
   if (eff.condition) validateCondition(eff.condition, `${path}.condition`, issues);
+}
+
+function validateDuration(dur, path, issues) {
+  if (!dur || typeof dur !== "object") {
+    issues.push(`${path}: duration is not an object`);
+    return;
+  }
+  if (typeof dur.base !== "number") {
+    issues.push(`${path}: base must be a number`);
+  }
+  if (!VALID_DURATION_TYPES.has(dur.type)) {
+    issues.push(`${path}: unknown duration type "${dur.type}"`);
+  }
+  if (dur.tags != null) {
+    if (!Array.isArray(dur.tags) || !dur.tags.every(t => typeof t === "string")) {
+      issues.push(`${path}.tags: must be string[]`);
+    }
+  }
 }
 
 function validateCost(cost, path, issues) {

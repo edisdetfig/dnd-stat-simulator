@@ -191,6 +191,45 @@ describe('defineClass — nested effect lists', () => {
     expect(() => defineClass(cls)).toThrow(/afterEffect\.effects\[0\]:.*unknown phase "alien_phase"/);
   });
 
+  it('accepts valid duration shapes (buff / debuff / other, optional tags)', () => {
+    const cls = baseClass();
+    cls.skills.push(
+      { id: "a", type: "skill", name: "A", duration: { base: 8, type: "buff" } },
+      { id: "b", type: "skill", name: "B", duration: { base: 2, type: "debuff" } },
+      { id: "c", type: "skill", name: "C", duration: { base: 30, type: "other", tags: ["shout"] } },
+    );
+    expect(() => defineClass(cls)).not.toThrow();
+  });
+
+  it('rejects unknown duration.type', () => {
+    const cls = baseClass();
+    cls.skills.push({ id: "a", type: "skill", name: "A", duration: { base: 8, type: "forever" } });
+    expect(() => defineClass(cls)).toThrow(/\.duration: unknown duration type "forever"/);
+  });
+
+  it('rejects non-numeric duration.base', () => {
+    const cls = baseClass();
+    cls.skills.push({ id: "a", type: "skill", name: "A", duration: { base: "long", type: "buff" } });
+    expect(() => defineClass(cls)).toThrow(/\.duration: base must be a number/);
+  });
+
+  it('rejects malformed duration.tags', () => {
+    const cls = baseClass();
+    cls.skills.push({ id: "a", type: "skill", name: "A", duration: { base: 3, type: "buff", tags: "shout" } });
+    expect(() => defineClass(cls)).toThrow(/\.duration\.tags: must be string\[\]/);
+  });
+
+  it('validates duration nested in appliesStatus and afterEffect', () => {
+    const cls = baseClass();
+    cls.skills.push({
+      id: "rush",
+      type: "skill",
+      name: "Rush",
+      afterEffect: { duration: { base: 2, type: "whatever" }, effects: [] },
+    });
+    expect(() => defineClass(cls)).toThrow(/afterEffect\.duration: unknown duration type "whatever"/);
+  });
+
   it('accepts valid cost shapes (health / charges / cooldown)', () => {
     const cls = baseClass();
     cls.spells.push(
