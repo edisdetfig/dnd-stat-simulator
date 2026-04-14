@@ -25,8 +25,9 @@ describe('STAT_META integrity', () => {
 });
 
 describe('STAT_META v3 additions (spec §5)', () => {
-  // Spec §5 lists 21 stat keys. additionalWeaponDamage and armorPenetration
-  // already existed pre-v3; the remaining 19 must be present.
+  // Spec §5 v3 additions. additionalWeaponDamage and armorPenetration already
+  // existed pre-v3; the list below tracks the v3-introduced keys still live
+  // after the Phase 1.3 §B retirements.
   const v3Keys = [
     "healingMod", "healingAdd", "magicDamageTaken", "curseDurationBonus",
     "recoverableHealth",
