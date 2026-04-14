@@ -203,10 +203,7 @@ Litmus test: when the panel is built, it should be "list enemy attacks → for e
 | Ref | Note |
 |---|---|
 | Warlock.BloodPact.ExploitationStrike | CSV phrases the 2s window as "additional evil magical damage for 2 seconds" without naming a status — authored as `passives.debuffDuration` metadata. Phase 1.3 may formalize as a nameless debuff with `appliesStatus`. |
-| Warlock.RayOfDarkness | CSV omits channel duration. Authored 5s placeholder; flagged `_unverified`. |
 | Warlock.LifeDrain | "Portion of damage" lifesteal % unresolved in CSV. Authored as `passives.lifestealPortion: true` (flag), numeric TBD. |
-| Warlock.DarkOffering | CSV doesn't cap stack count; authored maxStacks=10 best-faith (HP budget caps realistic usage well below). |
 | V1 | Druid form attack damage formula — engine math gap. Author data best-faith; flag `_unverified`. |
-| V10/V30 | Warlock Darkness Shards shared-pool architecture — coordinator must decide between class-root resource vs. per-ability stacking. Current author uses per-ability `stacking` block on Soul Collector; Blood Pact and Spell Predation reference shard consumption in `desc` only. |
 | Mending Grove duration | CSV omits. Flagged `_unverified`. |
 | Life Drain lifesteal percentage | Unresolved in csv. Authored with `healingMod`-driven lifesteal in desc prose; numeric value left as best-faith. |

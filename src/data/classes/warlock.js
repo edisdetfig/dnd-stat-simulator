@@ -20,6 +20,13 @@ export const warlock = ({
   // Warlock pays spell cost in health (HP:N per CSV).
   spellCost: { type: "health" },
 
+  classResources: {
+    darkness_shards: {
+      maxStacks: 3,
+      desc: "Shared pool of Darkness Shards. Produced by Soul Collector (on final blow) and Spell Predation (per removable magical buff consumed). Consumed on dealing dark magical damage. At Blood Pact activation, current shard count is snapshotted and locks in per-shard bonuses for the full demon form duration (independent from this live pool).",
+    },
+  },
+
   perks: [
     {
       id: "demon_armor",
@@ -196,12 +203,12 @@ export const warlock = ({
       activation: "passive",
       tags: ["dark"],
       stacking: {
-        maxStacks: 3,
+        resource: "darkness_shards",
         perStack: [
           { stat: "all_attributes", value: 1, phase: "pre_curve_flat" },
           { stat: "typeDamageBonus", value: 0.33, phase: "type_damage_bonus", damageType: "dark_magical" },
         ],
-        desc: "Darkness Shards — +1 all attributes and +33% dark_magical typeDamageBonus per shard. Gained on final blow; consumed on dealing dark magical damage. Shared pool with Blood Pact activation and Spell Predation gains (tracker F V30).",
+        desc: "Darkness Shards — +1 all attributes and +33% dark_magical typeDamageBonus per shard from the live shared pool.",
       },
     },
   ],
@@ -267,8 +274,6 @@ export const warlock = ({
       tags: ["channel"],
       duration: { base: 60, type: "buff" },
       stacking: {
-        // CSV doesn't cap; authored 10 as a reasonable upper bound (60s × 1/s,
-        // but HP budget runs out far earlier). UI provides 0..maxStacks input.
         maxStacks: 10,
         perStack: [
           { stat: "physicalDamageBonus", value: 0.05, phase: "post_curve" },
@@ -412,15 +417,11 @@ export const warlock = ({
       cost: { type: "health", value: 5 },
       targeting: "enemy",
       tags: ["dark", "beam", "channel"],
-      // CSV omits channel duration; authored 5s best-faith. Flagged.
       duration: { base: 5, type: "other" },
       damage: [
         { base: 12, scaling: 1.0, damageType: "dark_magical", isDot: true, tickRate: 1, target: "enemy", label: "per second" },
       ],
       passives: { canMoveWhileChanneling: true },
-      _unverified: {
-        channelDuration: "CSV omits explicit channel duration; authored 5s placeholder.",
-      },
     },
 
     {
@@ -570,17 +571,17 @@ export const warlock = ({
           condition: { type: "form_active", form: "demon" },
         },
       ],
-      // Darkness Shards consumed at activation lock in per-shard buffs for the
-      // full form duration. Per tracker F V10/V30, architecture decision
-      // deferred to Phase 1.3; authored as per-ability stacking block that
-      // mirrors Soul Collector's per-stack contribution (locked-in on entry).
+      // Ability-local stacking (no `resource` pointer) per D.11: this is a
+      // snapshot taken at activation from the live darkness_shards pool,
+      // independent of subsequent pool changes. Locks in +1 all attributes
+      // and +33% dark_magical typeDamageBonus per shard for the full form.
       stacking: {
         maxStacks: 3,
         perStack: [
           { stat: "all_attributes", value: 1, phase: "pre_curve_flat" },
           { stat: "typeDamageBonus", value: 0.33, phase: "type_damage_bonus", damageType: "dark_magical" },
         ],
-        desc: "Darkness Shards consumed at activation — locks in +1 all attributes and +33% dark_magical typeDamageBonus per shard for the entire demon form duration. Shared pool with Soul Collector / Spell Predation.",
+        desc: "Darkness Shards consumed at activation — locks in +1 all attributes and +33% dark_magical typeDamageBonus per shard for the entire demon form duration.",
       },
       passives: {
         selfDamagePerSecond: 0.01,
@@ -588,8 +589,7 @@ export const warlock = ({
         irreversibleUntilContractEnds: true,
       },
       _unverified: {
-        exploitationStrikeDebuff: "CSV says 'for 2 seconds' without naming a status — authored as descriptive debuff duration (tracker D.14).",
-        darknessShardsArchitecture: "Shared-pool modeling pending Phase 1.3 decision (tracker F V10/V30).",
+        exploitationStrikeStructural: "Authored as form-attack entry, but semantically is a cast-activated self-buff named 'Exploitation Strike' that modifies bare-hand attacks (+20(1.0) evil magical + heal 10% target max HP per hit). Tooltip says 2s duration but in-game base appears to be 15s (measured as 18s with +20% buffDurationBonus). Restructure pending — needs D.14 named-status shape with abilityModifiers on bare-hand attacks.",
       },
     },
   ],
