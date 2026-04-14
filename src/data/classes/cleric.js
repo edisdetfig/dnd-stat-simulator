@@ -50,17 +50,17 @@ export const cleric = ({
       desc: "When you drink alcohol, you no longer exhibit the detrimental drunk effects and gain 10 strength. The duration of the drunk effect is increased by 50%.",
       activation: "passive",
       tags: ["drunk"],
-      // Drunk extension: in-game verification pending — per tracker F, authored as
-      // 50% extension via drunkDurationBonus (receiver-side, drunk tag).
       effects: [
         {
           stat: "str", value: 10, phase: "pre_curve_flat",
+          // TODO(Phase 1.3 §A): retarget to "alcohol_consumed" once PLAYER_STATES
+          // enum splits alcohol_consumed from drunk. Brewmaster removes drunk,
+          // so firing on "drunk" is semantically wrong — the perk needs to fire
+          // whenever ale is drunk, regardless of debuff state.
           condition: { type: "player_state", state: "drunk" },
         },
         { stat: "drunkDurationBonus", value: 0.50, phase: "post_curve" },
       ],
-      passives: { detrimentalDrunkImmunity: true },
-      _unverified: { drunkExtension: "Extension vs. filter semantics pending in-game verification." },
     },
 
     {
