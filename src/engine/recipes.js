@@ -101,7 +101,7 @@ export const DERIVED_STAT_RECIPES = {
       const totalAR = (bonuses.armorRating || 0) * arMult
                     + (bonuses.additionalArmorRating || 0);
       const raw = evaluateCurve(STAT_CURVES.armorRatingToPDR, totalAR);
-      return raw + (bonuses.physicalDamageReduction || 0);
+      return raw + (bonuses.physicalDamageReductionBonus || 0);
     },
   },
 
@@ -115,7 +115,7 @@ export const DERIVED_STAT_RECIPES = {
       const baseMR = evaluateCurve(STAT_CURVES.willToMagicResistance, attrs.wil);
       const totalMR = baseMR + (bonuses.magicResistance || 0);
       const raw = evaluateCurve(STAT_CURVES.magicResistanceToMDR, totalMR);
-      return raw + (bonuses.magicalDamageReduction || 0);
+      return raw + (bonuses.magicalDamageReductionBonus || 0);
     },
   },
 
@@ -222,3 +222,12 @@ export const DERIVED_STAT_RECIPES = {
     compute: (a, b) => (b.headshotDamageBonus || 0) + (b.headshotPower || 0),
   },
 };
+
+// Registry of all recipe output IDs — the *computed* PDR/MDR/etc. namespace,
+// distinct from STAT_META (which holds *additive contributions* that feed
+// the recipes). Kept in sync with DERIVED_STAT_RECIPES by construction.
+//
+// Consumers: defineClass validator uses this to allow `stat: "pdr" | "mdr"`
+// under `phase: "cap_override"` (see Fighter Defense Mastery, Barbarian
+// Iron Will) without allowing recipe IDs in any other phase.
+export const RECIPE_IDS = new Set(Object.keys(DERIVED_STAT_RECIPES));

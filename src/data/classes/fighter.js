@@ -250,7 +250,7 @@ export const fighter = ({
       duration: { base: 4, type: "buff" },
       effects: [
         {
-          stat: "physicalDamageReduction", value: 0.10, phase: "post_curve_multiplicative",
+          stat: "physicalDamageReductionBonus", value: 0.10, phase: "post_curve_multiplicative",
           condition: { type: "player_state", state: "in_combat" },
         },
         {
@@ -269,7 +269,7 @@ export const fighter = ({
       tags: ["stance"],
       effects: [
         {
-          stat: "physicalDamageReduction", value: 0.05, phase: "post_curve",
+          stat: "physicalDamageReductionBonus", value: 0.05, phase: "post_curve",
           condition: { type: "player_state", state: "defensive_stance" },
         },
       ],
@@ -456,7 +456,7 @@ export const fighter = ({
       duration: { base: 5, type: "buff" },
       effects: [
         {
-          stat: "magicalDamageReduction", value: 0.15, phase: "post_curve",
+          stat: "magicalDamageReductionBonus", value: 0.15, phase: "post_curve",
           condition: { type: "player_state", state: "defensive_stance" },
         },
       ],
@@ -494,8 +494,8 @@ export const fighter = ({
       targeting: "self",
       duration: { base: 8, type: "buff", tags: ["shout"] },
       effects: [
-        { stat: "physicalDamageReduction", value: 0.12, phase: "post_curve" },
-        { stat: "magicalDamageReduction", value: 0.12, phase: "post_curve" },
+        { stat: "physicalDamageReductionBonus", value: 0.12, phase: "post_curve" },
+        { stat: "magicalDamageReductionBonus", value: 0.12, phase: "post_curve" },
       ],
     },
 

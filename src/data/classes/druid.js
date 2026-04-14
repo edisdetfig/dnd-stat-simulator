@@ -298,7 +298,7 @@ export const druid = ({
       desc: "Restore the health of all allies within 3m radius by 20(0.25) health for 12 seconds.",
       activation: "cast",
       cost: { type: "charges", value: 3 },
-      targeting: "nearby_allies",
+      targeting: "ally_or_self",
       tags: ["nature"],
       duration: { base: 12, type: "buff" },
       heal: {
@@ -364,7 +364,7 @@ export const druid = ({
       desc: "While standing on the ground, create a forest area centered around you within a 3m radius. Targets in the area gain 10% max health bonus and are healed for 10 health per second.",
       activation: "cast",
       cost: { type: "charges", value: 2 },
-      targeting: "nearby_allies",
+      targeting: "ally_or_self",
       tags: ["nature"],
       duration: { base: 5, type: "other" },
       heal: {
@@ -431,13 +431,13 @@ export const druid = ({
           desc: "+20% PDR/MDR for 8 seconds.",
           duration: { base: 8, type: "buff" },
           effects: [
-            { stat: "physicalDamageReduction", value: 0.20, phase: "post_curve" },
-            { stat: "magicalDamageReduction", value: 0.20, phase: "post_curve" },
+            { stat: "physicalDamageReductionBonus", value: 0.20, phase: "post_curve" },
+            { stat: "magicalDamageReductionBonus", value: 0.20, phase: "post_curve" },
           ],
         },
       },
       effects: [
-        { stat: "physicalDamageReduction", value: 0.50, phase: "post_curve", condition: { type: "form_active", form: "bear" } },
+        { stat: "physicalDamageReductionBonus", value: 0.50, phase: "post_curve", condition: { type: "form_active", form: "bear" } },
         { stat: "projectileDamageReduction", value: 0.10, phase: "post_curve", condition: { type: "form_active", form: "bear" } },
         { stat: "maxHealthBonus", value: 0.50, phase: "pre_curve_flat", condition: { type: "form_active", form: "bear" } },
         { stat: "moveSpeedBonus", value: -0.20, phase: "post_curve", condition: { type: "form_active", form: "bear" } },
@@ -497,7 +497,7 @@ export const druid = ({
         },
       },
       effects: [
-        { stat: "physicalDamageReduction", value: -0.30, phase: "post_curve", condition: { type: "form_active", form: "panther" } },
+        { stat: "physicalDamageReductionBonus", value: -0.30, phase: "post_curve", condition: { type: "form_active", form: "panther" } },
         { stat: "incomingPhysicalHealing", value: -0.10, phase: "post_curve", condition: { type: "form_active", form: "panther" } },
         { stat: "incomingMagicalHealing", value: -0.10, phase: "post_curve", condition: { type: "form_active", form: "panther" } },
         { stat: "moveSpeed", value: 5, phase: "post_curve", condition: { type: "form_active", form: "panther" } },
@@ -587,8 +587,8 @@ export const druid = ({
       },
       effects: [
         { stat: "maxHealthBonus", value: -0.95, phase: "pre_curve_flat", condition: { type: "form_active", form: "rat" } },
-        { stat: "physicalDamageReduction", value: -1.00, phase: "post_curve", condition: { type: "form_active", form: "rat" } },
-        { stat: "magicalDamageReduction", value: -1.00, phase: "post_curve", condition: { type: "form_active", form: "rat" } },
+        { stat: "physicalDamageReductionBonus", value: -1.00, phase: "post_curve", condition: { type: "form_active", form: "rat" } },
+        { stat: "magicalDamageReductionBonus", value: -1.00, phase: "post_curve", condition: { type: "form_active", form: "rat" } },
         { stat: "incomingPhysicalHealing", value: -0.95, phase: "post_curve", condition: { type: "form_active", form: "rat" } },
         { stat: "incomingMagicalHealing", value: -0.95, phase: "post_curve", condition: { type: "form_active", form: "rat" } },
         { stat: "jumpHeight", value: 0.10, phase: "post_curve", condition: { type: "form_active", form: "rat" } },

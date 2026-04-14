@@ -207,7 +207,7 @@ export const cleric = ({
       targeting: "self",
       duration: { base: 6, type: "buff" },
       effects: [
-        { stat: "physicalDamageReduction", value: 0.30, phase: "post_curve" },
+        { stat: "physicalDamageReductionBonus", value: 0.30, phase: "post_curve" },
       ],
     },
 

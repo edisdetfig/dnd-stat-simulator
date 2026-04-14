@@ -47,8 +47,8 @@ export function runTargetPipeline(ctx) {
   // numbers Phase 3 damage calcs can consume.
   const seedBonuses = {};
   if (ctx.target) {
-    if (ctx.target.pdr)        seedBonuses.physicalDamageReduction = ctx.target.pdr;
-    if (ctx.target.mdr)        seedBonuses.magicalDamageReduction  = ctx.target.mdr;
+    if (ctx.target.pdr)        seedBonuses.physicalDamageReductionBonus = ctx.target.pdr;
+    if (ctx.target.mdr)        seedBonuses.magicalDamageReductionBonus  = ctx.target.mdr;
     if (ctx.target.headshotDR) seedBonuses.headshotDamageReduction = ctx.target.headshotDR;
   }
   return applyEntries(enemy, {}, seedBonuses);

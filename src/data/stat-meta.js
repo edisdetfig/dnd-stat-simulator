@@ -36,8 +36,17 @@ export const STAT_META = {
   armorRating: { label: "Armor Rating", unit: "flat", cat: "defense", gearStat: true },
   additionalArmorRating: { label: "Add. Armor Rating", unit: "flat", cat: "defense", gearStat: true },
   magicResistance: { label: "Magic Resistance", unit: "flat", cat: "defense", gearStat: true },
-  physicalDamageReduction: { label: "Phys. Damage Reduction", unit: "percent", cat: "defense", gearStat: true },
-  magicalDamageReduction: { label: "Magic Damage Reduction", unit: "percent", cat: "defense", gearStat: true },
+  // ── Defensive additive contributions ──
+  // These stats represent *additive contributions* from gear and perks,
+  // summed into a total that feeds the pdr/mdr recipes. They are NOT the
+  // final computed PDR/MDR values. Those are the *recipe outputs* produced
+  // by src/engine/recipes.js, keyed as "pdr" / "mdr" (see RECIPE_IDS).
+  //
+  // Authoring rule:
+  //   - Perk/gear that says "+5% PDR" → { stat: "physicalDamageReductionBonus", ... }
+  //   - Perk that raises the PDR cap → { stat: "pdr", phase: "cap_override", ... }
+  physicalDamageReductionBonus: { label: "Physical Damage Reduction Bonus", unit: "percent", cat: "defense", gearStat: true },
+  magicalDamageReductionBonus: { label: "Magical Damage Reduction Bonus", unit: "percent", cat: "defense", gearStat: true },
   projectileDamageReduction: { label: "Projectile DR", unit: "percent", cat: "defense", gearStat: true },
   headshotDamageReduction: { label: "Headshot DR", unit: "percent", cat: "defense", gearStat: true },
   demonDamageReduction: { label: "Demon Damage Reduction", unit: "percent", cat: "defense", gearStat: true },

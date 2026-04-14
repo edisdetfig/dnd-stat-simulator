@@ -89,7 +89,7 @@ function makeBloodTitheGear() {
       { stat: "magicResistance",           value: 30 },
       { stat: "moveSpeed",                 value: -4 },
       { stat: "dex",                       value: 4 },
-      { stat: "physicalDamageReduction",   value: 0.01 },
+      { stat: "physicalDamageReductionBonus",   value: 0.01 },
     ],
     modifiers: [
       { stat: "str",               value: 3 },
@@ -129,7 +129,7 @@ function makeBloodTitheGear() {
       { stat: "wil",         value: 2 },
     ],
     modifiers: [
-      { stat: "magicalDamageReduction", value: 0.028 },
+      { stat: "magicalDamageReductionBonus", value: 0.028 },
       { stat: "actionSpeed",            value: 0.03 },
       { stat: "magicResistance",        value: 24 },
     ],
@@ -188,7 +188,7 @@ function makeBloodTitheGear() {
       { stat: "moveSpeed",              value: 5 },
       { stat: "str",                    value: 4 },
       { stat: "luck",                   value: 10 },
-      { stat: "magicalDamageReduction", value: 0.02 },
+      { stat: "magicalDamageReductionBonus", value: 0.02 },
     ],
     modifiers: [
       { stat: "dex",         value: 2 },
@@ -228,7 +228,7 @@ function makeBloodTitheGear() {
     inherentStats: [{ stat: "maxHealth", value: 6 }],
     modifiers: [
       { stat: "magicResistance",        value: 27 },
-      { stat: "magicalDamageReduction", value: 0.029 },
+      { stat: "magicalDamageReductionBonus", value: 0.029 },
       { stat: "actionSpeed",            value: 0.039 },
     ],
   };

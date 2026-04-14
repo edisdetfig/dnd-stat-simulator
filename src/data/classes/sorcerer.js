@@ -265,7 +265,7 @@ export const sorcerer = ({
       tags: ["earth"],
       duration: { base: 12, type: "buff" },
       effects: [
-        { stat: "physicalDamageReduction", value: 0.10, phase: "post_curve" },
+        { stat: "physicalDamageReductionBonus", value: 0.10, phase: "post_curve" },
         { stat: "physicalDamageBonus", value: 0.10, phase: "post_curve" },
         { stat: "moveSpeed", value: -5, phase: "post_curve" },
       ],

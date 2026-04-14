@@ -10,6 +10,7 @@
 //   - prod  → console.debug (silent in production)
 
 import { STAT_META } from '../stat-meta.js';
+import { RECIPE_IDS } from '../../engine/recipes.js';
 import {
   CORE_ATTRS, EFFECT_PHASES, CONDITION_TYPES,
   STATUS_TYPES, EFFECT_TARGETS,
@@ -282,8 +283,22 @@ function validateEffect(eff, path, issues) {
     issues.push(`${path}: effect is not an object`);
     return;
   }
-  if (eff.stat !== "all_attributes" && !STAT_META[eff.stat] && !CORE_ATTRS.has(eff.stat)) {
-    issues.push(`${path}: unknown stat "${eff.stat}"`);
+  // Stat resolution — two namespaces:
+  //   1. STAT_META keys (+ CORE_ATTRS + "all_attributes" sentinel) — the
+  //      normal case: gear/perk additive contributions.
+  //   2. RECIPE_IDS — recipe-output names (pdr, mdr, ...), allowed ONLY
+  //      under phase: "cap_override", which targets the recipe's cap.
+  //      Any other phase with a recipe ID is an authoring bug.
+  const isStatMeta = eff.stat === "all_attributes"
+    || !!STAT_META[eff.stat]
+    || CORE_ATTRS.has(eff.stat);
+  const isRecipeCapOverride = RECIPE_IDS.has(eff.stat) && eff.phase === "cap_override";
+  if (!isStatMeta && !isRecipeCapOverride) {
+    if (RECIPE_IDS.has(eff.stat)) {
+      issues.push(`${path}: stat "${eff.stat}" is a recipe ID and requires phase "cap_override" (got "${eff.phase}")`);
+    } else {
+      issues.push(`${path}: unknown stat "${eff.stat}"`);
+    }
   }
   if (!VALID_PHASES.has(eff.phase)) {
     issues.push(`${path}: unknown phase "${eff.phase}"`);
@@ -376,6 +391,15 @@ function validateCondition(cond, path, issues) {
   }
   if (!CONDITION_TYPES.has(cond.type)) {
     issues.push(`${path}: unknown condition type "${cond.type}"`);
+  }
+  if (cond.type === "all" || cond.type === "any") {
+    if (!Array.isArray(cond.conditions)) {
+      issues.push(`${path}: type "${cond.type}" requires conditions[] array`);
+    } else {
+      cond.conditions.forEach((inner, i) => {
+        validateCondition(inner, `${path}.conditions[${i}]`, issues);
+      });
+    }
   }
 }
 

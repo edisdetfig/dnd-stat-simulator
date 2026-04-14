@@ -277,7 +277,7 @@ Effect gated on caster's HP being below a threshold. Engine treats the condition
 
   effects: [
     {
-      stat: "physicalDamageReduction",
+      stat: "physicalDamageReductionBonus",
       value: 0.15,
       phase: "post_curve",
 
@@ -1040,7 +1040,7 @@ Transformation ability that shifts the character into a new form with replacemen
       condition: { type: "form_active", form: "bear" },
     },
     {
-      stat: "physicalDamageReduction",
+      stat: "physicalDamageReductionBonus",
       value: 0.25,
       phase: "post_curve",
       condition: { type: "form_active", form: "bear" },
@@ -1431,7 +1431,7 @@ Multiplies the derived stat's *own value* after all `post_curve` additives. Dist
     {
       // value 0.10 means ×1.10, applied AFTER all post_curve additives.
       // At 50% PDR baseline → 55% PDR while condition holds.
-      stat: "physicalDamageReduction", value: 0.10, phase: "post_curve_multiplicative",
+      stat: "physicalDamageReductionBonus", value: 0.10, phase: "post_curve_multiplicative",
       condition: { type: "player_state", state: "in_combat" },
     },
   ],

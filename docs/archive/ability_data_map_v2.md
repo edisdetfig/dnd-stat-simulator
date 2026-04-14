@@ -4,6 +4,8 @@
 >
 > **Design goal**: Adding new content (classes, perks, skills, spells) should be a data change, not a code change. When a genuinely new mechanic type appears, make one small localized engine addition — then all subsequent abilities using that pattern are purely data.
 >
+> **Vocabulary**: Enum-valued fields (damage types, status types, condition types, duration types, etc.) are defined in `docs/vocabulary.md`. This file is shape-spec only; membership and citations live there.
+>
 > **Changes from v1**: Resolved all open questions. Eliminated `isPercent`. Removed `DAMAGE_OVER_TIME` as a phase. Moved computable passives to `effects[]`. Resolved `maxHealthBonus` routing (Option C). Added `stateChange` to triggers. Unified trigger damage shape. Replaced `activatable` with `activation` enum (supersedes plan's `activatable: boolean`). Fixed constraint filters to use `tags`. Defined Summon/CrowdControl shapes. Added `affectedByHitLocation` to form attacks. Added `spellCostMultiplier` field. Added data-driven litmus test. Added `healOnDamage` as top-level field. 20 migration examples.
 >
 > **Changes from v2 review**: Added explicit `pre_curve_flat` routing rule (C4). Added `healOnDamage` field (C1). Added `buffWeaponDamage` to STAT_META (C2). Audited religion effects per-stat (C3). Added `healType` to healing_modifier effects (I2). Added `impliedHealEffects` migration (I4). Added class-level constraints note (I5). Fixed Dreamwalk phase (I7). Added migration examples: Mending Grove, Sun and Moon, Eldritch Shield, religion blessings. Documented wild skill scoping rule (m5). Updated health formula to verified spec (conditional rounding, +10 patch bonus).

@@ -375,7 +375,9 @@ Offensive additions:
 - `projectileSpeed` — `ranger.csv:L43`
 - `drawSpeed` — `ranger.csv:L27`
 
-Defensive: `armorRating`, `magicResistance`, `physicalDamageReduction`, `magicalDamageReduction`, `projectileDamageReduction`, `headshotDamageReduction`.
+Defensive: `armorRating`, `magicResistance`, `physicalDamageReductionBonus`, `magicalDamageReductionBonus`, `projectileDamageReduction`, `headshotDamageReduction`.
+
+Note: `physicalDamageReductionBonus` / `magicalDamageReductionBonus` are *additive contributions* summed into the `pdr`/`mdr` recipe inputs — not the final computed values. The computed outputs live under recipe IDs `pdr` / `mdr`, and are only addressable via `phase: "cap_override"` (see Fighter Defense Mastery, Barbarian Iron Will).
 
 Defensive additions:
 - `knockbackResistance` — `barbarian.csv:L28 (Iron Will "ignore knockback")`

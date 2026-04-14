@@ -95,11 +95,11 @@ export const bard = ({
       activation: "passive",
       effects: [
         {
-          stat: "physicalDamageReduction", value: 0.25, phase: "post_curve",
+          stat: "physicalDamageReductionBonus", value: 0.25, phase: "post_curve",
           condition: { type: "player_state", state: "playing_music" },
         },
         {
-          stat: "magicalDamageReduction", value: 0.25, phase: "post_curve",
+          stat: "magicalDamageReductionBonus", value: 0.25, phase: "post_curve",
           condition: { type: "player_state", state: "playing_music" },
         },
       ],
@@ -198,7 +198,7 @@ export const bard = ({
       name: "Encore",
       desc: "Resets the duration of all active music buffs on nearby party members.",
       activation: "cast",
-      targeting: "nearby_allies",
+      targeting: "ally_or_self",
       passives: { resetsMusicDurations: true },
     },
 
@@ -225,7 +225,7 @@ export const bard = ({
       name: "Party Maker",
       desc: "Play an instrument and grant all nearby allies immunity to drunkenness for 15 seconds. While immune, drinking alcohol restores 5 health.",
       activation: "cast",
-      targeting: "nearby_allies",
+      targeting: "ally_or_self",
       tags: ["song"],
       duration: { base: 15, type: "buff" },
       triggers: [
@@ -266,7 +266,7 @@ export const bard = ({
       desc: "Nearby allies gain 2 all attributes for 60/120/240 seconds, based on performance.",
       activation: "cast",
       memoryCost: 3,
-      targeting: "nearby_allies",
+      targeting: "ally_or_self",
       tags: ["song", "drum"],
       performanceTiers: {
         poor: {
@@ -350,7 +350,7 @@ export const bard = ({
       desc: "You and nearby allies gain 3/4.5/6% action speed and 3/4.5/6% spell casting speed per second for 6 seconds based on your performance. Stacks up to 3 times.",
       activation: "cast",
       memoryCost: 4,
-      targeting: "nearby_allies",
+      targeting: "ally_or_self",
       tags: ["song", "drum"],
       performanceTiers: {
         poor: {
@@ -396,7 +396,7 @@ export const bard = ({
       desc: "You and nearby allies gain 1/3/5 additional move speed per second for 6 seconds based on your performance. Stacks up to 3 times.",
       activation: "cast",
       memoryCost: 4,
-      targeting: "nearby_allies",
+      targeting: "ally_or_self",
       tags: ["song", "drum"],
       performanceTiers: {
         poor: {
@@ -458,21 +458,21 @@ export const bard = ({
           duration: { base: 6, type: "debuff" },
           effects: [
             { stat: "physicalPower", value: -3, phase: "post_curve", target: "nearby_enemies" },
-            { stat: "physicalDamageReduction", value: -0.03, phase: "post_curve", target: "nearby_enemies" },
+            { stat: "physicalDamageReductionBonus", value: -0.03, phase: "post_curve", target: "nearby_enemies" },
           ],
         },
         good: {
           duration: { base: 12, type: "debuff" },
           effects: [
             { stat: "physicalPower", value: -4, phase: "post_curve", target: "nearby_enemies" },
-            { stat: "physicalDamageReduction", value: -0.06, phase: "post_curve", target: "nearby_enemies" },
+            { stat: "physicalDamageReductionBonus", value: -0.06, phase: "post_curve", target: "nearby_enemies" },
           ],
         },
         perfect: {
           duration: { base: 18, type: "debuff" },
           effects: [
             { stat: "physicalPower", value: -5, phase: "post_curve", target: "nearby_enemies" },
-            { stat: "physicalDamageReduction", value: -0.09, phase: "post_curve", target: "nearby_enemies" },
+            { stat: "physicalDamageReductionBonus", value: -0.09, phase: "post_curve", target: "nearby_enemies" },
           ],
         },
       },
@@ -572,7 +572,7 @@ export const bard = ({
       desc: "All nearby players and monsters temporarily lose the will to fight when enchanted by the channel section of the song.",
       activation: "cast",
       memoryCost: 3,
-      targeting: "nearby_enemies",
+      targeting: "enemy",
       tags: ["song", "lute"],
       passives: { peacemaking: true, channeledAbility: true },
     },
@@ -609,9 +609,9 @@ export const bard = ({
       desc: "Excites nearby monsters to attack the nearest target except the performer.",
       activation: "cast",
       memoryCost: 3,
-      targeting: "nearby_enemies",
+      targeting: "enemy",
       tags: ["song", "lute"],
-      passives: { monsterAggroRedirect: true },
+      passives: { monsterAggroRedirect: true, pveOnly: true },
     },
 
     {
@@ -646,7 +646,7 @@ export const bard = ({
       desc: "Restore 2(0.25) recoverable health of yourself and nearby allies every second while resting for 10/15/20 seconds.",
       activation: "cast",
       memoryCost: 2,
-      targeting: "nearby_allies",
+      targeting: "ally_or_self",
       tags: ["song", "lyre"],
       performanceTiers: {
         poor: {
@@ -672,7 +672,7 @@ export const bard = ({
       desc: "You and all nearby allies gain invisibility for 10/20/30 seconds. Invisibility breaks upon movement.",
       activation: "cast",
       memoryCost: 3,
-      targeting: "nearby_allies",
+      targeting: "ally_or_self",
       tags: ["song", "lyre"],
       performanceTiers: {
         poor: { duration: { base: 10, type: "buff" } },
@@ -695,22 +695,22 @@ export const bard = ({
         poor: {
           duration: { base: 60, type: "buff" },
           effects: [
-            { stat: "physicalDamageReduction", value: 0.03, phase: "post_curve" },
-            { stat: "magicalDamageReduction", value: 0.03, phase: "post_curve" },
+            { stat: "physicalDamageReductionBonus", value: 0.03, phase: "post_curve" },
+            { stat: "magicalDamageReductionBonus", value: 0.03, phase: "post_curve" },
           ],
         },
         good: {
           duration: { base: 120, type: "buff" },
           effects: [
-            { stat: "physicalDamageReduction", value: 0.04, phase: "post_curve" },
-            { stat: "magicalDamageReduction", value: 0.04, phase: "post_curve" },
+            { stat: "physicalDamageReductionBonus", value: 0.04, phase: "post_curve" },
+            { stat: "magicalDamageReductionBonus", value: 0.04, phase: "post_curve" },
           ],
         },
         perfect: {
           duration: { base: 240, type: "buff" },
           effects: [
-            { stat: "physicalDamageReduction", value: 0.05, phase: "post_curve" },
-            { stat: "magicalDamageReduction", value: 0.05, phase: "post_curve" },
+            { stat: "physicalDamageReductionBonus", value: 0.05, phase: "post_curve" },
+            { stat: "magicalDamageReductionBonus", value: 0.05, phase: "post_curve" },
           ],
         },
       },
@@ -723,7 +723,7 @@ export const bard = ({
       desc: "Restore 8 spell memory per second of all nearby allies who rest for 8/16/24 seconds.",
       activation: "cast",
       memoryCost: 3,
-      targeting: "nearby_allies",
+      targeting: "ally_or_self",
       tags: ["song", "lyre"],
       performanceTiers: {
         poor: {

@@ -339,7 +339,7 @@ export const barbarian = ({
       effects: [
         { stat: "str", value: 10, phase: "pre_curve_flat" },
         { stat: "moveSpeedBonus", value: 0.07, phase: "post_curve" },
-        { stat: "physicalDamageReduction", value: -0.05, phase: "post_curve" },
+        { stat: "physicalDamageReductionBonus", value: -0.05, phase: "post_curve" },
       ],
     },
 

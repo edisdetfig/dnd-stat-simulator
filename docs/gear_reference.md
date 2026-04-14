@@ -77,7 +77,7 @@ Defines what random modifiers are available per slot, with both **socket ranges*
         },
         {
           "stat": "additionalArmorRating",
-          "exclusionGroup": "ar_pdr",   // mutually exclusive with physicalDamageReduction
+          "exclusionGroup": "ar_pdr",   // mutually exclusive with physicalDamageReductionBonus
           "socketRange":  { "min": 3, "max": 4.8 },
           "naturalRange": { "min": 3, "max": 6 },
           "unit": "flat"
@@ -100,7 +100,7 @@ Defines what random modifiers are available per slot, with both **socket ranges*
 2. Remove any modifier where the item has that stat as inherent (general rule).
 3. Apply the item's `socketExclusionOverrides` to re-add any stat that should still be available despite being inherent.
 4. **AR/PDR asymmetry:**
-   - If item has inherent `physicalDamageReduction` → remove the entire `ar_pdr` exclusion group.
+   - If item has inherent `physicalDamageReductionBonus` → remove the entire `ar_pdr` exclusion group.
    - If item has inherent `armorRating` only → `ar_pdr` group remains available.
 5. Enforce mutual exclusivity within each `exclusionGroup` — user can pick at most one.
 
@@ -130,9 +130,9 @@ Standalone rules object consumed by the runtime pool computation.
     // Named exclusion groups for mutual exclusivity in socketing.
     "exclusionGroups": {
       "ar_pdr": {
-        "members": ["additionalArmorRating", "physicalDamageReduction"],
+        "members": ["additionalArmorRating", "physicalDamageReductionBonus"],
         "description": "Can socket at most one of these two.",
-        "dominantBlocker": "physicalDamageReduction"
+        "dominantBlocker": "physicalDamageReductionBonus"
         // If item has inherent PDR, entire group is blocked.
         // If item has inherent AR (but not PDR), group remains available.
       }

@@ -259,7 +259,7 @@ export const warlock = ({
       duration: { base: 4, type: "buff" },
       effects: [
         { stat: "moveSpeedBonus", value: 0.05, phase: "post_curve" },
-        { stat: "magicalDamageReduction", value: -0.50, phase: "post_curve" },
+        { stat: "magicalDamageReductionBonus", value: -0.50, phase: "post_curve" },
       ],
       passives: { phaseThrough: true },
     },
@@ -301,7 +301,7 @@ export const warlock = ({
             type: "all",
             conditions: [
               { type: "effect_active", effectId: "exploitation_strike" },
-              { type: "weaponType", weaponType: "unarmed" },
+              { type: "weapon_type", weaponType: "unarmed" },
             ],
           },
           damage: [
@@ -362,8 +362,8 @@ export const warlock = ({
       duration: { base: 12, type: "debuff", tags: ["curse"] },
       effects: [
         { stat: "all_attributes", value: -0.25, phase: "attribute_multiplier", target: "enemy" },
-        { stat: "physicalDamageReduction", value: -0.15, phase: "post_curve", target: "enemy" },
-        { stat: "magicalDamageReduction", value: -0.15, phase: "post_curve", target: "enemy" },
+        { stat: "physicalDamageReductionBonus", value: -0.15, phase: "post_curve", target: "enemy" },
+        { stat: "magicalDamageReductionBonus", value: -0.15, phase: "post_curve", target: "enemy" },
       ],
     },
 

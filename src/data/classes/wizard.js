@@ -28,7 +28,7 @@ export const wizard = ({
         {
           desc: "Fires on dealing fire-magical damage — applies 2s debuff on target (-15% PDR, -10% projDR).",
           effects: [
-            { stat: "physicalDamageReduction", value: -0.15, phase: "post_curve", target: "enemy" },
+            { stat: "physicalDamageReductionBonus", value: -0.15, phase: "post_curve", target: "enemy" },
             { stat: "projectileDamageReduction", value: -0.10, phase: "post_curve", target: "enemy" },
           ],
         },

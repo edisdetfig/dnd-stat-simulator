@@ -81,6 +81,23 @@ describe('defineClass — happy path', () => {
     });
     expect(() => defineClass(cls)).not.toThrow();
   });
+
+  it('accepts recipe IDs (pdr, mdr) under phase "cap_override"', () => {
+    const cls = baseClass();
+    cls.perks.push({
+      id: "defense_mastery",
+      type: "perk",
+      name: "Defense Mastery",
+      effects: [{ stat: "pdr", value: 0.75, phase: "cap_override" }],
+    });
+    cls.perks.push({
+      id: "iron_will",
+      type: "perk",
+      name: "Iron Will",
+      effects: [{ stat: "mdr", value: 0.75, phase: "cap_override" }],
+    });
+    expect(() => defineClass(cls)).not.toThrow();
+  });
 });
 
 describe('defineClass — failure modes', () => {
@@ -88,6 +105,18 @@ describe('defineClass — failure modes', () => {
     const cls = baseClass();
     cls.perks[0].effects = [{ stat: "spellCastingSpeedBonus", value: 1, phase: "post_curve" }];
     expect(() => defineClass(cls)).toThrow(/unknown stat "spellCastingSpeedBonus"/);
+  });
+
+  it('rejects recipe ID "pdr" under a non-cap_override phase', () => {
+    const cls = baseClass();
+    cls.perks[0].effects = [{ stat: "pdr", value: 0.05, phase: "post_curve" }];
+    expect(() => defineClass(cls)).toThrow(/stat "pdr" is a recipe ID and requires phase "cap_override"/);
+  });
+
+  it('rejects old-style additive stat name "physicalDamageReduction"', () => {
+    const cls = baseClass();
+    cls.perks[0].effects = [{ stat: "physicalDamageReduction", value: 0.05, phase: "post_curve" }];
+    expect(() => defineClass(cls)).toThrow(/unknown stat "physicalDamageReduction"/);
   });
 
   it('catches unknown phase', () => {

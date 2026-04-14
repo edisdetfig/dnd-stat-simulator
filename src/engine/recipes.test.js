@@ -169,14 +169,14 @@ describe('PDR recipe', () => {
   });
 
   it('caps at 65% by default; rawValue / cap surfaced for UI overflow', () => {
-    const result = pdr({ physicalDamageReduction: 0.99 });
+    const result = pdr({ physicalDamageReductionBonus: 0.99 });
     expect(result.value).toBe(0.65);
     expect(result.rawValue).toBeGreaterThan(0.65);
     expect(result.cap).toBe(0.65);
   });
 
   it('cap_override raises the cap', () => {
-    const result = pdr({ physicalDamageReduction: 0.99 }, { pdr: 0.75 });
+    const result = pdr({ physicalDamageReductionBonus: 0.99 }, { pdr: 0.75 });
     expect(result.value).toBe(0.75);
     expect(result.cap).toBe(0.75);
   });
