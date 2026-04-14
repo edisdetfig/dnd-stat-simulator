@@ -94,8 +94,6 @@ export const STAT_META = {
 
   // Class / spell mechanics
   curseDurationBonus: { label: "Curse Duration", unit: "percent", cat: "utility", direction: "caster", tag: "curse" },
-  shapeshiftCastTime: { label: "Shapeshift Cast Time", unit: "percent", cat: "utility" },
-  wildSkillCooldown: { label: "Wild Skill Cooldown", unit: "percent", cat: "utility" },
   spellChargeMultiplier: { label: "Spell Charge Multiplier", unit: "percent", cat: "utility" },
   spellCooldownMultiplier: { label: "Spell Cooldown Multiplier", unit: "percent", cat: "utility" },
   drawSpeed: { label: "Draw Speed", unit: "percent", cat: "utility" },

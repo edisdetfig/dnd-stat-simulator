@@ -29,7 +29,7 @@ describe('STAT_META v3 additions (spec §5)', () => {
   // already existed pre-v3; the remaining 19 must be present.
   const v3Keys = [
     "healingMod", "healingAdd", "magicDamageTaken", "curseDurationBonus",
-    "shapeshiftCastTime", "wildSkillCooldown", "recoverableHealth",
+    "recoverableHealth",
     "typeDamageBonus", "buffWeaponDamage", "headshotPower", "backstabPower",
     "headPenetration", "impactPower", "impactResistance",
     "equippedArmorRatingBonus", "spellChargeMultiplier", "spellCooldownMultiplier",
