@@ -107,14 +107,17 @@ export const STATUS_TYPES = new Set([
 export const PLAYER_STATES = new Set([
   "hiding",
   "crouching",
-  "blocking",
   "defensive_stance",
   "casting",
   "reloading",
   "bow_drawn",
   "playing_music",
+  "performing",
   "drunk",
+  "alcohol_consumed",
   "dual_casting",
+  "in_combat",
+  "behind_target",
 ]);
 
 // ── Weapon types (spec §3 condition `weapon_type` values) ──
