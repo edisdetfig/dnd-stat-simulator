@@ -21,6 +21,7 @@ const ABILITY_CONTAINERS = ["perks", "skills", "spells", "transformations", "mus
 
 const VALID_MODIFIER_FIELDS = new Set(["duration", "cooldown", "castTime", "range", "aoeRadius", "cost"]);
 const VALID_MODIFIER_MODES = new Set(["multiply", "add"]);
+const VALID_COST_TYPES = new Set(["health", "charges", "cooldown"]);
 
 export function defineClass(classData) {
   const issues = [];
@@ -63,6 +64,8 @@ export function defineClass(classData) {
         if (tr?.condition) validateCondition(tr.condition, `${tPath}.condition`, issues);
       });
     }
+
+    if (ability.cost != null) validateCost(ability.cost, `${path}.cost`, issues);
 
     if (Array.isArray(ability.abilityModifiers)) {
       ability.abilityModifiers.forEach((mod, i) => {
@@ -162,6 +165,19 @@ function validateEffect(eff, path, issues) {
     issues.push(`${path}: unknown target "${eff.target}"`);
   }
   if (eff.condition) validateCondition(eff.condition, `${path}.condition`, issues);
+}
+
+function validateCost(cost, path, issues) {
+  if (!cost || typeof cost !== "object") {
+    issues.push(`${path}: cost is not an object`);
+    return;
+  }
+  if (!VALID_COST_TYPES.has(cost.type)) {
+    issues.push(`${path}: unknown cost type "${cost.type}"`);
+  }
+  if (typeof cost.value !== "number") {
+    issues.push(`${path}: value must be a number`);
+  }
 }
 
 function validateAbilityModifier(mod, path, issues) {

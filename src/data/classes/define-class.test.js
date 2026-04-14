@@ -191,6 +191,28 @@ describe('defineClass — nested effect lists', () => {
     expect(() => defineClass(cls)).toThrow(/afterEffect\.effects\[0\]:.*unknown phase "alien_phase"/);
   });
 
+  it('accepts valid cost shapes (health / charges / cooldown)', () => {
+    const cls = baseClass();
+    cls.spells.push(
+      { id: "a", type: "spell", name: "A", cost: { type: "health",   value: 5  } },
+      { id: "b", type: "spell", name: "B", cost: { type: "charges",  value: 4  } },
+      { id: "c", type: "spell", name: "C", cost: { type: "cooldown", value: 12 } },
+    );
+    expect(() => defineClass(cls)).not.toThrow();
+  });
+
+  it('rejects unknown cost.type', () => {
+    const cls = baseClass();
+    cls.spells.push({ id: "a", type: "spell", name: "A", cost: { type: "mana", value: 5 } });
+    expect(() => defineClass(cls)).toThrow(/\.cost: unknown cost type "mana"/);
+  });
+
+  it('rejects non-numeric cost.value', () => {
+    const cls = baseClass();
+    cls.spells.push({ id: "a", type: "spell", name: "A", cost: { type: "charges", value: "five" } });
+    expect(() => defineClass(cls)).toThrow(/\.cost: value must be a number/);
+  });
+
   it('accepts valid abilityModifiers[]', () => {
     const cls = baseClass();
     cls.perks.push({
