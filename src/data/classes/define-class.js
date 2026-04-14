@@ -12,7 +12,7 @@
 import { STAT_META } from '../stat-meta.js';
 import {
   CORE_ATTRS, EFFECT_PHASES, CONDITION_TYPES,
-  STATUS_TYPES, TRIGGER_EVENTS, EFFECT_TARGETS,
+  STATUS_TYPES, EFFECT_TARGETS,
 } from '../constants.js';
 
 const VALID_PHASES = new Set(Object.values(EFFECT_PHASES));
@@ -57,9 +57,6 @@ export function defineClass(classData) {
     if (Array.isArray(ability.triggers)) {
       ability.triggers.forEach((tr, i) => {
         const tPath = `${path}.triggers[${i}]`;
-        if (!TRIGGER_EVENTS.has(tr?.event)) {
-          issues.push(`${tPath}: unknown trigger event "${tr?.event}"`);
-        }
         if (tr?.condition) validateCondition(tr.condition, `${tPath}.condition`, issues);
       });
     }

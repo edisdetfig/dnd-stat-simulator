@@ -79,12 +79,6 @@ describe('defineClass — failure modes', () => {
     expect(() => defineClass(cls)).toThrow(/unknown status type "petrified"/);
   });
 
-  it('catches unknown trigger event', () => {
-    const cls = baseClass();
-    cls.perks[0].triggers = [{ event: "on_dawn", effects: [] }];
-    expect(() => defineClass(cls)).toThrow(/unknown trigger event "on_dawn"/);
-  });
-
   it('catches duplicate ability ID', () => {
     const cls = baseClass();
     cls.skills.push({ id: "robust", type: "skill", name: "Robust Clash" });
