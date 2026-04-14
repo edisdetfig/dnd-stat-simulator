@@ -191,6 +191,110 @@ describe('defineClass — nested effect lists', () => {
     expect(() => defineClass(cls)).toThrow(/afterEffect\.effects\[0\]:.*unknown phase "alien_phase"/);
   });
 
+  it('accepts valid form.attacks damage and tolerates empty attacks[]', () => {
+    const cls = baseClass();
+    cls.spells.push({
+      id: "bear",
+      type: "transformation",
+      name: "Bear",
+      form: {
+        formId: "bear",
+        attacks: [
+          {
+            name: "Swipe",
+            damage: [{ base: 27, scaling: 1.0, damageType: "physical", target: "enemy" }],
+          },
+        ],
+      },
+    });
+    cls.spells.push({
+      id: "demon",
+      type: "transformation",
+      name: "Demon",
+      form: { formId: "demon", attacks: [] },
+    });
+    expect(() => defineClass(cls)).not.toThrow();
+  });
+
+  it('rejects form.attacks damage missing damageType', () => {
+    const cls = baseClass();
+    cls.spells.push({
+      id: "bear",
+      type: "transformation",
+      name: "Bear",
+      form: {
+        formId: "bear",
+        attacks: [
+          { name: "Swipe", damage: [{ base: 27, scaling: 1.0, target: "enemy" }] },
+        ],
+      },
+    });
+    expect(() => defineClass(cls)).toThrow(/form\.attacks\[0\]\.damage\[0\]: missing damageType/);
+  });
+
+  it('validates damage inside form.attacks[].frenziedEffect.damage', () => {
+    const cls = baseClass();
+    cls.spells.push({
+      id: "panther",
+      type: "transformation",
+      name: "Panther",
+      form: {
+        formId: "panther",
+        attacks: [
+          {
+            name: "Neckbite",
+            damage: [{ base: 25, scaling: 1.0, damageType: "physical", target: "enemy" }],
+            frenziedEffect: {
+              damage: [{ base: 10, scaling: 0.5, damageType: "physical", target: "bogus_target" }],
+            },
+          },
+        ],
+      },
+    });
+    expect(() => defineClass(cls)).toThrow(/frenziedEffect\.damage\[0\]: unknown target "bogus_target"/);
+  });
+
+  it('accepts valid summon.damage[]', () => {
+    const cls = baseClass();
+    cls.spells.push({
+      id: "hydra",
+      type: "spell",
+      name: "Summon Hydra",
+      summon: {
+        type: "hydra",
+        duration: { base: 10, type: "other" },
+        damage: [{ base: 10, scaling: 1.0, damageType: "fire_magical", target: "enemy" }],
+      },
+    });
+    expect(() => defineClass(cls)).not.toThrow();
+  });
+
+  it('rejects summon.damage[] missing damageType', () => {
+    const cls = baseClass();
+    cls.spells.push({
+      id: "hydra",
+      type: "spell",
+      name: "Summon Hydra",
+      summon: {
+        type: "hydra",
+        duration: { base: 10, type: "other" },
+        damage: [{ base: 10, scaling: 1.0, target: "enemy" }],
+      },
+    });
+    expect(() => defineClass(cls)).toThrow(/summon\.damage\[0\]: missing damageType/);
+  });
+
+  it('shield.effects walker is a no-op when shield has no effects (future-proof)', () => {
+    const cls = baseClass();
+    cls.spells.push({
+      id: "arcane_shield",
+      type: "spell",
+      name: "Arcane Shield",
+      shield: { base: 15, scaling: 0.5, damageFilter: null },
+    });
+    expect(() => defineClass(cls)).not.toThrow();
+  });
+
   it('accepts valid duration shapes (buff / debuff / other, optional tags)', () => {
     const cls = baseClass();
     cls.skills.push(

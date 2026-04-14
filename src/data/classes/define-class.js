@@ -50,6 +50,8 @@ export function defineClass(classData) {
 
     forEachEffectList(ability, path, (eff, effPath) => validateEffect(eff, effPath, issues));
 
+    forEachDamageList(ability, path, (dmg, dmgPath) => validateDamage(dmg, dmgPath, issues));
+
     if (Array.isArray(ability.appliesStatus)) {
       ability.appliesStatus.forEach((status, i) => {
         const sPath = `${path}.appliesStatus[${i}]`;
@@ -143,6 +145,33 @@ function forEachEffectList(ability, path, fn) {
   if (Array.isArray(ability.stacking?.perStack)) {
     visit(ability.stacking.perStack, `${path}.stacking.perStack`);
   }
+  // shield.* currently carries { base, scaling, damageFilter } — no effects
+  // authored today. Visit is a no-op that keeps the tree future-proof: any
+  // later shield.effects block would fall into effect validation automatically.
+  if (ability.shield) {
+    visit(ability.shield.effects, `${path}.shield.effects`);
+  }
+}
+
+// Walks every damage[] array that currently lacks coverage: form.attacks[].damage,
+// form.attacks[].frenziedEffect.damage, summon.damage. Tolerates empty arrays
+// (Warlock Blood Pact's form.attacks: []).
+function forEachDamageList(ability, path, fn) {
+  const visit = (dmg, where) => {
+    if (!Array.isArray(dmg)) return;
+    dmg.forEach((d, i) => fn(d, `${where}[${i}]`));
+  };
+
+  if (ability.summon) {
+    visit(ability.summon.damage, `${path}.summon.damage`);
+  }
+  if (ability.form?.attacks) {
+    ability.form.attacks.forEach((atk, i) => {
+      const atkPath = `${path}.form.attacks[${i}]`;
+      visit(atk?.damage, `${atkPath}.damage`);
+      visit(atk?.frenziedEffect?.damage, `${atkPath}.frenziedEffect.damage`);
+    });
+  }
 }
 
 // Walks every duration block reachable from an ability. Scoped to paths the
@@ -193,6 +222,19 @@ function validateEffect(eff, path, issues) {
     issues.push(`${path}: unknown target "${eff.target}"`);
   }
   if (eff.condition) validateCondition(eff.condition, `${path}.condition`, issues);
+}
+
+function validateDamage(d, path, issues) {
+  if (!d || typeof d !== "object") {
+    issues.push(`${path}: damage is not an object`);
+    return;
+  }
+  if (!d.damageType) {
+    issues.push(`${path}: missing damageType`);
+  }
+  if (d.target != null && !EFFECT_TARGETS.has(d.target)) {
+    issues.push(`${path}: unknown target "${d.target}"`);
+  }
 }
 
 function validateDuration(dur, path, issues) {
