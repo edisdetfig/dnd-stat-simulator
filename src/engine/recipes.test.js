@@ -157,13 +157,13 @@ describe('PDR recipe', () => {
     expect(pdr({}).value).toBeCloseTo(-0.22, 6);
   });
 
-  it('armorRatingMultiplier scales gear AR before the curve', () => {
-    expect(pdr({ armorRating: 100, armorRatingMultiplier: 0.50 }).value)
+  it('equippedArmorRatingBonus scales gear AR before the curve', () => {
+    expect(pdr({ armorRating: 100, equippedArmorRatingBonus: 0.50 }).value)
       .toBeGreaterThan(pdr({ armorRating: 100 }).value);
   });
 
-  it('additionalArmorRating is NOT scaled by armorRatingMultiplier', () => {
-    const scaled = pdr({ armorRating: 100, armorRatingMultiplier: 0.50 }).value;
+  it('additionalArmorRating is NOT scaled by equippedArmorRatingBonus', () => {
+    const scaled = pdr({ armorRating: 100, equippedArmorRatingBonus: 0.50 }).value;
     const flatAdd = pdr({ armorRating: 100, additionalArmorRating: 50 }).value;
     expect(scaled).toBeCloseTo(flatAdd, 6);
   });

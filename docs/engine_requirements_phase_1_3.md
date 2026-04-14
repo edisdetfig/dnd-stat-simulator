@@ -13,12 +13,16 @@
 | Add | Rationale | First use |
 |---|---|---|
 | `post_cap_multiplicative_layer` | Locked per coordinator; replaces retired `antimagic_layer`. Applies multiplicatively AFTER capped DR (see docs/damage_formulas.md:182-188). | `warlock.antimagic` |
+| `post_curve_multiplicative` | **LOCKED (D.25)** — in-game verified. Multiplies a derived stat's own value by `(1 + value)` AFTER all `post_curve` additives. Distinct from `post_cap_multiplicative_layer` (which multiplies final damage): this scales the STAT itself. Used for "X% of current" CSV phrasings. | `fighter.veteran_instinct` (PDR) |
 
 ### CONDITION_TYPES
 
 | Add | Rationale | First use |
 |---|---|---|
 | `creature_type` | Condition gates effect on target's creature category (`undead`, `demon`). Reads `ctx.target.creatureType`. | `cleric.undead_slaying`, `warlock.infernal_pledge` |
+| `damageType` | **LOCKED (D.8)**. Accepts `damageType: <value>` or `damageType: [<values>]` with optional `exclude: [<values>]`. Anchor: Antimagic "magic except divine". | `warlock.antimagic` |
+| `all` | **LOCKED (D.24)**. Compound — `{ type: "all", conditions: [...] }`. Logical AND, evaluated recursively. | `fighter.sword_mastery` (sword + defensive_stance) |
+| `any` | **LOCKED (D.24)**. Compound — `{ type: "any", conditions: [...] }`. Logical OR, evaluated recursively. Reserved; no current anchor. | — |
 
 ### STATUS_TYPES
 
@@ -75,6 +79,8 @@ All additions come from CSV values that don't yet have a STAT_META entry. Durati
 Reconcile: existing `curseDurationBonus` — add `direction: "caster", tag: "curse"` metadata (vocab Convention 13). Existing `wildSkillCooldown`, `shapeshiftCastTime` — either retire or alias to new entries; author path prefers `wildSkillCooldownReduction` / `shapeshiftTimeReduction` to reflect "reduction" semantics.
 
 Retire: `backstabPower` (replaced by conditional `physicalDamageBonus` + `player_state: behind_target`).
+
+Rename (completed 2026-04-13): `armorRatingMultiplier` → `equippedArmorRatingBonus`. The previous name implied a general AR multiplier (Reading A); the stat is actually source-scoped to gear-contributed AR only (Reading B, confirmed in-game). Rename applied to `stat-meta.js`, `stat-meta.test.js`, `recipes.js`, `recipes.test.js`, and Fighter Defense Mastery authoring. Defense Mastery phase also corrected `post_curve` → `pre_curve_flat` (matches engine routing — the stat lives in `bonuses`, populated by pre_curve_flat). First use: `fighter.defense_mastery`.
 
 ---
 
@@ -150,6 +156,8 @@ Inter-source stacking (e.g., same status type from two same-class, same-form abi
 21. **`form.attacks[i].appliesStatus` walker** — Druid Panther Scratch bleed, Rat Infected Fangs plague, Penguin Sharp Beak bleed. Validator currently only walks wildSkill.effects. Add form.attacks[i].appliesStatus to validator traversal.
 22. **`form.attacks[i].frenziedEffect`** — Druid Panther Neckbite silence triggered only while frenzy_active. Validator must walk frenziedEffect.appliesStatus / frenziedEffect.damage / frenziedEffect.effects, gated by `frenzy_active` condition at runtime.
 23. **`condition.type: "effect_active"` resolver** — already in CONDITION_TYPES, but engine must resolve `effectId` lookup at runtime (per-target effect presence). First use: Druid Dreamfire conditional heal for allies with Nature's Touch active.
+24. **Compound conditions `all` / `any`** (LOCKED D.24). Condition evaluator recursively evaluates `condition.conditions[]` and combines via AND (`all`) or OR (`any`). Leaves resolve via existing condition dispatch. No depth limit; authors keep depth shallow for readability. Retires the prior workaround of authoring parallel effects each gated by one leg of the intended conjunction. First use: Fighter Sword Mastery (`weapon_type: sword` + `player_state: defensive_stance`). Validator walks inner conditions identically to top-level. UI: no new controls — existing state/weapon/equipment toggles cover all leaves.
+25. **`post_curve_multiplicative` phase** (LOCKED D.25). Applies after all `post_curve` additives on a given stat: `stat_final = (base + Σ post_curve additives) × Π (1 + post_curve_multiplicative values)`. In-game verified on Fighter Veteran Instinct PDR (`+10% of current value` = ×1.10). Aggregator needs to track per-stat multiplicative bucket separately from additive `post_curve` bucket. Order: curve → pre_curve_flat → attribute_multiplier (applied to attrs pre-curve) → curve eval → post_curve adds → post_curve_multiplicatives → `cap_override` / cap clamp → used by damage formulas. Distinct from `post_cap_multiplicative_layer` (damage-side). Existing `multiplicative_layer` (pre-cap damage-side) remains in constants for Phase 1.3 cleanup review — verify whether to retire in favor of the three clearly-named phases.
 
 ---
 

@@ -82,7 +82,7 @@ export const STAT_META = {
   magicDamageTaken: { label: "Magic Damage Taken", unit: "percent", cat: "defense" },
   flatDamageReduction: { label: "Flat Damage Reduction", unit: "flat", cat: "defense" },
   impactResistance: { label: "Impact Resistance", unit: "flat", cat: "defense" },
-  armorRatingMultiplier: { label: "Armor Rating Multiplier", unit: "percent", cat: "defense" },
+  equippedArmorRatingBonus: { label: "Equipped Armor Rating Bonus", unit: "percent", cat: "defense" },
 
   // Offensive (per-target / per-context multipliers)
   typeDamageBonus: { label: "Type Damage Bonus", unit: "percent", cat: "offense" },

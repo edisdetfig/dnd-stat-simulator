@@ -215,7 +215,7 @@ All 10 classes contribute to ≥ 1 category. No class is silent.
 
 ## Category 5: `condition.type`
 
-**Closed set.** `form_active, hp_below, effect_active, environment, frenzy_active, weapon_type, dual_wield, player_state, equipment, creature_type`.
+**Closed set.** `form_active, hp_below, effect_active, environment, frenzy_active, weapon_type, dual_wield, player_state, equipment, creature_type, damageType, all, any`.
 
 | Value           | Cited |
 |-----------------|-------|
@@ -229,8 +229,13 @@ All 10 classes contribute to ≥ 1 category. No class is silent.
 | `player_state`  | see Category 9 |
 | `equipment`     | `barbarian.csv:L32 (Savage)` |
 | `creature_type` | `cleric.csv:L33 (Undead Slaying)`, `cleric.csv:L39 (Holy Purification)`, `cleric.csv:L53 (Holy Light)`, `cleric.csv:L54 (Sanctuary)`, `warlock.csv:L31 (Infernal Pledge — undead and demons)` |
+| `damageType`    | Accepts scalar `damageType: <value>`, array `damageType: [<values>]`, and exclusion `exclude: [<values>]`. Anchor: `warlock.csv:L26 (Antimagic — "all magic damage except divine")` per tracker D.8. Evaluator consumes `ctx.incomingDamageType` when present; stat-panel aggregate tooltip surfaces `exclude` as qualifier when absent. |
+| `all`           | Compound: `{ type: "all", conditions: [...] }` — logical AND of inner conditions. Anchor: `fighter.csv (Sword Mastery — "defensive stance with your sword")` per tracker D.24. |
+| `any`           | Compound: `{ type: "any", conditions: [...] }` — logical OR of inner conditions. Reserved for future patterns (no anchor in committed data today). |
 
 Creature-type sub-values observed: `undead`, `demon`.
+
+**Compound conditions.** `all` and `any` nest inner conditions (including other compounds) recursively. Engine evaluator resolves leaves normally (`form_active`, `player_state`, etc.) and combines via AND/OR. No depth limit; authors keep depth shallow for readability. Compound conditions eliminate the previous workaround of authoring two parallel effects each with one leg of the compound.
 
 **Rejected.**
 - `debuffed` (Barbarian Achilles Strike) — collapses to `effect_active`.
@@ -424,6 +429,7 @@ Utility additions:
 | `post_curve`           | `warlock.csv:L22 (Demon Armor -10% SCS)`, `barbarian.csv:L27 (Heavy Swing)`, `fighter.csv:L23 (Combo Attack)` |
 | `multiplicative_layer` | generic multiplicative DR-like effects (future-extensible) |
 | `post_cap_multiplicative_layer` | Multiplicative damage-taken modifier that applies AFTER capped DR. Distinct from `multiplicative_layer` (which operates before the cap). Anchor case: `warlock.csv:L26 (Antimagic)` — verified in `docs/damage_formulas.md:182-188`. Generalizes to any future mechanic that stacks a separate multiplier on incoming damage after the capped DR step. |
+| `post_curve_multiplicative` | Multiplies a derived stat's own value by `(1 + value)` AFTER all `post_curve` additive modifiers are folded in. Distinct from `post_cap_multiplicative_layer` (which multiplies final incoming damage) — this scales the STAT itself before it enters any damage formula. Anchor case: `fighter.csv (Veteran Instinct — "PDR increased by 10% of its current value")` per tracker D.25. Used for any CSV phrasing of "X% of current" / "scale your current X by Y%" / "add Y% to your existing X". |
 | `type_damage_bonus`    | `warlock.csv:L27 (Dark Enhancement)`, `wizard.csv:L23 (Fire Mastery)`, `cleric.csv:L25 (Faithfulness)` |
 | `healing_modifier`     | `warlock.csv:L30 (Immortal Lament)`, `warlock.csv:L32 (Vampirism)`, `cleric.csv:L22 (Advanced Healer)` |
 | `cap_override`         | `fighter.csv:L22 (Defense Mastery — PDR cap to 75%)` |

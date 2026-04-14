@@ -30,7 +30,7 @@ export const fighter = ({
       desc: "Gain an additional 15% armor rating bonus from equipped armor. The maximum Physical Damage Reduction limit is increased to 75%.",
       activation: "passive",
       effects: [
-        { stat: "armorRatingMultiplier", value: 0.15, phase: "post_curve" },
+        { stat: "equippedArmorRatingBonus", value: 0.15, phase: "pre_curve_flat" },
         { stat: "pdr", value: 0.75, phase: "cap_override" },
       ],
     },
@@ -231,13 +231,12 @@ export const fighter = ({
           stat: "actionSpeed", value: 0.05, phase: "post_curve",
           condition: { type: "weapon_type", weaponType: "sword" },
         },
-        // Compound condition: sword + defensive_stance. Author as two effects both conditionally gated;
-        // engine must enforce both (condition chain handled at effect level).
-        // NOTE (_unverified): compound-condition semantics — authored as player_state gate, relying on the user
-        // to also have a sword equipped via the weapon-held toggle. No explicit multi-condition shape exists yet.
         {
           stat: "moveSpeed", value: 10, phase: "post_curve",
-          condition: { type: "player_state", state: "defensive_stance" },
+          condition: { type: "all", conditions: [
+            { type: "weapon_type", weaponType: "sword" },
+            { type: "player_state", state: "defensive_stance" },
+          ] },
         },
       ],
     },
@@ -249,12 +248,9 @@ export const fighter = ({
       desc: "When you enter combat, physical damage reduction is increased by 10% of its current value and physical damage bonus is increased by 10% for 4 seconds.",
       activation: "passive",
       duration: { base: 4, type: "buff" },
-      // _unverified: "10% of its current value" suggests a multiplicative-on-current-PDR boost,
-      // which the current phase set doesn't express. Simplest faithful interpretation: +10% flat PDR.
-      // Phase 1.3 may introduce a multiplicative-on-self phase if in-game testing warrants.
       effects: [
         {
-          stat: "physicalDamageReduction", value: 0.10, phase: "post_curve",
+          stat: "physicalDamageReduction", value: 0.10, phase: "post_curve_multiplicative",
           condition: { type: "player_state", state: "in_combat" },
         },
         {

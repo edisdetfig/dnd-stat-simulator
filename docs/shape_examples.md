@@ -1380,6 +1380,70 @@ Damage source that bypasses target DR. Encoded via the `trueDamage` flag on a no
 
 ---
 
+## 26. `example_compound_condition`
+
+Compound condition combining two leaves via logical AND. `all` nests a `conditions[]` array; each entry is any valid condition, including other compounds. Use `any` for OR. Anchor: Fighter Sword Mastery's "defensive stance WITH a sword" effect.
+
+```js
+{
+  id: "example_compound_condition",
+  type: "perk",
+  name: "Example Compound Condition",
+  desc: "While holding a sword and in defensive stance, gain 10 move speed.",
+  activation: "passive",
+
+  effects: [
+    {
+      stat: "moveSpeed", value: 10, phase: "post_curve",
+      // AND: both leaves must be true. Engine resolves recursively; leaves
+      // dispatch through the normal CONDITION_TYPES evaluator.
+      condition: {
+        type: "all",
+        conditions: [
+          { type: "weapon_type", weaponType: "sword" },
+          { type: "player_state", state: "defensive_stance" },
+        ],
+      },
+    },
+  ],
+}
+```
+
+**Pipeline**: condition evaluator sees `type: "all"` and recursively evaluates each entry in `conditions[]`. All must pass for the effect to apply. `any` combines via OR. Nested compounds allowed (e.g., `all` containing an `any`). No depth limit; keep shallow for readability.
+
+**When to use**: Any ability whose effect requires more than one simultaneous gate. Previously authored as two parallel single-gated effects, which was fragile; the compound form is canonical per tracker D.24.
+
+---
+
+## 27. `example_post_curve_multiplicative`
+
+Multiplies the derived stat's *own value* after all `post_curve` additives. Distinct from `post_cap_multiplicative_layer` (which multiplies final incoming damage) — this scales the STAT itself before it enters any damage formula. Anchor: Fighter Veteran Instinct's "+10% of current PDR" effect (in-game verified multiplicative-on-current).
+
+```js
+{
+  id: "example_post_curve_multiplicative",
+  type: "perk",
+  name: "Example Post-Curve Multiplicative",
+  desc: "While in combat, physical damage reduction is increased by 10% of its current value.",
+  activation: "passive",
+
+  effects: [
+    {
+      // value 0.10 means ×1.10, applied AFTER all post_curve additives.
+      // At 50% PDR baseline → 55% PDR while condition holds.
+      stat: "physicalDamageReduction", value: 0.10, phase: "post_curve_multiplicative",
+      condition: { type: "player_state", state: "in_combat" },
+    },
+  ],
+}
+```
+
+**Pipeline**: `stat_final = (base + Σ post_curve additives) × Π (1 + post_curve_multiplicative values)`, then clamped by any active `cap_override`. Multiple `post_curve_multiplicative` effects on the same stat compose multiplicatively (product of `1 + value`).
+
+**When to use**: Any CSV phrasing of "X% of current" / "scale your current X by Y%" / "add Y% to your existing X" — where the language signals *of current value*, not flat addition. Flat additions stay on `post_curve`.
+
+---
+
 ## Meta: patterns this doc does NOT show
 
 For completeness — other shape fields exist but aren't standalone patterns:
@@ -1387,7 +1451,7 @@ For completeness — other shape fields exist but aren't standalone patterns:
 - `grantsArmor`, `removesArmor`, `grantsWeapon`, `grantsSpells` — one-line ability-level additions, not shape patterns. See vocabulary.md Categories 22-24.
 - `passives: { ... }` — escape-hatch flag map for mechanics with no engine path. Keys are open; prefer `effects[]` when possible. See vocabulary.md Category 25.
 - `disables[]` — ability disables another ability by type + filter. Rare; see vocabulary.md Category 20.
-- `cc: { type, duration }` — instant crowd-control layer alongside damage. See vocabulary.md Category 26.
+- `cc: [{ type, duration, tags? }, ...]` — crowd-control array alongside damage (per tracker D.16). See vocabulary.md Category 26.
 - `slots: { type, count }` — on class root, not ability level. See vocabulary.md Category 12.
 
 Each of the above is a single field addition to one of the patterns above; no new shape is required.
@@ -1411,3 +1475,5 @@ Each of the above is a single field addition to one of the patterns above; no ne
 | 23 merged spell | Cat 31 | components |
 | 24 summon | Cat 28, 29, 7 | summon |
 | 25 true damage | Cat 16, Conv 8 | DamageSource.trueDamage |
+| 26 compound condition | Cat 5 | Condition shape (nested) |
+| 27 post_curve_multiplicative | Cat 14 | effects[].phase |

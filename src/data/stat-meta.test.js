@@ -32,7 +32,7 @@ describe('STAT_META v3 additions (spec §5)', () => {
     "shapeshiftCastTime", "wildSkillCooldown", "recoverableHealth",
     "typeDamageBonus", "buffWeaponDamage", "headshotPower", "backstabPower",
     "headPenetration", "impactPower", "impactResistance",
-    "armorRatingMultiplier", "spellChargeMultiplier", "spellCooldownMultiplier",
+    "equippedArmorRatingBonus", "spellChargeMultiplier", "spellCooldownMultiplier",
     "flatDamageReduction", "drawSpeed",
   ];
 
