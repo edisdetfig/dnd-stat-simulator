@@ -73,8 +73,14 @@ Ordered by pipeline production. Each contract notes where it is produced and whe
 
   hpPercent: number,
   // Weapon-state fields DERIVED at Stage 0 from equipment.weaponSlots[activeWeaponSlot]:
-  weaponType: string | null,              // specific weapon kind: "sword" | "axe" | "spellbook" | ...
-  weaponCategory: "unarmed" | "one_handed" | "two_handed" | "dual_wield",
+  weaponType: string | null,              // specific weapon kind: "sword" | "axe" | "spellbook" | "shield" | ...
+  weaponCategory:                         // mutually-exclusive state of the active weapon slot
+      "unarmed"
+    | "one_handed"
+    | "one_handed_shield"
+    | "two_handed"
+    | "two_handed_shield"
+    | "dual_wield",
   environment: string | null,
 
   activeAbilityIds: Set<string>,  // populated at Stage 0's end
@@ -92,11 +98,22 @@ Ordered by pipeline production. Each contract notes where it is produced and whe
 | Active slot contents | `weaponCategory` | `weaponType` |
 |---|---|---|
 | primary = null, offhand = null | `unarmed` | `null` |
-| primary.handedness = two_handed | `two_handed` | primary's type |
-| primary present, offhand is a weapon | `dual_wield` | primary's type |
-| primary present, offhand is a shield (or null) | `one_handed` | primary's type |
+| primary.handedness = two_handed, is weapon | `two_handed` | primary's type |
+| primary.handedness = two_handed, is shield | `two_handed_shield` | `"shield"` |
+| primary = weapon, offhand = shield | `one_handed_shield` | primary's type |
+| primary = weapon, offhand = weapon | `dual_wield` | primary's type |
+| primary = weapon, offhand = null | `one_handed` | primary's type |
 
-Shield presence is orthogonal — `ctx.equipment.weaponSlots[ctx.activeWeaponSlot].offhand?.type === "shield"` is what a shield-specific condition checks, independent of `weaponCategory`.
+**Condition dispatch** for the `weapon_type` virtual categories (evaluator maps each virtual value to a set of `weaponCategory` matches):
+
+| `weapon_type` value | Matches if `weaponCategory` ∈ |
+|---|---|
+| `"unarmed"` | `{ "unarmed" }` |
+| `"one_handed"` | `{ "one_handed", "one_handed_shield" }` |
+| `"two_handed"` | `{ "two_handed" }` (strict — 2h weapon only, not 2h shield) |
+| `"dual_wield"` | `{ "dual_wield" }` |
+| `"shield"` | `{ "one_handed_shield", "two_handed_shield" }` |
+| specific weapon type (`"sword"`, `"axe"`, etc.) | checked against `weaponType` directly |
 
 ### 2.2 · `Effect`
 
