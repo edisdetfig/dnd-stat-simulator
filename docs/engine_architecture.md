@@ -41,12 +41,12 @@ Ordered by pipeline production. Each contract notes where it is produced and whe
   selectedMusics: string[],
   equipment: { head, chest, legs, ... },
 
-  activeBuffs: Set<string>,
+  activeBuffs: Set<string>,        // includes wild-skill IDs when toggled — the wild-skill collector reads from here
   activeForm: string | null,
   activeSummons: Set<string>,
   activeAfterEffects: Set<string>,
-  activeWildSkill: string | null,
-  activeMergedSpells: string[],
+
+  grantedSpells: Set<string>,      // DERIVED at Stage 0 — unified from active grantsSpells + merged-spell `requires` satisfied
 
   stackCounts: { [abilityId]: number },
   classResources: { [resourceId]: number },
@@ -270,15 +270,18 @@ Recipes are either curve-based (the four `curve*` fields) OR escape-hatch (`comp
 
 ```js
 {
-  ctx: Ctx,                                         // read-only; UI reads build state from here
-  selfDerivedStats: { [recipeId]: DerivedStat },    // Stage 5 run over self-bucket
-  targetDerivedStats: { [recipeId]: DerivedStat },  // Stage 5 run over target-bucket
-  finalAttrs: Attrs,                                // attrs after attribute_multiplier phase
-  availableSpells: string[],                        // spell ids available to cast
+  ctx: Ctx,                                         // read-only build state; every panel references for toggles + selections
+  selfDerivedStats: { [recipeId]: DerivedStat },    // AttributesPanel, DerivedStatsPanel, outgoing-damage attacker side
+  targetDerivedStats: { [recipeId]: DerivedStat },  // damage calc defender side; TargetPanel and future incoming-damage panel
+  finalAttrs: Attrs,                                // AttributesPanel — attribute display after attribute_multiplier phase
 }
 ```
 
+Each field is a stable reference when its inputs haven't changed (see §5.1). Panels memoize against just the slice they render.
+
 Damage estimates are NOT pre-computed in `Snapshot`. Panels call `applyDamage` (or a convenience wrapper) per-attack on demand, passing the relevant derived stats.
+
+Spell availability (selected + granted + merged-derived) is already unified in `ctx.grantedSpells` + `ctx.selectedSpells` — panels query those directly rather than duplicating on Snapshot.
 
 ### 2.13 · Two-namespace stat model
 
@@ -480,6 +483,50 @@ export { DERIVED_STAT_RECIPES, RECIPE_IDS } from './recipes.js'
 ```
 
 `computeSnapshot` is the primary entrypoint. Stage-level entrypoints are exposed for tests and for the incoming-damage panel's role-swap call pattern.
+
+### 5.1 · Consumer patterns
+
+UI panels consume `Snapshot` and memoize per-panel on just the slice they render. Snapshot fields are stable references — when a field's inputs have not changed, the field returns the same reference across snapshot rebuilds (structural sharing). Panels depending only on that slice do not re-derive.
+
+Pattern:
+
+```jsx
+// In DamagePanel
+const damageAbilities = useMemo(
+  () => filterByShape(snapshot.ctx.classData, "damage"),
+  [snapshot.ctx.classData]
+);
+
+// In ActiveBuffsPanel
+const activeBuffEffects = useMemo(
+  () => filterActiveBuffs(snapshot.ctx.activeBuffs, snapshot.ctx.classData),
+  [snapshot.ctx.activeBuffs, snapshot.ctx.classData]
+);
+```
+
+Each panel depends on the narrowest slice it needs. Unrelated state changes do not retrigger the filter.
+
+**Implication for Stage 0 / Stage 5 / `computeSnapshot` implementations:** when rebuilding `ctx` or `Snapshot`, preserve array / Set references for sub-fields whose inputs did not change. Avoid spreading (`{ ...ctx, X: newX }`) in ways that break reference equality on untouched fields. React's `useMemo` dependency checks are reference-based; losing reference equality defeats the memoization.
+
+### 5.2 · Consumer map
+
+Authoritative contract for which `Snapshot` / `ctx` slice each consumer reads. When a new panel or consumer is added, its row is appended here. When a new Snapshot field is added, the author fills in its consumers.
+
+| Consumer | Slices depended on |
+|---|---|
+| `AttributesPanel` | `snapshot.finalAttrs`, `snapshot.ctx.classData.baseAttributes` |
+| `DerivedStatsPanel` | `snapshot.selfDerivedStats`, `snapshot.ctx.classData` (for display labels) |
+| `DamagePanel` | `snapshot.selfDerivedStats`, `snapshot.targetDerivedStats`, `snapshot.ctx.classData`, `snapshot.ctx.selectedSpells`, `snapshot.ctx.grantedSpells` |
+| `ActiveBuffsPanel` | `snapshot.ctx.activeBuffs`, `snapshot.ctx.classData` |
+| `PerksPanel` | `snapshot.ctx.selectedPerks`, `snapshot.ctx.classData.perks` |
+| `SkillsPanel` | `snapshot.ctx.selectedSkills`, `snapshot.ctx.classData.skills` |
+| `SpellsPanel` | `snapshot.ctx.selectedSpells`, `snapshot.ctx.grantedSpells`, `snapshot.ctx.classData.spells`, `snapshot.ctx.classData.mergedSpells` |
+| `GearPanel` | `snapshot.ctx.equipment`, `snapshot.ctx.weaponType` |
+| `TargetPanel` | `snapshot.targetDerivedStats`, `snapshot.ctx.targetStatuses`, `snapshot.ctx.targetStatusSource` |
+| `LiveStatePanel` | `snapshot.ctx.playerStates`, `snapshot.ctx.stackCounts`, `snapshot.ctx.classResources`, `snapshot.ctx.abilityTargetMode`, `snapshot.ctx.activeForm`, `snapshot.ctx.activeSummons` |
+| `ReligionPanel` | `snapshot.ctx.religion`, `snapshot.ctx.classData` |
+
+Panels render subsets of these slices. Each panel's top-level `useMemo` should depend on exactly the slices listed. This table is added to during D.0.4 panel rebuild and maintained as the panel set evolves.
 
 ---
 
