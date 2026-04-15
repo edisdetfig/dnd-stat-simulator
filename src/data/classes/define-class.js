@@ -89,10 +89,10 @@ export function defineClass(classData) {
       issues.push(`${path}.slots: unknown slot type "${ability.slots.type}"`);
     }
 
-    if (ability.type === "merged_spell" && Array.isArray(ability.components)) {
-      for (const compId of ability.components) {
+    if (Array.isArray(ability.requires)) {
+      for (const compId of ability.requires) {
         if (!idIndex.has(compId)) {
-          issues.push(`${path}.components: unknown component spell id "${compId}"`);
+          issues.push(`${path}.requires: unknown spell id "${compId}"`);
         }
       }
     }

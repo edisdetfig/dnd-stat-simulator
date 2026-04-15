@@ -155,12 +155,12 @@ describe('defineClass — failure modes', () => {
       // ice_bolt is intentionally missing
       {
         id: "steam_bolt",
-        type: "merged_spell",
+        type: "spell",
         name: "Steam Bolt",
-        components: ["fire_bolt", "ice_bolt"],
+        requires: ["fire_bolt", "ice_bolt"],
       },
     ];
-    expect(() => defineClass(cls)).toThrow(/unknown component spell id "ice_bolt"/);
+    expect(() => defineClass(cls)).toThrow(/unknown spell id "ice_bolt"/);
   });
 
   it('accepts all_attributes under pre_curve_flat and attribute_multiplier', () => {

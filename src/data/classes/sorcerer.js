@@ -534,11 +534,11 @@ export const sorcerer = ({
   mergedSpells: [
     {
       id: "aqua_prison",
-      type: "merged_spell",
+      type: "spell",
       name: "Aqua Prison",
       desc: "Launch a water orb that engulfs the target, dealing 15(1.0) ice magical damage, trapping them, and lifting them into the air for 3 seconds. The orb bursts instantly upon taking physical damage, inflicting wet for 2 seconds. Wet: The target loses 20% move speed bonus and jump height is reduced by 30%.",
       activation: "cast",
-      components: ["water_bolt", "levitation"],
+      requires: ["water_bolt", "levitation"],
       targeting: "enemy",
       tags: ["water"],
       damage: [
@@ -563,11 +563,11 @@ export const sorcerer = ({
 
     {
       id: "electric_dash",
-      type: "merged_spell",
+      type: "spell",
       name: "Electric Dash",
       desc: "Transform into a lightning orb and quickly move to the selected location, electrifying all targets along the path and dealing 10(1.0) lightning magical damage. Upon reaching the destination, unleash a lightning strike, dealing 15(1.0) lightning magical damage to nearby targets. The caster is immune to physical attacks while moving but remains affected by area magic.",
       activation: "cast",
-      components: ["lightning_bolt", "vortex"],
+      requires: ["lightning_bolt", "vortex"],
       targeting: "self",
       tags: ["lightning"],
       damage: [
@@ -589,11 +589,11 @@ export const sorcerer = ({
 
     {
       id: "elemental_bolt",
-      type: "merged_spell",
+      type: "spell",
       name: "Elemental Bolt",
       desc: "Deal 50(1.0) Fire/Ice magical damage to the target, inflicting burn over 3 seconds and frostbite for 2 seconds.",
       activation: "cast",
-      components: ["water_bolt", "fire_arrow"],
+      requires: ["water_bolt", "fire_arrow"],
       targeting: "enemy",
       tags: ["fire", "frost"],
       damage: [
@@ -621,11 +621,11 @@ export const sorcerer = ({
 
     {
       id: "flamefrost_spear",
-      type: "merged_spell",
+      type: "spell",
       name: "Flamefrost Spear",
       desc: "Throw a Flamefrost Spear, dealing 30(1.0) fire magical damage and 30(1.0) ice magical damage to the target, inflicting burn over 3 seconds and frostbite for 3 seconds. The spear pierces through targets, dealing damage to all it hits.",
       activation: "cast",
-      components: ["ice_spear", "flamestrike"],
+      requires: ["ice_spear", "flamestrike"],
       targeting: "enemy",
       tags: ["fire", "frost", "projectile"],
       damage: [
@@ -654,11 +654,11 @@ export const sorcerer = ({
 
     {
       id: "flamethrower",
-      type: "merged_spell",
+      type: "spell",
       name: "Flamethrower",
       desc: "Blast radial flames forward for 5 seconds, dealing 25(1.0) fire magical damage per second and inflicting burn over 3 seconds on targets.",
       activation: "cast",
-      components: ["fire_arrow", "windblast"],
+      requires: ["fire_arrow", "windblast"],
       targeting: "enemy",
       tags: ["fire", "beam"],
       duration: { base: 5, type: "other" },
@@ -678,11 +678,11 @@ export const sorcerer = ({
 
     {
       id: "frost_breath",
-      type: "merged_spell",
+      type: "spell",
       name: "Frost Breath",
       desc: "Exhale an icy gust of breath forward, dealing 20(1.0) ice magical damage to all targets and inflicting frostbite for 2 seconds. The affected area remains frozen for 3 seconds, causing targets on the ice to lose 10% move speed bonus.",
       activation: "cast",
-      components: ["glaciate", "windblast"],
+      requires: ["glaciate", "windblast"],
       targeting: "enemy",
       tags: ["frost"],
       damage: [
@@ -711,11 +711,11 @@ export const sorcerer = ({
 
     {
       id: "frost_lightning",
-      type: "merged_spell",
+      type: "spell",
       name: "Frost Lightning",
       desc: "Fires a lightning bolt, dealing 15(1.0) lightning magical damage and electrifying for 1 second. The bolt freezes shortly after, inflicting 15(1.0) ice magical damage and immobilizing the target for 1.5 seconds.",
       activation: "cast",
-      components: ["lightning_bolt", "ice_spear"],
+      requires: ["lightning_bolt", "ice_spear"],
       targeting: "enemy",
       tags: ["lightning", "frost"],
       damage: [
@@ -737,11 +737,11 @@ export const sorcerer = ({
 
     {
       id: "icebound",
-      type: "merged_spell",
+      type: "spell",
       name: "Icebound",
       desc: "Upon casting, become frozen for 6 seconds, becoming immune to all damage and gaining a 50% cooldown reduction bonus. The ice can be shattered by a powerful impact.",
       activation: "cast",
-      components: ["stone_skin", "glaciate"],
+      requires: ["stone_skin", "glaciate"],
       targeting: "self",
       tags: ["frost"],
       duration: { base: 6, type: "buff" },
@@ -753,11 +753,11 @@ export const sorcerer = ({
 
     {
       id: "lightning_storm",
-      type: "merged_spell",
+      type: "spell",
       name: "Lightning Storm",
       desc: "Channel for 6 seconds to summon a lightning storm, dealing 10(1.0) lightning magical damage per second and electrifying all targets within the area.",
       activation: "cast",
-      components: ["lightning_sphere", "levitation"],
+      requires: ["lightning_sphere", "levitation"],
       targeting: "enemy",
       tags: ["lightning", "channel"],
       duration: { base: 6, type: "other" },
@@ -779,11 +779,11 @@ export const sorcerer = ({
 
     {
       id: "lightning_vortex",
-      type: "merged_spell",
+      type: "spell",
       name: "Lightning Vortex",
       desc: "Deal 20(1.0) lightning/air magical damage to all targets within the area, push them back, and electrify them for 2 seconds.",
       activation: "cast",
-      components: ["lightning_sphere", "vortex"],
+      requires: ["lightning_sphere", "vortex"],
       targeting: "enemy",
       tags: ["lightning", "air"],
       damage: [
@@ -805,11 +805,11 @@ export const sorcerer = ({
 
     {
       id: "mud_shield",
-      type: "merged_spell",
+      type: "spell",
       name: "Mud Shield",
       desc: "Create a mud shield in front of the caster for 7 seconds, blocking all damage. The shield remains fixed in its initial direction.",
       activation: "cast",
-      components: ["water_bolt", "stone_skin"],
+      requires: ["water_bolt", "stone_skin"],
       targeting: "self",
       tags: ["water", "earth"],
       duration: { base: 7, type: "other" },
@@ -820,11 +820,11 @@ export const sorcerer = ({
 
     {
       id: "plasma_blast",
-      type: "merged_spell",
+      type: "spell",
       name: "Plasma Blast",
       desc: "After 4 seconds, the caster explodes, inflicting 50(1.0) fire/lightning magical damage to all nearby targets, inflicting burn for 3 seconds, and electrocuting them for 2 seconds.",
       activation: "cast",
-      components: ["fire_orb", "lightning_sphere"],
+      requires: ["fire_orb", "lightning_sphere"],
       targeting: "enemy",
       tags: ["fire", "lightning"],
       castTime: 4,
@@ -852,11 +852,11 @@ export const sorcerer = ({
 
     {
       id: "summon_lava_elemental",
-      type: "merged_spell",
+      type: "spell",
       name: "Summon Lava Elemental",
       desc: "Summon a Lava Elemental for 18 seconds. The Lava Elemental deals 10(0.5) fire magical damage per second to nearby enemies and leaves a trail of lava that deals 10(0.5) fire magical damage per second.",
       activation: "cast",
-      components: ["fire_orb", "summon_earth_elemental"],
+      requires: ["fire_orb", "summon_earth_elemental"],
       targeting: "self",
       tags: ["fire", "summon"],
       summon: {
@@ -872,11 +872,11 @@ export const sorcerer = ({
 
     {
       id: "thorn_of_earth",
-      type: "merged_spell",
+      type: "spell",
       name: "Thorn of Earth",
       desc: "Erupts a thorn of earth, dealing 30(1.0) earth magical damage to all targets within the area.",
       activation: "cast",
-      components: ["eruption", "levitation"],
+      requires: ["eruption", "levitation"],
       targeting: "enemy",
       tags: ["earth"],
       damage: [
@@ -886,11 +886,11 @@ export const sorcerer = ({
 
     {
       id: "wall_of_fire",
-      type: "merged_spell",
+      type: "spell",
       name: "Wall of Fire",
       desc: "Erupt a wall of fire for 8 seconds, dealing 10(1.0) earth/fire magical damage instantly and 20(1.0) fire magical damage per second to all targets it touches and inflicting burn over 3 seconds.",
       activation: "cast",
-      components: ["flamestrike", "eruption"],
+      requires: ["flamestrike", "eruption"],
       targeting: "enemy",
       tags: ["fire", "earth"],
       duration: { base: 8, type: "other" },
