@@ -39,7 +39,17 @@ Ordered by pipeline production. Each contract notes where it is produced and whe
   selectedSkills: string[],
   selectedSpells: string[],
   selectedMusics: string[],
-  equipment: { head, chest, legs, ... },
+
+  equipment: {
+    // Armor slots — single loadout, independent of active weapon slot
+    head, chest, legs, feet, hands, back, ring1, ring2, necklace,
+    // Two weapon loadouts; user configures both, one is active at a time
+    weaponSlots: {
+      slot1: { primary: Weapon | null, offhand: Weapon | Shield | null },
+      slot2: { primary: Weapon | null, offhand: Weapon | Shield | null },
+    },
+  },
+  activeWeaponSlot: "slot1" | "slot2",    // user toggle — which loadout is currently held
 
   activeBuffs: Set<string>,        // includes wild-skill IDs when toggled — the wild-skill collector reads from here
   activeForm: string | null,
@@ -62,10 +72,9 @@ Ordered by pipeline production. Each contract notes where it is produced and whe
   targetStatusSource: { [statusType]: abilityId },
 
   hpPercent: number,
-  weaponType: string | null,
-  isDualWield: boolean,
-  isUnarmed: boolean,
-  isTwoHanded: boolean,
+  // Weapon-state fields DERIVED at Stage 0 from equipment.weaponSlots[activeWeaponSlot]:
+  weaponType: string | null,              // specific weapon kind: "sword" | "axe" | "spellbook" | ...
+  weaponCategory: "unarmed" | "one_handed" | "two_handed" | "dual_wield",
   environment: string | null,
 
   activeAbilityIds: Set<string>,  // populated at Stage 0's end
@@ -77,6 +86,17 @@ Ordered by pipeline production. Each contract notes where it is produced and whe
   incomingSource?: { className, abilityId },
 }
 ```
+
+**Weapon-category derivation** (Stage 0 computes from the active slot's contents):
+
+| Active slot contents | `weaponCategory` | `weaponType` |
+|---|---|---|
+| primary = null, offhand = null | `unarmed` | `null` |
+| primary.handedness = two_handed | `two_handed` | primary's type |
+| primary present, offhand is a weapon | `dual_wield` | primary's type |
+| primary present, offhand is a shield (or null) | `one_handed` | primary's type |
+
+Shield presence is orthogonal — `ctx.equipment.weaponSlots[ctx.activeWeaponSlot].offhand?.type === "shield"` is what a shield-specific condition checks, independent of `weaponCategory`.
 
 ### 2.2 · `Effect`
 
@@ -521,7 +541,7 @@ Authoritative contract for which `Snapshot` / `ctx` slice each consumer reads. W
 | `PerksPanel` | `snapshot.ctx.selectedPerks`, `snapshot.ctx.classData.perks` |
 | `SkillsPanel` | `snapshot.ctx.selectedSkills`, `snapshot.ctx.classData.skills` |
 | `SpellsPanel` | `snapshot.ctx.selectedSpells`, `snapshot.ctx.grantedSpells`, `snapshot.ctx.classData.spells`, `snapshot.ctx.classData.mergedSpells` |
-| `GearPanel` | `snapshot.ctx.equipment`, `snapshot.ctx.weaponType` |
+| `GearPanel` | `snapshot.ctx.equipment`, `snapshot.ctx.activeWeaponSlot`, `snapshot.ctx.weaponType`, `snapshot.ctx.weaponCategory` |
 | `TargetPanel` | `snapshot.targetDerivedStats`, `snapshot.ctx.targetStatuses`, `snapshot.ctx.targetStatusSource` |
 | `LiveStatePanel` | `snapshot.ctx.playerStates`, `snapshot.ctx.stackCounts`, `snapshot.ctx.classResources`, `snapshot.ctx.abilityTargetMode`, `snapshot.ctx.activeForm`, `snapshot.ctx.activeSummons` |
 | `ReligionPanel` | `snapshot.ctx.religion`, `snapshot.ctx.classData` |
