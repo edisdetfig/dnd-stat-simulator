@@ -1,5 +1,5 @@
 // Ranger — v3 class definition.
-// Authored from docs/classes/ranger.csv. See engine_requirements_phase_1_3.md.
+// Authored from docs/classes/ranger.csv.
 
 export const ranger = ({
   id: "ranger",

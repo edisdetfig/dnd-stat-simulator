@@ -65,9 +65,8 @@ npm test                # Run vitest
 ```
 
 **Tracker + architecture docs:**
-- `docs/engine_requirements_phase_1_3.md` — §A–G engine feature tracker (27 §D rows)
+- `docs/engine_architecture.md` — authoritative engine reference (ctx shape, contracts, stage pipeline, module map, public API; §6 D-row tracker D.1–D.26; §8 open items)
 - `docs/vocabulary.md` — controlled vocabulary (enum values, conventions, tags, direction semantics)
-- `docs/shape_examples.md` — class-agnostic worked examples of v3 ability patterns
 
 **Two-namespace stat model:**
 - STAT_META keys = gear/perk additive contributions (e.g., `physicalDamageReductionBonus`, `maxHealthBonus`)

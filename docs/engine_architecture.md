@@ -634,7 +634,6 @@ Tracked in project memory; not part of the core engine contract:
 
 - `passives` schema cleanup (split into stat-like + flags[] + desc-only)
 - `passives.radius` consistent authoring audit
-- Form-attack `id:` convention (triggered-on-need per D.21/D.22 tracker note)
 - `grantsSpells` auto-display rule (UI behavior)
 - Ale / consumable modeling
 - Incoming-damage panel UI (engine pipeline supports it; panel itself is a discrete task)

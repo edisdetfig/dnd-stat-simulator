@@ -1,5 +1,5 @@
 // Barbarian — v3 class definition.
-// Authored from docs/classes/barbarian.csv. See engine_requirements_phase_1_3.md.
+// Authored from docs/classes/barbarian.csv.
 
 export const barbarian = ({
   id: "barbarian",
