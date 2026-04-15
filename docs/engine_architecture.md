@@ -61,7 +61,7 @@ Ordered by pipeline production. Each contract notes where it is produced and whe
   classResources: { [resourceId]: number },
   abilityTargetMode: { [abilityId]: "self" | "enemy" | "both" },
 
-  playerStates: Set<string>,        // scenario toggles: in_combat, defensive_stance, behind_target, drunk, frenzy_active, casting, reloading, bow_drawn, playing_music, dual_casting, hiding, crouching
+  playerStates: Set<string>,        // scenario toggles: in_combat, defensive_stance, behind_target, drunk, frenzy, casting, reloading, bow_drawn, playing_music, dual_casting, hiding, crouching
 
   selectedTiers: { [abilityId]: "poor" | "good" | "perfect" },
   targetStatuses: Set<string>,

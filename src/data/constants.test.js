@@ -80,7 +80,7 @@ describe('membership sets', () => {
       "hiding", "crouching", "defensive_stance", "casting",
       "reloading", "bow_drawn", "playing_music",
       "drunk", "dual_casting",
-      "in_combat", "behind_target", "frenzy_active",
+      "in_combat", "behind_target", "frenzy",
     ]) expect(PLAYER_STATES.has(s)).toBe(true);
     expect(PLAYER_STATES.size).toBe(12);
   });

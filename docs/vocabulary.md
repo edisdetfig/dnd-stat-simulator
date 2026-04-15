@@ -294,7 +294,7 @@ Per coordinator, `water` and `underwater` collapse to a single `water` value. Th
 
 ## Category 9: `condition.state` (player states)
 
-**Closed set.** `hiding, crouching, defensive_stance, casting, reloading, bow_drawn, playing_music, drunk, dual_casting, in_combat, behind_target, frenzy_active`.
+**Closed set.** `hiding, crouching, defensive_stance, casting, reloading, bow_drawn, playing_music, drunk, dual_casting, in_combat, behind_target, frenzy`.
 
 | Value              | Cited |
 |--------------------|-------|
@@ -309,7 +309,7 @@ Per coordinator, `water` and `underwater` collapse to a single `water` value. Th
 | `dual_casting`     | `sorcerer` Class Notes L8, `sorcerer.csv:L31 (Spell Stride)` |
 | `in_combat`        | `fighter.csv:L34 (Veteran Instinct)` |
 | `behind_target`    | `rogue.csv:L23 (Back Attack "When attacking a target from behind")` |
-| `frenzy_active`    | `druid.panther_rush` (Wild Skill: Rush — sets `frenzy: true`) |
+| `frenzy`           | emitter `druid.panther_rush` (Wild Skill: Rush sets `frenzy: true`); consumer `druid.panther` Neckbite (silence appliesStatus gated on frenzy) |
 
 **Removed.**
 - `blocking` — collapsed into `defensive_stance` per Fighter sim note at `fighter.csv:L25` ("defensive stance... is when you are blocking").
@@ -320,6 +320,8 @@ Per coordinator, `water` and `underwater` collapse to a single `water` value. Th
 - `attacking` — trigger-event context, not a persistent state.
 - `summoned` — collapse to `effect_active` against the summon ability.
 - `debuffed` — collapse to `effect_active`.
+
+**Rule: a state belongs in this enum only if at least one `condition: { type: "player_state", state: "X" }` reads it.** A `stateChange: { X: true }` emitter without a consumer is dead emit — drop the emitter or wire a consumer. States used purely as user-facing scenario toggles (no emitter) are valid; states emitted but never read are not.
 
 **Note on `behind_target`.** Used by `rogue.csv:L23 (Back Attack)` which grants 30% physical damage bonus when true. Authored as a `physicalDamageBonus` effect with `condition: { type: "player_state", state: "behind_target" }`. The former proposed `backstabPower` stat is dropped.
 
@@ -516,18 +518,15 @@ Utility additions:
 
 ---
 
-## Category 19: `triggers[].stateChange` keys (open)
+## Category 19: `triggers[].stateChange` keys
 
-Keys flipped by a trigger, e.g. `{ spiritual: true }`. Open-ended by design.
+Keys flipped by a trigger emitter. **Must be a subset of Category 9 PLAYER_STATES** — emitting a key with no consumer (or no enum entry) is dead emit.
 
-| Key                  | Cited |
-|----------------------|-------|
-| `spiritual`          | `druid.csv:L20 (Dreamwalk)` |
-| `frenzy`             | `druid.csv:L54 (Panther Rush)` |
-| `drunk`              | `bard.csv:L25 (Jolly Time)`, `bard.csv:L39 (Party Maker — immunity)` |
-| `defensive_stance`   | `fighter.csv:L25 (Barricade)` |
-| `momentum_stacks`    | `fighter.csv:L48 (Sprint)` |
-| `hiding`             | `rogue.csv:L41 (Hide)` |
+| Key       | Emitter (source)                              | Consumer (cite)                                                  |
+|-----------|-----------------------------------------------|------------------------------------------------------------------|
+| `frenzy`  | `druid.panther_rush` (Wild Skill: Rush)       | `druid.panther` Neckbite (silence appliesStatus condition)       |
+| `drunk`   | `bard.jolly_time` (drinking ale)              | `bard.jolly_time` (+5 MS), `cleric.brewmaster` (+10 STR)         |
+| `hiding`  | `rogue.hide` (skill)                          | `rogue.stealth` (perk)                                           |
 
 ---
 

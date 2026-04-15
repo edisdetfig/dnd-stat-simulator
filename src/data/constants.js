@@ -100,7 +100,7 @@ export const PLAYER_STATES = new Set([
   "dual_casting",
   "in_combat",
   "behind_target",
-  "frenzy_active",
+  "frenzy",
 ]);
 
 // ── Weapon types (spec §3 condition `weapon_type` values) ──

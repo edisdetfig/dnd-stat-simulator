@@ -477,12 +477,6 @@ export const fighter = ({
         ],
         desc: "Momentum stacks — +10 move speed per stack. Starts at 3, decays by 1 every 2s.",
       },
-      triggers: [
-        {
-          desc: "Activates Sprint — sets momentum_stacks flag.",
-          stateChange: { momentum_stacks: true },
-        },
-      ],
     },
 
     {

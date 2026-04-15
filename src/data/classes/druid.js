@@ -28,11 +28,10 @@ export const druid = ({
       duration: { base: 2, type: "buff" },
       triggers: [
         {
-          desc: "Fires on damage taken (18s CD) — +5 magical power, enters spiritual state.",
+          desc: "Fires on damage taken (18s CD) — +5 magical power for 2s; spiritual behavior (no collision, no attacks/skills, can cast) is descriptive only.",
           effects: [
             { stat: "magicalPower", value: 5, phase: "post_curve" },
           ],
-          stateChange: { spiritual: true },
         },
       ],
       passives: {
@@ -477,15 +476,14 @@ export const druid = ({
             damage: [
               { base: 25, scaling: 1.0, damageType: "physical", target: "enemy" },
             ],
-            frenziedEffect: {
-              appliesStatus: [
-                {
-                  type: "silence",
-                  duration: { base: 2, type: "debuff" },
-                  desc: "Silence — only applied while frenzied.",
-                },
-              ],
-            },
+            appliesStatus: [
+              {
+                type: "silence",
+                duration: { base: 2, type: "debuff" },
+                desc: "Silence — only while frenzied.",
+                condition: { type: "player_state", state: "frenzy" },
+              },
+            ],
           },
         ],
         wildSkill: {
