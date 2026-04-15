@@ -75,15 +75,14 @@ describe('membership sets', () => {
     expect(STATUS_TYPES.size).toBe(10);
   });
 
-  it('PLAYER_STATES contains all fourteen spec states', () => {
+  it('PLAYER_STATES contains all twelve spec states', () => {
     for (const s of [
       "hiding", "crouching", "defensive_stance", "casting",
-      "reloading", "bow_drawn", "playing_music", "performing",
-      "drunk", "alcohol_consumed", "dual_casting",
+      "reloading", "bow_drawn", "playing_music",
+      "drunk", "dual_casting",
       "in_combat", "behind_target", "frenzy_active",
     ]) expect(PLAYER_STATES.has(s)).toBe(true);
-    expect(PLAYER_STATES.has("blocking")).toBe(false);
-    expect(PLAYER_STATES.size).toBe(14);
+    expect(PLAYER_STATES.size).toBe(12);
   });
 
   it('WEAPON_TYPES contains all 18 weapon kinds and virtual categories', () => {

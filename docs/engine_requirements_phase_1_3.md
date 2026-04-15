@@ -37,7 +37,6 @@
 | Change | Rationale | First use |
 |---|---|---|
 | Add `in_combat` | New state. | `fighter.veteran_instinct` |
-| Add `performing` | New state; distinct from `playing_music` (performing = mid-performance with tier resolution). | `bard.war_song`, `bard.encore` |
 | Add `behind_target` | Replaces proposed `backstabPower` stat per vocab lock. | `rogue.back_attack` |
 | Remove `blocking` | Collapsed into `defensive_stance`. | Fighter perks reference `defensive_stance`. |
 
@@ -181,7 +180,7 @@ Inter-source stacking (e.g., same status type from two same-class, same-form abi
 
 ## E. UI plumbing (LiveStatePanel / TargetEditor)
 
-- Live State toggles for new player states: `in_combat`, `performing`, `behind_target`.
+- Live State toggles for new player states: `in_combat`, `behind_target`.
 - Target Editor creature-type selector (undead / demon).
 - Form toggle for each transformation (+1 "no form" default).
 - Frenzy toggle (Druid Panther Rush sets frenzy state).

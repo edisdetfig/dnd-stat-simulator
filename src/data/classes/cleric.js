@@ -53,7 +53,7 @@ export const cleric = ({
       effects: [
         {
           stat: "str", value: 10, phase: "pre_curve_flat",
-          condition: { type: "player_state", state: "alcohol_consumed" },
+          condition: { type: "player_state", state: "drunk" },
         },
         { stat: "drunkDurationBonus", value: 0.50, phase: "post_curve" },
       ],

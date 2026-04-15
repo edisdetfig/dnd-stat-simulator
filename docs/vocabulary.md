@@ -294,7 +294,7 @@ Per coordinator, `water` and `underwater` collapse to a single `water` value. Th
 
 ## Category 9: `condition.state` (player states)
 
-**Closed set.** `hiding, crouching, defensive_stance, casting, reloading, bow_drawn, playing_music, drunk, dual_casting, in_combat, performing, behind_target`.
+**Closed set.** `hiding, crouching, defensive_stance, casting, reloading, bow_drawn, playing_music, drunk, dual_casting, in_combat, behind_target, frenzy_active`.
 
 | Value              | Cited |
 |--------------------|-------|
@@ -305,11 +305,11 @@ Per coordinator, `water` and `underwater` collapse to a single `water` value. Th
 | `reloading`        | `ranger.csv:L25 (Crossbow Mastery)` |
 | `bow_drawn`        | `ranger.csv:L26 (Kinesthesia)` |
 | `playing_music`    | `bard.csv:L27 (Melodic Protection)`, `bard.csv:L37 (Encore)` |
-| `drunk`            | `bard.csv:L25 (Jolly Time)` |
+| `drunk`            | `bard.csv:L25 (Jolly Time)`, `cleric.csv (Brewmaster)` — universal "drank alcohol" state across all classes |
 | `dual_casting`     | `sorcerer` Class Notes L8, `sorcerer.csv:L31 (Spell Stride)` |
 | `in_combat`        | `fighter.csv:L34 (Veteran Instinct)` |
-| `performing`       | `bard.csv:L33 (War Song "A successful performance")`, `bard.csv:L37 (Encore "active music buffs")` |
 | `behind_target`    | `rogue.csv:L23 (Back Attack "When attacking a target from behind")` |
+| `frenzy_active`    | `barbarian` Frenzy / `druid.panther_rush` — buff-state toggle |
 
 **Removed.**
 - `blocking` — collapsed into `defensive_stance` per Fighter sim note at `fighter.csv:L25` ("defensive stance... is when you are blocking").

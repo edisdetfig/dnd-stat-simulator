@@ -369,7 +369,7 @@ Effect gated on a user-toggleable player state. The user declares the state in U
 
 **Pipeline**: `evaluateCondition` reads `ctx.playerStates[state]`. The Live State panel exposes every PLAYER_STATES member as a toggle so authors don't need per-state UI wiring.
 
-**When to use**: Any effect that says "while [crouching|hiding|blocking|in combat|performing|etc.]".
+**When to use**: Any effect that says "while [crouching|hiding|drunk|in combat|defensive stance|etc.]".
 
 ---
 
