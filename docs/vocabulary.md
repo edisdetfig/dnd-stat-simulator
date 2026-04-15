@@ -309,7 +309,7 @@ Per coordinator, `water` and `underwater` collapse to a single `water` value. Th
 | `dual_casting`     | `sorcerer` Class Notes L8, `sorcerer.csv:L31 (Spell Stride)` |
 | `in_combat`        | `fighter.csv:L34 (Veteran Instinct)` |
 | `behind_target`    | `rogue.csv:L23 (Back Attack "When attacking a target from behind")` |
-| `frenzy_active`    | `barbarian` Frenzy / `druid.panther_rush` — buff-state toggle |
+| `frenzy_active`    | `druid.panther_rush` (Wild Skill: Rush — sets `frenzy: true`) |
 
 **Removed.**
 - `blocking` — collapsed into `defensive_stance` per Fighter sim note at `fighter.csv:L25` ("defensive stance... is when you are blocking").
