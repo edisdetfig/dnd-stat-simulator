@@ -49,7 +49,7 @@ Essential rules referenced throughout:
 20. [`example_ability_modifiers_by_tag`](#20-example_ability_modifiers_by_tag) — abilityModifiers targeting tagged abilities
 21. [`example_transformation_with_form`](#21-example_transformation_with_form) — Transformation with form.attacks + wildSkill
 22. [`example_music_with_tiers`](#22-example_music_with_tiers) — Music with performanceTiers
-23. [`example_merged_spell`](#23-example_merged_spell) — Merged spell with components + dual-element damage
+23. [`example_merged_spell`](#23-example_merged_spell) — Merged spell with `requires[]` + dual-element damage
 24. [`example_summon_with_caster_effects`](#24-example_summon_with_caster_effects) — Summon conferring effects on caster
 25. [`example_true_damage_source`](#25-example_true_damage_source) — trueDamage flag on a damage source
 
@@ -66,7 +66,7 @@ Flat stat bonus applied additively before curve evaluation. The simplest shape.
   // and by grantsSpells, afterEffect.removedBy, abilityModifiers.target, etc.
   id: "example_passive_stat_perk",
 
-  // Ability category. One of: perk | skill | spell | transformation | music | merged_spell.
+  // Ability category. One of: perk | skill | spell | transformation | music.
   // Determines which container list on the class the ability lives in.
   // See vocabulary.md Category 1.
   type: "perk",
@@ -1066,7 +1066,7 @@ Transformation ability that shifts the character into a new form with replacemen
             target: "enemy",
           },
         ],
-        // Optional frenziedEffect — applies when ctx.frenzyActive is true.
+        // Optional frenziedEffect — applies when ctx.playerStates.frenzy_active is true.
         // See vocabulary.md Category 29.
         frenziedEffect: {
           // Additional bleed status applied only when frenzied.
@@ -1112,7 +1112,7 @@ Transformation ability that shifts the character into a new form with replacemen
 }
 ```
 
-**Pipeline**: `collectTransformationEffects` reads `ctx.activeForm`. When user toggles the transformation active, `activeForm` is set; condition-gated effects (`form_active`) apply. Form attacks and wildSkill surface as replacement ability options in UI. `frenzyActive` separately gates `frenziedEffect` branches on form attacks.
+**Pipeline**: the transformations collector reads `ctx.activeForm`. When the user toggles the transformation active, `activeForm` is set; condition-gated effects (`form_active`) apply. Form attacks and wildSkill surface as replacement ability options in UI. `ctx.playerStates.frenzy_active` separately gates `frenziedEffect` branches on form attacks.
 
 **When to use**: Druid-style shapeshifts, Warlock Blood Pact's demon form, any "replace your skills with form-specific ones" mechanic.
 
@@ -1188,27 +1188,27 @@ Music ability with performance tiers (poor / good / perfect). Tier-specific effe
 
 ## 23. `example_merged_spell`
 
-Merged spell that combines two component spells. Availability derives from both components being equipped in spell memory; merged spell carries dual-element damage.
+Merged spell that combines two component spells. Availability derives from every entry in `requires[]` being in spell memory; merged spell carries dual-element damage. Authored in the class's `mergedSpells: []` array (separate from `spells: []` for visual clarity), but structurally a regular spell with a `requires[]` availability gate.
 
 ```js
 {
   id: "example_merged_spell",
-  type: "merged_spell",
+  type: "spell",
   name: "Example Merged Spell",
   desc: "Combines two component spells into a dual-element projectile dealing fire + ice damage, applying burn and frostbite.",
   tier: 3,
 
-  // No memoryCost — merged spells don't consume additional slots beyond their components.
+  // No memoryCost — merged spells don't consume additional slots beyond their requires entries.
 
   activation: "cast",
   targeting: "enemy",
   // Cost is typically cooldown-type for merged spells (Sorcerer pattern).
   cost: { type: "cooldown", value: 18 },
 
-  // components: [componentSpellIdA, componentSpellIdB].
-  // Merged spell becomes available when BOTH referenced spells are in selectedSpells.
-  // See vocabulary.md Category 31 and ability_data_map_v2.md §3.
-  components: ["example_component_fire_spell", "example_component_frost_spell"],
+  // requires: [componentSpellIdA, componentSpellIdB].
+  // Merged spell becomes available when EVERY referenced spell is in selectedSpells.
+  // See vocabulary.md Category 31.
+  requires: ["example_component_fire_spell", "example_component_frost_spell"],
 
   // Damage array carries TWO entries — one per element. Each scales on MPB
   // (universal) and on its own type bonus (specific).
@@ -1264,7 +1264,7 @@ Merged spell that combines two component spells. Availability derives from both 
 }
 ```
 
-**Pipeline**: `deriveAvailableMergedSpells` walks the class's `merged_spell` list; any merged spell whose components are ALL in `selectedSpells` becomes available in UI. Cooldown comes from the `cost.value` (cooldown-type). Each damage entry and status is applied independently — two separate damage instances per cast.
+**Pipeline**: Stage 0 walks the class's `mergedSpells[]` array; any merged spell whose `requires[]` are ALL in `selectedSpells` is added to `ctx.grantedSpells` alongside contributions from active abilities' `grantsSpells`. Cooldown comes from the `cost.value` (cooldown-type). Each damage entry and status is applied independently — two separate damage instances per cast.
 
 **When to use**: Sorcerer-style elemental combinations. Any spell authored as "combines X + Y into Z."
 

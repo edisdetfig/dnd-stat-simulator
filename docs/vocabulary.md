@@ -47,7 +47,7 @@ Rules that govern every vocabulary decision below.
 
 11. **Plural/verb-form canonicalization.** Canonical form for verb-stem enum members is the infinitive: `immobilize` (not `immobilized`), `trap` (not `trapped`). Status names that are in-game nouns keep their noun form (`burn`, `frostbite`, `poison`).
 
-12. **Ability IDs and spell IDs are referential.** `grantsSpells`, `abilityModifiers.target` (string form), `healEffects.source`, `afterEffect.removedBy`, `merged_spell.components`, `condition.effectId` carry string identifiers that must resolve to a real ability's `id`. They are not controlled vocabulary; this document does not enumerate them.
+12. **Ability IDs and spell IDs are referential.** `grantsSpells`, `abilityModifiers.target` (string form), `healEffects.source`, `afterEffect.removedBy`, `requires` (on merged spells), `condition.effectId` carry string identifiers that must resolve to a real ability's `id`. They are not controlled vocabulary; this document does not enumerate them.
 
 13. **Two-direction modifier framework.** Stat modifiers that scale temporal values are labeled by direction:
 
@@ -96,7 +96,7 @@ Per-class × per-category count of distinct values contributed. `—` = zero con
 | 28 `summon.type`                  | —    | —    | —    | 1    | —    | —    | —    | 2    | 2    | —    |
 | 29 `form.attacks[]`               | —    | —    | —    | 3    | —    | —    | —    | —    | 1    | —    |
 | 30 `performanceTiers` names       | —    | 3    | —    | —    | —    | —    | —    | —    | —    | —    |
-| 31 `merged_spell.components`      | —    | —    | —    | —    | —    | —    | —    | 15   | —    | —    |
+| 31 merged spell `requires`        | —    | —    | —    | —    | —    | —    | —    | 15   | —    | —    |
 | 32 `duration.type`                | 3    | 2    | 3    | 3    | 3    | 1    | 3    | 3    | 3    | 2    |
 | 33 `duration.tags` (open)         | 1    | 1    | 1    | 2    | 0    | 0    | 2    | 4    | 3    | 3    |
 
@@ -115,7 +115,6 @@ All 10 classes contribute to ≥ 1 category. No class is silent.
 | `spell`          | casters — e.g. `warlock.csv:L48 (Bolt of Darkness)`, `cleric.csv:L46 (Protection)`, `wizard.csv:L46 (Zap)`, `sorcerer.csv:L46 (Water Bolt)`, `druid.csv:L40 (Nature's Touch)` |
 | `transformation` | `druid.csv:L53 (Bear)`, `druid.csv:L54 (Panther)`, `druid.csv:L55 (Chicken)`, `druid.csv:L56 (Rat)`, `druid.csv:L57 (Penguin)` |
 | `music`          | `bard.csv:L46..L64` (all 19 Bard musics) |
-| `merged_spell`   | `sorcerer.csv:L95..L155` (15 merged spells) |
 
 ---
 
@@ -699,9 +698,9 @@ Display-only flags. Authors should prefer `effects[]` where possible; `passives`
 
 ---
 
-## Category 31: `merged_spell.components` (reference — not vocabulary)
+## Category 31: merged spell `requires` (reference — not vocabulary)
 
-15 pairs recorded from `sorcerer.csv:L95..L155`. Each component is a spell ID. Pairs:
+15 pairs recorded from `sorcerer.csv:L95..L155`. Each entry in `requires[]` is a spell ID. A merged spell becomes available when every ID in its `requires[]` is in `selectedSpells`. Pairs:
 
 ```
 aqua_prison = [water_bolt, levitation]
