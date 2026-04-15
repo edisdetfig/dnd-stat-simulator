@@ -17,8 +17,8 @@ import {
 } from '../constants.js';
 
 const VALID_PHASES = new Set(Object.values(EFFECT_PHASES));
-const VALID_SLOT_TYPES = new Set(["spell", "shapeshift", "music"]);
-const ABILITY_CONTAINERS = ["perks", "skills", "spells", "transformations", "musics", "mergedSpells"];
+const VALID_SLOT_TYPES = new Set(["spell", "shapeshift"]);
+const ABILITY_CONTAINERS = ["perks", "skills", "spells", "transformations", "mergedSpells"];
 
 const VALID_MODIFIER_FIELDS = new Set(["duration", "cooldown", "castTime", "range", "aoeRadius", "cost"]);
 const VALID_MODIFIER_MODES = new Set(["multiply", "add"]);

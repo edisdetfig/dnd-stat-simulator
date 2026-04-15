@@ -1118,15 +1118,15 @@ Transformation ability that shifts the character into a new form with replacemen
 
 ---
 
-## 22. `example_music_with_tiers`
+## 22. `example_spell_with_tiers`
 
-Music ability with performance tiers (poor / good / perfect). Tier-specific effects vary; the UI defaults to perfect for the main stat sheet.
+Castable spell with performance tiers (poor / good / perfect). Bard-style abilities use this shape — structurally a spell that varies its effects by performance quality. Tier-specific effects vary; the UI defaults to perfect for the main stat sheet.
 
 ```js
 {
-  id: "example_music_with_tiers",
-  type: "music",
-  name: "Example Music",
+  id: "example_spell_with_tiers",
+  type: "spell",
+  name: "Example Tiered Spell",
   desc: "A tiered song that buffs nearby allies' move speed.",
   tier: 1,
   memoryCost: 2,
@@ -1134,14 +1134,13 @@ Music ability with performance tiers (poor / good / perfect). Tier-specific effe
   activation: "cast",
   targeting: "nearby_allies",
 
-  // Music ability uses `tags` to classify by instrument.
-  // Instrument tags (vocabulary.md Category 4) aren't enum-validated, but should
-  // follow convention (drum, flute, lute, lyre, etc.).
+  // Instrument tags (vocabulary.md Category 4) aren't enum-validated; follow
+  // convention (drum, flute, lute, lyre, etc.) when the spell represents a music.
   tags: ["song", "drum"],
 
   // performanceTiers: { poor, good, perfect }.
   // Each tier shape is an object with optional: effects, damage, heal, duration, appliesStatus.
-  // See vocabulary.md Category 30 and ability_data_map_v2.md §3.
+  // See vocabulary.md Category 30.
   performanceTiers: {
     poor: {
       duration: { base: 60, type: "buff" },
@@ -1180,9 +1179,9 @@ Music ability with performance tiers (poor / good / perfect). Tier-specific effe
 }
 ```
 
-**Pipeline**: UI provides a tier selector (poor/good/perfect) on any selected music ability. `ctx.selectedTiers[ability.id]` drives which tier's effects enter the pipeline. Defaults to `"perfect"` for new builds. Tier-bound effects skip the main `effects[]` field entirely when `performanceTiers` is present.
+**Pipeline**: UI provides a tier selector (poor/good/perfect) on any selected tiered spell. `ctx.selectedTiers[ability.id]` drives which tier's effects enter the pipeline. Defaults to `"perfect"` for new builds. Tier-bound effects skip the main `effects[]` field entirely when `performanceTiers` is present.
 
-**When to use**: Bard-style music with variable-quality performance outcomes.
+**When to use**: Bard-style abilities with variable-quality performance outcomes. Authored in `spells[]` like any cast spell; `performanceTiers` is an optional field that any spell can carry.
 
 ---
 

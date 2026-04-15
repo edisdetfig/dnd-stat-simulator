@@ -243,7 +243,7 @@ export const bard = ({
       name: "Music Memory 1",
       desc: "Allows for using up to 5 musics.",
       activation: "passive",
-      slots: { type: "music", count: 5 },
+      slots: { type: "spell", count: 5 },
     },
 
     {
@@ -252,16 +252,14 @@ export const bard = ({
       name: "Music Memory 2",
       desc: "Allows for using up to 5 musics.",
       activation: "passive",
-      slots: { type: "music", count: 5 },
+      slots: { type: "spell", count: 5 },
     },
   ],
 
-  spells: [],
-
-  musics: [
+  spells: [
     {
       id: "rousing_rhythms",
-      type: "music",
+      type: "spell",
       name: "Rousing Rhythms",
       desc: "Nearby allies gain 2 all attributes for 60/120/240 seconds, based on performance.",
       activation: "cast",
@@ -292,7 +290,7 @@ export const bard = ({
 
     {
       id: "din_of_darkness",
-      type: "music",
+      type: "spell",
       name: "Din of Darkness",
       desc: "Deal 1(0.16)/3(0.33)/5(0.5) dark magical damage to all enemies in an area around the performer, based on performance.",
       activation: "cast",
@@ -320,7 +318,7 @@ export const bard = ({
 
     {
       id: "beats_of_alacrity",
-      type: "music",
+      type: "spell",
       name: "Beats of Alacrity",
       desc: "The performer gains 4/5/6 additional move speed for 60/120/240 seconds. Song does not stack on itself.",
       activation: "cast",
@@ -345,7 +343,7 @@ export const bard = ({
 
     {
       id: "allegro",
-      type: "music",
+      type: "spell",
       name: "Allegro",
       desc: "You and nearby allies gain 3/4.5/6% action speed and 3/4.5/6% spell casting speed per second for 6 seconds based on your performance. Stacks up to 3 times.",
       activation: "cast",
@@ -391,7 +389,7 @@ export const bard = ({
 
     {
       id: "accelerando",
-      type: "music",
+      type: "spell",
       name: "Accelerando",
       desc: "You and nearby allies gain 1/3/5 additional move speed per second for 6 seconds based on your performance. Stacks up to 3 times.",
       activation: "cast",
@@ -434,7 +432,7 @@ export const bard = ({
 
     {
       id: "unchained_harmony",
-      type: "music",
+      type: "spell",
       name: "Unchained Harmony",
       desc: "Open all nearby doors/containers, including locked containers. It does not work for doors that require a special key.",
       activation: "cast",
@@ -446,7 +444,7 @@ export const bard = ({
 
     {
       id: "shriek_of_weakness",
-      type: "music",
+      type: "spell",
       name: "Shriek of Weakness",
       desc: "Nearby enemies lose 3/4/5 physical power and lose 3/6/9% physical damage reduction for 6/12/18 seconds.",
       activation: "cast",
@@ -480,7 +478,7 @@ export const bard = ({
 
     {
       id: "piercing_shrill",
-      type: "music",
+      type: "spell",
       name: "Piercing Shrill",
       desc: "Deal 20(0.1)/25(0.3)/30(0.5) physical damage to a target. Causes the echo sound effect on player targets for 3 seconds.",
       activation: "cast",
@@ -508,7 +506,7 @@ export const bard = ({
 
     {
       id: "banshees_howl",
-      type: "music",
+      type: "spell",
       name: "Banshees Howl",
       desc: "Reduces nearby enemy all attributes by 1/2/3 for 20 seconds. Does not work on Boss or Sub-boss monsters.",
       activation: "cast",
@@ -539,7 +537,7 @@ export const bard = ({
 
     {
       id: "song_of_silence",
-      type: "music",
+      type: "spell",
       name: "Song of Silence",
       desc: "Interrupts all skills, spells, and songs used by nearby enemies, and prevents them from using skills, casting spells, or playing songs for 1/1.5/2 seconds. Does not work on boss or sub-boss monsters.",
       activation: "cast",
@@ -567,7 +565,7 @@ export const bard = ({
 
     {
       id: "peacemaking",
-      type: "music",
+      type: "spell",
       name: "Peacemaking",
       desc: "All nearby players and monsters temporarily lose the will to fight when enchanted by the channel section of the song.",
       activation: "cast",
@@ -579,7 +577,7 @@ export const bard = ({
 
     {
       id: "lament_of_languor",
-      type: "music",
+      type: "spell",
       name: "Lament of Languor",
       desc: "Reduces the additional move speed by 10 of all enemy targets in the area for 6/12/18 seconds.",
       activation: "cast",
@@ -604,7 +602,7 @@ export const bard = ({
 
     {
       id: "chaotic_discord",
-      type: "music",
+      type: "spell",
       name: "Chaotic Discord",
       desc: "Excites nearby monsters to attack the nearest target except the performer.",
       activation: "cast",
@@ -616,7 +614,7 @@ export const bard = ({
 
     {
       id: "aria_of_alacrity",
-      type: "music",
+      type: "spell",
       name: "Aria of Alacrity",
       desc: "The performer gains 4/6/8% action speed for 60/120/240 seconds. Song does not stack on itself.",
       activation: "cast",
@@ -641,7 +639,7 @@ export const bard = ({
 
     {
       id: "tranquility",
-      type: "music",
+      type: "spell",
       name: "Tranquility",
       desc: "Restore 2(0.25) recoverable health of yourself and nearby allies every second while resting for 10/15/20 seconds.",
       activation: "cast",
@@ -667,7 +665,7 @@ export const bard = ({
 
     {
       id: "song_of_shadow",
-      type: "music",
+      type: "spell",
       name: "Song of Shadow",
       desc: "You and all nearby allies gain invisibility for 10/20/30 seconds. Invisibility breaks upon movement.",
       activation: "cast",
@@ -684,7 +682,7 @@ export const bard = ({
 
     {
       id: "harmonic_shield",
-      type: "music",
+      type: "spell",
       name: "Harmonic Shield",
       desc: "The performer gains 3/4/5% physical damage reduction and 3/4/5% magical damage reduction for 60/120/240 seconds.",
       activation: "cast",
@@ -718,7 +716,7 @@ export const bard = ({
 
     {
       id: "chorale_of_clarity",
-      type: "music",
+      type: "spell",
       name: "Chorale of Clarity",
       desc: "Restore 8 spell memory per second of all nearby allies who rest for 8/16/24 seconds.",
       activation: "cast",
@@ -750,7 +748,7 @@ export const bard = ({
 
     {
       id: "ballad_of_courage",
-      type: "music",
+      type: "spell",
       name: "Ballad of Courage",
       desc: "Grants the performer 5/7/10 physical power for 60/120/240 seconds. Song does not stack on itself.",
       activation: "cast",

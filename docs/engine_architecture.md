@@ -38,7 +38,6 @@ Ordered by pipeline production. Each contract notes where it is produced and whe
   selectedPerks: string[],
   selectedSkills: string[],
   selectedSpells: string[],
-  selectedMusics: string[],
 
   equipment: {
     // Armor slots — single loadout, independent of active weapon slot
@@ -122,7 +121,7 @@ Ordered by pipeline production. Each contract notes where it is produced and whe
 ```js
 {
   source: {
-    kind: "perk" | "skill" | "spell" | "music" | "transformation" |
+    kind: "perk" | "skill" | "spell" | "transformation" |
           "form_attack" | "buff" | "religion" | "gear" | "class_root",
     abilityId: string | null,
     className: string | null,

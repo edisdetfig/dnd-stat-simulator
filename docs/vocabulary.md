@@ -114,7 +114,6 @@ All 10 classes contribute to ≥ 1 category. No class is silent.
 | `skill`          | every class — e.g. `fighter.csv:L39 (Adrenaline Rush)`, `warlock.csv:L39 (Blow of Corruption)` |
 | `spell`          | casters — e.g. `warlock.csv:L48 (Bolt of Darkness)`, `cleric.csv:L46 (Protection)`, `wizard.csv:L46 (Zap)`, `sorcerer.csv:L46 (Water Bolt)`, `druid.csv:L40 (Nature's Touch)` |
 | `transformation` | `druid.csv:L53 (Bear)`, `druid.csv:L54 (Panther)`, `druid.csv:L55 (Chicken)`, `druid.csv:L56 (Rat)`, `druid.csv:L57 (Penguin)` |
-| `music`          | `bard.csv:L46..L64` (all 19 Bard musics) |
 
 ---
 
