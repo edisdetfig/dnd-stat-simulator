@@ -312,11 +312,22 @@ export const fighter = ({
       afterEffect: {
         duration: { base: 2, type: "debuff" },
         effects: [
-          { stat: "actionSpeed", value: -0.08, phase: "post_curve", target: "self" },
-          { stat: "moveSpeedBonus", value: -0.04, phase: "post_curve", target: "self" },
+          {
+            stat: "actionSpeed", value: -0.08, phase: "post_curve", target: "self",
+            condition: { type: "not", conditions: [
+              { type: "effect_active", effectId: "adrenaline_spike" },
+              { type: "effect_active", effectId: "second_wind" },
+            ]},
+          },
+          {
+            stat: "moveSpeedBonus", value: -0.04, phase: "post_curve", target: "self",
+            condition: { type: "not", conditions: [
+              { type: "effect_active", effectId: "adrenaline_spike" },
+              { type: "effect_active", effectId: "second_wind" },
+            ]},
+          },
         ],
-        removedBy: ["adrenaline_spike", "second_wind"],
-        desc: "Penalty phase after the main buff ends. Removed by Adrenaline Spike or Second Wind.",
+        desc: "Penalty phase: -8% action speed, -4% move speed bonus for 2s. Canceled by Adrenaline Spike or Second Wind.",
       },
     },
 

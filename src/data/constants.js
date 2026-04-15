@@ -50,6 +50,7 @@ export const CONDITION_TYPES = new Set([
   "damage_type",
   "all",
   "any",
+  "not",
 ]);
 
 // ── Gear triggers (spec §3 gear items — separate vocabulary from ability triggers) ──

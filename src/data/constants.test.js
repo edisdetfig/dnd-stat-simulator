@@ -56,13 +56,13 @@ describe('frozen enums', () => {
 });
 
 describe('membership sets', () => {
-  it('CONDITION_TYPES contains all eleven spec types', () => {
+  it('CONDITION_TYPES contains all twelve spec types', () => {
     for (const t of [
       "form_active", "hp_below", "effect_active", "environment",
       "weapon_type", "player_state", "equipment",
-      "creature_type", "damage_type", "all", "any",
+      "creature_type", "damage_type", "all", "any", "not",
     ]) expect(CONDITION_TYPES.has(t)).toBe(true);
-    expect(CONDITION_TYPES.size).toBe(11);
+    expect(CONDITION_TYPES.size).toBe(12);
   });
 
   it('STATUS_TYPES contains the ten spec statuses', () => {

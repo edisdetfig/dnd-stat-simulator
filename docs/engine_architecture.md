@@ -53,7 +53,7 @@ Ordered by pipeline production. Each contract notes where it is produced and whe
   activeBuffs: Set<string>,        // includes wild-skill IDs when toggled — the wild-skill collector reads from here
   activeForm: string | null,
   activeSummons: Set<string>,
-  activeAfterEffects: Set<string>,
+  activeAfterEffects: Set<string>,  // ability IDs in their post-duration penalty phase. UI radio (Off / Main / AfterEffect) maps the user's selection to activeBuffs (Main) or activeAfterEffects (AfterEffect). Mutual exclusion enforced by UI, not data shape. Cancel hints sourced from `afterEffect.desc`; gating expressed via per-effect `condition` (typically `not: [effect_active(remover), ...]`) — no `removedBy` keyword.
 
   grantedSpells: Set<string>,      // DERIVED at Stage 0 — unified from active grantsSpells + merged-spell `requires` satisfied
 
@@ -137,7 +137,7 @@ When both ability-level and effect-level conditions exist in the source data, co
 
 ### 2.3 · `Condition`
 
-**Authored** in class data on ability-level or effect-level fields. **Consumed** at Stage 2 by the condition evaluator. Every `condition.type` value has an evaluator function `(condition, ctx) → boolean`. Compound `all` / `any` recurse through the dispatcher.
+**Authored** in class data on ability-level or effect-level fields. **Consumed** at Stage 2 by the condition evaluator. Every `condition.type` value has an evaluator function `(condition, ctx) → boolean`. Compound `all` / `any` / `not` recurse through the dispatcher.
 
 ```js
 { type: "form_active", form?: string }
@@ -149,9 +149,21 @@ When both ability-level and effect-level conditions exist in the source data, co
 { type: "equipment", slot: string, equipped: boolean }
 { type: "creature_type", creature: string }
 { type: "damage_type", damageType?: string | string[], exclude?: string[] }
-{ type: "all", conditions: Condition[] }
-{ type: "any", conditions: Condition[] }
+{ type: "all", conditions: Condition[] }       // AND
+{ type: "any", conditions: Condition[] }       // OR
+{ type: "not", conditions: Condition[] }       // NONE — true iff every entry is false (= !any)
 ```
+
+**`isActive(abilityId, ctx)` predicate** — used by `effect_active` and by UI gating (e.g., afterEffect radio availability). Resolves activation rules per ability type:
+
+| Ability type                            | "Active" iff                            |
+|-----------------------------------------|-----------------------------------------|
+| Perk                                    | in `selectedPerks`                      |
+| Skill `activation: "passive"`           | in `selectedSkills`                     |
+| Skill `activation: "toggle"` / `"cast"` | selected AND in `activeBuffs`           |
+| Spell                                   | selected AND in `activeBuffs`           |
+
+Polarity is a compound concern (`not`), never a leaf flag. Leaf condition types describe what they ARE; never carry `negate`.
 
 Canonical set lives in `src/data/constants.js` as `CONDITION_TYPES`.
 

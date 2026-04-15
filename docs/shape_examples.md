@@ -895,14 +895,14 @@ Ability that grants a shield absorbing damage up to a capacity. Shield carries s
 
 ## 19. `example_after_effect_ability`
 
-Ability with a main duration followed by a penalty phase (afterEffect). The penalty can be canceled early by other abilities via `removedBy`.
+Ability with a main duration followed by a penalty phase (afterEffect). The penalty's effects use the standard condition system to express "doesn't apply when canceler X is active" — no special `removedBy` keyword.
 
 ```js
 {
   id: "example_after_effect_ability",
   type: "skill",
   name: "Example After-Effect Ability",
-  desc: "For 8 seconds, gain 20% action speed and 10 additional move speed. When the effect ends, suffer -8% action speed and -4 move speed for 2 seconds.",
+  desc: "For 8 seconds, gain 20% action speed and 10 additional move speed. When the effect ends, suffer -8% action speed and -4 move speed for 2 seconds. Canceled by Example Cancel Ability.",
 
   activation: "toggle",
   cost: { type: "health", value: 3 },
@@ -914,22 +914,15 @@ Ability with a main duration followed by a penalty phase (afterEffect). The pena
 
   // Main-phase effects, active while the ability's duration runs.
   effects: [
-    {
-      stat: "actionSpeed",
-      value: 0.20,
-      phase: "post_curve",
-    },
-    {
-      stat: "moveSpeed",
-      value: 10,
-      phase: "post_curve",
-    },
+    { stat: "actionSpeed", value: 0.20, phase: "post_curve" },
+    { stat: "moveSpeed",   value: 10,   phase: "post_curve" },
   ],
 
   // afterEffect: a secondary phase activated after duration expiry.
-  // Authored as its own { duration, effects, removedBy } block.
+  // Authored as its own { duration, effects, desc } block. Each effect
+  // carries its own condition; cancelers are expressed as `not: [...]`
+  // over `effect_active` checks. No `removedBy` keyword.
   afterEffect: {
-    // Duration of the penalty. Typically type: debuff with target: self.
     duration: {
       base: 2,
       type: "debuff",
@@ -939,30 +932,27 @@ Ability with a main duration followed by a penalty phase (afterEffect). The pena
 
     effects: [
       {
-        stat: "actionSpeed",
-        value: -0.08,
-        phase: "post_curve",
-        target: "self",
+        stat: "actionSpeed", value: -0.08, phase: "post_curve", target: "self",
+        condition: { type: "not", conditions: [
+          { type: "effect_active", effectId: "example_cancel_after_effect_ability" },
+        ]},
       },
       {
-        stat: "moveSpeed",
-        value: -4,
-        phase: "post_curve",
-        target: "self",
+        stat: "moveSpeed", value: -4, phase: "post_curve", target: "self",
+        condition: { type: "not", conditions: [
+          { type: "effect_active", effectId: "example_cancel_after_effect_ability" },
+        ]},
       },
     ],
 
-    // removedBy: array of ability IDs that cancel the penalty early.
-    // User toggles a referenced ability active to skip the afterEffect.
-    // Not validated against ability IDs at define-class time (per vocabulary decisions).
-    removedBy: ["example_cancel_after_effect_ability"],
-
-    desc: "Penalty phase after the main buff ends.",
+    desc: "Penalty phase: -8% action speed, -4 move speed for 2s. Canceled by Example Cancel Ability.",
   },
 }
 ```
 
-**Pipeline**: `collectAfterEffects` treats the afterEffect as a separate toggleable state. When the user activates the main buff and toggles "main expired / in afterEffect phase," the afterEffect's effects apply. If any `removedBy` ability is equipped AND toggled, UI surfaces the cancel option.
+**Pipeline**: `collectAfterEffects` treats the afterEffect as a separate toggleable state. UI radio (Off / Main / AfterEffect) maps the user's selection to either `activeBuffs` (Main) or `activeAfterEffects` (AfterEffect). Mutual exclusion enforced by UI, not data shape.
+
+**Cancel hint**: when a canceler is active, the afterEffect's effects evaluate to no-op via the per-effect `not` condition. UI greys the AfterEffect radio option and renders `afterEffect.desc` verbatim as the hover hint — `desc` is the single source of truth for human-readable display, no condition-tree introspection needed.
 
 **When to use**: Any "buff that leaves a debuff" pattern (adrenaline rushes, berserker fatigue, overcharge crashes).
 

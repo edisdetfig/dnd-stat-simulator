@@ -392,7 +392,7 @@ function validateCondition(cond, path, issues) {
   if (!CONDITION_TYPES.has(cond.type)) {
     issues.push(`${path}: unknown condition type "${cond.type}"`);
   }
-  if (cond.type === "all" || cond.type === "any") {
+  if (cond.type === "all" || cond.type === "any" || cond.type === "not") {
     if (!Array.isArray(cond.conditions)) {
       issues.push(`${path}: type "${cond.type}" requires conditions[] array`);
     } else {

@@ -580,6 +580,7 @@ export const druid = ({
             effects: [
               { stat: "moveSpeedBonus", value: -0.20, phase: "post_curve" },
             ],
+            desc: "Penalty phase: -20% move speed bonus for 3s after Survival Instinct ends.",
           },
         },
       },
