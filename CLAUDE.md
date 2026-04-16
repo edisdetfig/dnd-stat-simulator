@@ -70,6 +70,7 @@ npm test                # Run vitest
 
 **Tracker + architecture docs:**
 - `docs/rebuild-plan.md` — authoritative 13-phase roadmap from locked `class-shape.js` to shipping UI; every phase session reads this first
+- `docs/coordinator-role.md` — how the coordinator/architect role operates; read this if you're driving the rebuild (designing session prompts, reviewing reports, committing phase work)
 - `docs/perspective.md` — project mental model and core principles
 - `src/data/classes/class-shape.js` - Authoritative class data shape
 - `src/data/classes/class-shape-examples.js` - Concrete examples of class data
