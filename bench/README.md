@@ -16,7 +16,7 @@ npm test               # harness-self tests (fixture shape, stub smoke)
 
 | Path | Role |
 |---|---|
-| `fixtures/max-loadout.fixture.js`     | Synthetic max-density anchor (full perks/skills/spells, gear stack, toggles, stacks). NOT a real class. |
+| `fixtures/max-loadout.fixture.js`     | Synthetic max-density anchor (full perks/skills/spells, gear stack, toggles, stacks). NOT a real class. Also imported by `src/data/classes/class-shape-validator.test.js` as the rich positive fixture — fixture drift off-shape fails the validator test by design. |
 | `fixtures/minimal-loadout.fixture.js` | 1 passive perk, no gear. Scaling-signal control case. |
 | `fixtures/max-loadout.fixture.test.js`| Pattern-coverage + shape tests guarding the fixture. |
 | `stub-pipeline.js`                    | THROWAWAY. Stubs Stages 0–4; calls real `computeDerivedStats` / `calcSpellDamage` / `calcHealing` for Stages 5–6. Matches the pinned `Snapshot` signature. |

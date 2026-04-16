@@ -17,7 +17,7 @@ export const CLASS_SHAPE = {
   maxPerks: 0,
   maxSkills: 0,
 
-  armorProficiency: ["cloth | leather | plate"],               // base armor types the class can equip; modified by grants[]/removes[] on perks
+  armorProficiency: ["cloth | leather | plate"],               // see constants.js::ARMOR_TYPES. Base armor types the class can equip; modified by grants[]/removes[] on perks
 
   // Class-level resource pool declarations. Atoms reference an entry by name
   // via the atom's `resource` field. Live stack count maintained in
@@ -70,9 +70,9 @@ const ABILITY = {
   // Identity
   id: "string",
   name: "string",
-  type: "perk | skill | spell | transformation | music",
+  type: "perk | skill | spell | transformation | music",  // see constants.js::ABILITY_TYPES
   desc: "string",                    // human-readable description; absorbs all flavor with no engine role
-  activation: "passive | cast | cast_buff | toggle",
+  activation: "passive | cast | cast_buff | toggle",       // see constants.js::ACTIVATIONS
   // passive   → selected = active (perks, passive skills)
   // cast      → instant projection, no caster-side state (Dark Bolt, Fireball, Slow)
   // cast_buff → cast that produces caster-side buff (Haste, Ignite, Bloodstained Blade)
@@ -146,18 +146,15 @@ const ABILITY = {
 const STAT_EFFECT_ATOM = {
   stat:      "string",     // optional — STAT_META key, or RECIPE_IDS entry (cap_override phase only)
   value:     0,            // optional — numeric contribution
-  phase:     "string",     // optional — EFFECT_PHASES value (see engine_architecture.md §2.4)
-  target:    "string",     // EFFECT_TARGETS — default "self"
+  phase:     "string",     // optional — see constants.js::EFFECT_PHASE_VALUES
+  target:    "string",     // see constants.js::EFFECT_TARGETS — default "self"
   duration:  0,            // optional — lifetime in seconds; absent = lives while parent ability is active
-  condition: {},           // optional — gating (see engine_architecture.md §2.3)
-  scalesWith:  {},          // optional — atom value derived from ctx input. Polymorphic via `type`:
+  condition: {},           // optional — see constants.js::CONDITION_TYPES
+  scalesWith:  {},          // optional — atom value derived from ctx input. Polymorphic via `type` (see constants.js::SCALES_WITH_TYPES):
                             //   { type: "hp_missing", per: 10, valuePerStep: 0.02, maxValue: 0.20 } (Barb Berserker)
                             //   { type: "attribute", curve: "shapeshiftPrimitive", attribute: "str" } (shapeshift)
-  abilityType: "string",    // optional — discriminator linking stat to an ability type (e.g. memorySlots + abilityType: "spell")
-  tags:        ["string"],  // optional — named grouping labels. UI groups atoms with matching tags.
-                           // Possible values: burn, frostbite, wet, electrified, poison, bleed, silence,
-                           //                  plague, blind, freeze, root, stun, slow, bind, disarm,
-                           //                  fear, knockback, lift, trap, immobilize.
+  abilityType: "string",    // optional — see constants.js::ABILITY_TYPES. Discriminator linking stat to an ability type (e.g. memorySlots + abilityType: "spell")
+  tags:        ["string"],  // optional — see constants.js::ATOM_TAGS. Named grouping labels; UI groups atoms with matching tags.
 
   // Stacking — use ONE of these (not both). Contribution = atom.value × currentStackCount.
   //   maxStacks  — single-atom local stacking; count lives in ctx.stackCounts[abilityId]
@@ -176,23 +173,19 @@ const STAT_EFFECT_ATOM = {
 const DAMAGE_ATOM = {
   base:              0,
   scaling:           0,
-  damageType:        "string",   // physical | magical | divine_magical | dark_magical | evil_magical |
-                                 // fire_magical | ice_magical | lightning_magical | air_magical |
-                                 // earth_magical | arcane_magical | spirit_magical | light_magical
-  target:            "string",
+  damageType:        "string",   // see constants.js::DAMAGE_TYPES
+  target:            "string",   // see constants.js::EFFECT_TARGETS
   isDot:             false,      // optional — damage-over-time
   tickRate:          0,          // optional — seconds per tick (DoT only)
   duration:          0,          // optional — total DoT lifetime in seconds
   trueDamage:        false,      // optional — bypasses DR
   weaponDamageScale: 0,          // optional — scales against weapon damage (Barb Hurl Weapon, Whirlwind)
   percentMaxHealth:  0,          // optional — % of max HP as damage
-  scalesWith:        {},         // optional — damage derived from ctx input. Polymorphic via `type`:
-                                 //   { type: "attribute", curve: "shapeshiftPrimitive", attribute: "str" } (shapeshift)
-                                 // Same vocabulary as STAT_EFFECT_ATOM.scalesWith.
+  scalesWith:        {},         // optional — see constants.js::SCALES_WITH_TYPES. Same polymorphism as STAT_EFFECT_ATOM.scalesWith.
   count:             1,          // optional — number of hits this atom produces per cast (missiles, chains, etc.)
   desc:              "string",   // optional — display sub-label
-  condition:         {},         // optional gating
-  tags:              ["string"], // optional — named grouping labels (same vocabulary as STAT_EFFECT_ATOM.tags).
+  condition:         {},         // optional — see constants.js::CONDITION_TYPES
+  tags:              ["string"], // optional — see constants.js::ATOM_TAGS (same vocabulary as STAT_EFFECT_ATOM.tags).
 
   // Stacking — use ONE of these (not both). Contribution = atom.value × currentStackCount.
   //   maxStacks  — single-atom local stacking; count lives in ctx.stackCounts[abilityId]
@@ -207,7 +200,7 @@ const HEAL_ATOM = {
   baseHeal:         0,
   scaling:          0,
   healType:         "string",    // "physical" | "magical"
-  target:           "string",
+  target:           "string",    // see constants.js::EFFECT_TARGETS
   isHot:            false,       // optional — heal-over-time
   tickRate:         0,           // optional — seconds per tick (HoT only)
   duration:         0,           // optional — total HoT lifetime in seconds
@@ -222,7 +215,7 @@ const SHIELD_ATOM = {
   base:         0,
   scaling:      0,
   damageFilter: "string",        // "physical" | "magical" | null (absorbs all damage)
-  target:       "string",        // EFFECT_TARGETS — typically "self"
+  target:       "string",        // see constants.js::EFFECT_TARGETS — typically "self"
   duration:     0,               // optional — how long the shield lasts
   condition:    {},              // optional gating
 };
@@ -251,7 +244,7 @@ const CONDITION_VARIANTS = [
 // ─────────────────────────────────────────────────────────────────────
 
 const COST = {
-  type: "charges | health | cooldown | percentMaxHealth | none",
+  type: "charges | health | cooldown | percentMaxHealth | none",   // see constants.js::COST_TYPES
   value: 0,
 };
 
@@ -275,12 +268,12 @@ const AFTER_EFFECT = {
 // the bearer is active. `condition` gates on ctx (WHEN). `costSource`
 // controls cost display for ability grants.
 const GRANT_ATOM = {
-  type:       "ability | weapon | armor",
+  type:       "ability | weapon | armor",   // see constants.js::GRANT_REMOVE_TYPES
   abilityId:  "string",              // when type = "ability"
-  weaponType: "string",              // when type = "weapon"
-  armorType:  "string",              // when type = "armor"
+  weaponType: "string",              // when type = "weapon" — see constants.js::WEAPON_TYPES
+  armorType:  "string",              // when type = "armor" — see constants.js::ARMOR_TYPES
   condition:  {},                    // optional — ctx-gating (e.g. effect_active + weapon_type)
-  costSource: "granted | granter",   // optional — default "granted"; "granter" = granter's cost governs
+  costSource: "granted | granter",   // optional — default "granted" (see constants.js::COST_SOURCE)
 };
 
 // ATOM — remove
@@ -288,9 +281,9 @@ const GRANT_ATOM = {
 // while the bearer is active. `condition` gates on ctx (WHEN). `tags`
 // filters within the abilityType category (WHAT to remove).
 const REMOVE_ATOM = {
-  type:        "ability | weapon | armor",
-  abilityType: "string",             // when type = "ability" — target ability type (spell, transformation, etc.)
-  armorType:   "string",             // when type = "armor"
-  tags:        ["string"],           // optional — filter by target ability's tags (e.g. ["spirit"])
+  type:        "ability | weapon | armor",   // see constants.js::GRANT_REMOVE_TYPES
+  abilityType: "string",             // when type = "ability" — see constants.js::ABILITY_TYPES
+  armorType:   "string",             // when type = "armor" — see constants.js::ARMOR_TYPES
+  tags:        ["string"],           // optional — see constants.js::ATOM_TAGS (filter by target ability's tags)
   condition:   {},                   // optional — ctx-gating
 };

@@ -46,11 +46,17 @@ export const EFFECT_PHASES = Object.freeze({
   CAP_OVERRIDE:                "cap_override",
 });
 
-// ── Condition types (spec §3 Condition shape) ──
+// Phase-value membership set — consumers check `atom.phase` membership against this.
+export const EFFECT_PHASE_VALUES = new Set(Object.values(EFFECT_PHASES));
+
+// ── Condition types (class-shape.js CONDITION_VARIANTS) ──
+//
+// `form_active` removed; replaced by uniform `effect_active` (dispatched by
+// ability.activation). `ability_selected` and `tier` added per class-shape-progress.md.
 
 export const CONDITION_TYPES = new Set([
-  "form_active",
   "hp_below",
+  "ability_selected",
   "effect_active",
   "environment",
   "weapon_type",
@@ -58,9 +64,77 @@ export const CONDITION_TYPES = new Set([
   "equipment",
   "creature_type",
   "damage_type",
+  "tier",
   "all",
   "any",
   "not",
+]);
+
+// ── Ability shape vocabularies (class-shape.js § ABILITY) ──
+
+// Ability `type` — also the memory-pool discriminator (spell/transformation/music).
+export const ABILITY_TYPES = new Set([
+  "perk", "skill", "spell", "transformation", "music",
+]);
+
+// Ability `activation` — sim-behavior distinction (see class-shape-progress.md open-item-1).
+export const ACTIVATIONS = new Set([
+  "passive", "cast", "cast_buff", "toggle",
+]);
+
+// ── Atom vocabularies (class-shape.js § STAT_EFFECT_ATOM / DAMAGE_ATOM) ──
+
+// Named grouping labels on atoms. Superset of STATUS_TYPES (adds CC markers).
+// No engine math depends on these values — purely UI grouping.
+export const ATOM_TAGS = new Set([
+  // Status (damage/debuff over time) — mirrors STATUS_TYPES
+  "burn", "frostbite", "wet", "electrified", "poison", "bleed", "silence",
+  "plague", "blind", "freeze",
+  // CC markers (no stat payload)
+  "root", "stun", "slow", "bind", "disarm", "fear", "knockback", "lift",
+  "trap", "immobilize",
+]);
+
+// Polymorphic `scalesWith.type` discriminator.
+//   hp_missing — stat atom value scales with % of max HP missing (Barb Berserker)
+//   attribute  — damage atom value derived from attribute curve (shapeshift)
+export const SCALES_WITH_TYPES = new Set([
+  "hp_missing", "attribute",
+]);
+
+// Damage-type vocabulary (DAMAGE_ATOM.damageType). Physical + one generic magical
+// + eleven specific magical types.
+export const DAMAGE_TYPES = new Set([
+  "physical",
+  "magical",
+  "divine_magical", "dark_magical", "evil_magical",
+  "fire_magical", "ice_magical", "lightning_magical", "air_magical",
+  "earth_magical", "arcane_magical", "spirit_magical", "light_magical",
+]);
+
+// Armor-proficiency vocabulary (class.armorProficiency + grant/remove armor type).
+export const ARMOR_TYPES = new Set([
+  "cloth", "leather", "plate",
+]);
+
+// grant/remove discriminator.
+export const GRANT_REMOVE_TYPES = new Set([
+  "ability", "weapon", "armor",
+]);
+
+// Cost vocabularies (COST shape).
+export const COST_TYPES = new Set([
+  "charges", "health", "cooldown", "percentMaxHealth", "none",
+]);
+
+// grant.costSource — who pays for the granted ability's cast.
+export const COST_SOURCE = new Set([
+  "granted", "granter",
+]);
+
+// Bard performance-tier values — condition { type: "tier", tier }.
+export const TIER_VALUES = new Set([
+  "poor", "good", "perfect",
 ]);
 
 // ── Gear triggers (spec §3 gear items — separate vocabulary from ability triggers) ──
