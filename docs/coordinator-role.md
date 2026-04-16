@@ -163,7 +163,7 @@ Update this table after every completed phase.
 |---|---|---|---|
 | 0 — Performance harness | DONE | `docs/session-prompts/phase-0-performance-harness.md` | `0622189` |
 | 1 — Class-shape validator | DONE | `docs/session-prompts/phase-1-class-shape-validator.md` | `c5160d7` |
-| 2 — Warlock migration | PROMPT READY | `docs/session-prompts/phase-2-warlock-migration.md` | — |
+| 2 — Warlock migration | DONE | `docs/session-prompts/phase-2-warlock-migration.md` | `f8431ad` |
 | 3 — engine_architecture.md + vocabulary.md | — | — | — |
 | 4 — Architecture doc verification pass | — | — | — |
 | 5 — Engine implementation plan | — | — | — |
