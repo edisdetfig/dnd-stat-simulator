@@ -132,8 +132,7 @@ export const warlock = {
       desc: "Gain 20% dark magical damage bonus towards dark magic spells.",
       activation: "passive",
       effects: [
-        { stat: "typeDamageBonus", value: 0.20, phase: "type_damage_bonus",
-          damageType: "dark_magical" },
+        { stat: "darkDamageBonus", value: 0.20, phase: "type_damage_bonus" },
       ],
     },
 
@@ -214,8 +213,8 @@ export const warlock = {
       effects: [
         { stat: "allAttributes", value: 1, phase: "pre_curve_flat",
           resource: "darkness_shards" },
-        { stat: "typeDamageBonus", value: 0.33, phase: "type_damage_bonus",
-          damageType: "dark_magical", resource: "darkness_shards" },
+        { stat: "darkDamageBonus", value: 0.33, phase: "type_damage_bonus",
+          resource: "darkness_shards" },
       ],
     },
   ],
@@ -296,8 +295,8 @@ export const warlock = {
         { stat: "allAttributes", value: 1, phase: "pre_curve_flat",
           resource: "blood_pact_locked_shards",
           condition: { type: "effect_active", effectId: "blood_pact" } },
-        { stat: "typeDamageBonus", value: 0.33, phase: "type_damage_bonus",
-          damageType: "dark_magical", resource: "blood_pact_locked_shards",
+        { stat: "darkDamageBonus", value: 0.33, phase: "type_damage_bonus",
+          resource: "blood_pact_locked_shards",
           condition: { type: "effect_active", effectId: "blood_pact" } },
         { tags: ["irreversible_until_contract_ends"],
           desc: "Cannot be stopped until the contract ends.",
@@ -616,18 +615,19 @@ export const warlock = {
       tags: ["dark"],
       duration: { base: 15, type: "buff" },
       shield: { base: 25, scaling: 0, damageFilter: "magical", target: "self", duration: 15 },
-      effects: [
-        { stat: "typeDamageBonus", value: 0.30, phase: "type_damage_bonus",
-          damageType: "dark_magical", target: "self", duration: 6,
-          desc: "shield-break proc: next dark spell within 6s",
-          condition: { type: "effect_active", effectId: "eldritch_shield" } },
-        { stat: "spellCastingSpeed", value: 0.50, phase: "post_curve",
-          target: "self", duration: 6,
-          desc: "shield-break proc: next dark spell within 6s",
-          condition: { type: "effect_active", effectId: "eldritch_shield" } },
-      ],
+      afterEffect: {
+        duration: 6,
+        effects: [
+          { stat: "darkDamageBonus", value: 0.30, phase: "type_damage_bonus",
+            target: "self",
+            condition: { type: "effect_active", effectId: "eldritch_shield" } },
+          { stat: "spellCastingSpeed", value: 0.50, phase: "post_curve",
+            target: "self",
+            condition: { type: "effect_active", effectId: "eldritch_shield" } },
+        ],
+        desc: "Shield-break proc: next dark spell within 6s",
+      },
     },
-
     {
       id: "flame_walker",
       type: "spell",

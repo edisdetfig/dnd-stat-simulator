@@ -30,6 +30,7 @@ import {
   ABILITY_TYPES,
   ACTIVATIONS,
   ATOM_TAGS,
+  CAPABILITY_TAGS,
   SCALES_WITH_TYPES,
   DAMAGE_TYPES,
   ARMOR_TYPES,
@@ -493,15 +494,28 @@ function validateStatEffectAtom(atom, path, condCtx, errors) {
       `'${atom.target}' is not in EFFECT_TARGETS`, "C.target"));
   }
 
-  // Atom-tag vocabulary check: only applied to semantic atoms (those with
-  // stat/value/phase). Display-only "bare tagged" atoms use a broader,
-  // partly-informal capability vocabulary (detects_hidden, invisibility, etc.
-  // per class-shape-progress.md §5) that isn't fully locked — defer to
-  // Phase 3 vocabulary pass.
+  // Atom-tag vocabulary check.
+  //   - Semantic atoms (stat/value/phase present): tags must be in ATOM_TAGS
+  //     (status + CC grouping labels).
+  //   - Display-only "bare tagged" atoms (no stat/value/phase): tags must be
+  //     in ATOM_TAGS (bare CC markers — fear, knockback, etc.) OR in
+  //     CAPABILITY_TAGS (engine-observable capabilities — detects_hidden,
+  //     phase_through, etc.). Both are locked Phase 3; extension is a
+  //     vocabulary update, not a quiet add.
   if (!displayOnly) {
     validateTagsField(atom.tags, `${path}.tags`, errors);
-  } else if (atom.tags != null && !Array.isArray(atom.tags)) {
-    errors.push(errAt(`${path}.tags`, "is not an array", "C.tags"));
+  } else if (atom.tags != null) {
+    if (!Array.isArray(atom.tags)) {
+      errors.push(errAt(`${path}.tags`, "is not an array", "C.tags"));
+    } else {
+      atom.tags.forEach((t, i) => {
+        if (!ATOM_TAGS.has(t) && !CAPABILITY_TAGS.has(t)) {
+          errors.push(errAt(`${path}.tags[${i}]`,
+            `'${t}' is not in ATOM_TAGS or CAPABILITY_TAGS`,
+            "C.capability_tags"));
+        }
+      });
+    }
   }
 
   // Display-only atoms need non-empty tags to identify themselves.
@@ -554,6 +568,18 @@ function validateDamageAtom(atom, path, condCtx, errors) {
     if (!Number.isInteger(atom.count) || atom.count < 1) {
       errors.push(errAt(`${path}.count`,
         "must be a positive integer", "D.count"));
+    }
+  }
+
+  // D: lifestealRatio optional numeric 0..1 (LOCK 3 — flat-field lifesteal).
+  // Engine rule: derived heal = lifestealRatio × damage_atom_projection,
+  // target: "self", healType via family-collapse (physical → physical;
+  // any magical subtype → magical). See docs/engine_architecture.md §16.
+  if ("lifestealRatio" in atom && atom.lifestealRatio != null) {
+    const v = atom.lifestealRatio;
+    if (typeof v !== "number" || v < 0 || v > 1) {
+      errors.push(errAt(`${path}.lifestealRatio`,
+        "must be a number in [0, 1]", "D.lifestealRatio"));
     }
   }
 

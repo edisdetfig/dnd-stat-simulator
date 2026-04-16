@@ -104,9 +104,9 @@ export const MAX_LOADOUT_CLASS = {
       activation: "passive",
       tags: ["dark"],
       effects: [
-        { stat: "physicalPower", value: 1, phase: "pre_curve_flat",
+        { stat: "physicalPower",   value: 1,    phase: "pre_curve_flat",
           resource: "shared_pool" },
-        { stat: "typeDamageBonus", value: 0.33, phase: "type_damage_bonus",
+        { stat: "darkDamageBonus", value: 0.33, phase: "type_damage_bonus",
           resource: "shared_pool" },
       ],
     },
@@ -150,10 +150,10 @@ export const MAX_LOADOUT_CLASS = {
         { stat: "magicResistance", value: 50, phase: "pre_curve_flat",
           condition: { type: "effect_active", effectId: "demon_form" } },
         // User-set locked-shard scaling.
-        { stat: "physicalPower", value: 1, phase: "pre_curve_flat",
+        { stat: "physicalPower",   value: 1,    phase: "pre_curve_flat",
           resource: "form_locked_shards",
           condition: { type: "effect_active", effectId: "demon_form" } },
-        { stat: "typeDamageBonus", value: 0.33, phase: "type_damage_bonus",
+        { stat: "darkDamageBonus", value: 0.33, phase: "type_damage_bonus",
           resource: "form_locked_shards",
           condition: { type: "effect_active", effectId: "demon_form" } },
       ],
@@ -237,7 +237,7 @@ export const MAX_LOADOUT_CLASS = {
       ],
       effects: [
         // Bonus damage-bonus contribution gated on player_state.
-        { stat: "typeDamageBonus", value: 0.15, phase: "type_damage_bonus",
+        { stat: "darkDamageBonus", value: 0.15, phase: "type_damage_bonus",
           condition: { type: "player_state", state: "hiding" } },
       ],
     },

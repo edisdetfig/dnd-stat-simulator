@@ -4,7 +4,7 @@ import {
   EFFECT_PHASES, EFFECT_PHASE_VALUES, CONDITION_TYPES,
   STATUS_TYPES, PLAYER_STATES, WEAPON_TYPES,
   WEAPON_TYPE_CATEGORIES, TARGETING, EFFECT_TARGETS,
-  ABILITY_TYPES, ACTIVATIONS, ATOM_TAGS, SCALES_WITH_TYPES,
+  ABILITY_TYPES, ACTIVATIONS, ATOM_TAGS, CAPABILITY_TAGS, SCALES_WITH_TYPES,
   DAMAGE_TYPES, ARMOR_TYPES, GRANT_REMOVE_TYPES,
   COST_TYPES, COST_SOURCE, TIER_VALUES,
 } from './constants.js';
@@ -177,10 +177,25 @@ describe('membership sets', () => {
     expect(WEAPON_TYPES.size).toBe(18);
   });
 
-  it('EFFECT_TARGETS contains the six effect-level target values', () => {
-    for (const t of ["self", "enemy", "either", "party", "nearby_allies", "nearby_enemies"]) {
+  it('CAPABILITY_TAGS contains the seven Phase-3-locked display-only-atom capabilities', () => {
+    for (const t of [
+      "cooldown_gated", "phase_through", "spells_cannot_kill",
+      "detects_hidden", "possessable", "can_move_while_channeling",
+      "irreversible_until_contract_ends",
+    ]) {
+      expect(CAPABILITY_TAGS.has(t)).toBe(true);
+    }
+    expect(CAPABILITY_TAGS.size).toBe(7);
+  });
+
+  it('EFFECT_TARGETS contains the eight effect-level target values (incl. ally + self_or_ally)', () => {
+    for (const t of [
+      "self", "ally", "self_or_ally",
+      "enemy", "either",
+      "party", "nearby_allies", "nearby_enemies",
+    ]) {
       expect(EFFECT_TARGETS.has(t)).toBe(true);
     }
-    expect(EFFECT_TARGETS.size).toBe(6);
+    expect(EFFECT_TARGETS.size).toBe(8);
   });
 });

@@ -140,21 +140,30 @@ const ABILITY = {
 
 // ATOM — statEffect
 // Contributes to a stat via the aggregator pipeline. When `stat` / `value` /
-// `phase` are all absent, the atom is a display-only marker (bare CC —
-// knockback, fear, bind, lift, trap, root, immobilize, and silence variants
-// with no stat impact).
+// `phase` are all absent, the atom is a display-only marker — its `tags[]`
+// must come from ATOM_TAGS (bare CC markers: knockback, fear, bind, lift,
+// trap, root, immobilize, and silence variants with no stat impact) OR from
+// CAPABILITY_TAGS (engine-observable capabilities: detects_hidden,
+// phase_through, spells_cannot_kill, possessable, cooldown_gated,
+// can_move_while_channeling, irreversible_until_contract_ends).
+//
+// Typed-damage-bonus stats (darkDamageBonus, fireDamageBonus, etc.) are
+// authored as the `stat` value at phase: "type_damage_bonus". No separate
+// `damageType` discriminator on the atom — the stat identity carries the
+// type. Gear rolls only `physicalDamageBonus` / `magicalDamageBonus`;
+// typed-damage stats come from class data only.
 const STAT_EFFECT_ATOM = {
   stat:      "string",     // optional — STAT_META key, or RECIPE_IDS entry (cap_override phase only)
   value:     0,            // optional — numeric contribution
   phase:     "string",     // optional — see constants.js::EFFECT_PHASE_VALUES
-  target:    "string",     // see constants.js::EFFECT_TARGETS — default "self"
+  target:    "string",     // see constants.js::EFFECT_TARGETS — default "self". Supports self/ally/self_or_ally/enemy/either/party/nearby_allies/nearby_enemies.
   duration:  0,            // optional — lifetime in seconds; absent = lives while parent ability is active
   condition: {},           // optional — see constants.js::CONDITION_TYPES
   scalesWith:  {},          // optional — atom value derived from ctx input. Polymorphic via `type` (see constants.js::SCALES_WITH_TYPES):
                             //   { type: "hp_missing", per: 10, valuePerStep: 0.02, maxValue: 0.20 } (Barb Berserker)
                             //   { type: "attribute", curve: "shapeshiftPrimitive", attribute: "str" } (shapeshift)
   abilityType: "string",    // optional — see constants.js::ABILITY_TYPES. Discriminator linking stat to an ability type (e.g. memorySlots + abilityType: "spell")
-  tags:        ["string"],  // optional — see constants.js::ATOM_TAGS. Named grouping labels; UI groups atoms with matching tags.
+  tags:        ["string"],  // optional — semantic atoms: ATOM_TAGS (status/CC grouping). Display-only atoms: ATOM_TAGS or CAPABILITY_TAGS (see above).
 
   // Stacking — use ONE of these (not both). Contribution = atom.value × currentStackCount.
   //   maxStacks  — single-atom local stacking; count lives in ctx.stackCounts[abilityId]
@@ -181,6 +190,19 @@ const DAMAGE_ATOM = {
   trueDamage:        false,      // optional — bypasses DR
   weaponDamageScale: 0,          // optional — scales against weapon damage (Barb Hurl Weapon, Whirlwind)
   percentMaxHealth:  0,          // optional — % of max HP as damage
+
+  // Lifesteal ratio — optional flat field (0–1). When present, the engine
+  // projects a derived heal alongside this damage atom's damage projection:
+  //   heal_amount = lifestealRatio × damage_atom_projection
+  //   target      = "self"
+  //   healType    = family-collapse of damageType (physical → "physical";
+  //                 any magical subtype → "magical"; see engine_architecture.md §16)
+  // Flat-field pattern parallel to `percentMaxHealth`; per-atom granularity
+  // lets multi-damage abilities lifesteal on a subset of their atoms.
+  // Example first consumer (Phase 4): Warlock Life Drain damage atom with
+  // lifestealRatio: 1.0.
+  lifestealRatio:    0,          // optional — [0, 1]
+
   scalesWith:        {},         // optional — see constants.js::SCALES_WITH_TYPES. Same polymorphism as STAT_EFFECT_ATOM.scalesWith.
   count:             1,          // optional — number of hits this atom produces per cast (missiles, chains, etc.)
   desc:              "string",   // optional — display sub-label
@@ -257,6 +279,18 @@ const COST = {
 // to DAMAGE_ATOM.scalesWith. See class-shape-progress.md "Transformations
 // fold into spells[]".
 
+// AFTER_EFFECT — trailing post-main-effect phase for an ability. Engine
+// treats afterEffect atoms two ways (see engine_architecture.md §14):
+//   1. Always-display informational metadata in tooltips whenever the parent
+//      ability is selected — atoms not summed into snapshot stats.
+//   2. Conditionally applied to snapshot stats via a per-ability user toggle
+//      ("view post-effect state"). The snapshot ctx carries a
+//      `viewingAfterEffect: Set<abilityId>` field. When toggled for a parent
+//      ability: snapshot drops the parent's main-state atoms
+//      (effects/damage/heal/shield) and applies this afterEffect's atoms
+//      instead.
+// Cancellation is expressed per-atom via the `not` compound condition —
+// there is no separate cancellation-specific field.
 const AFTER_EFFECT = {
   duration: { base: 0, type: "debuff" },
   effects:  [/* STAT_EFFECT_ATOM */],

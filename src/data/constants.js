@@ -222,17 +222,37 @@ export const TARGETING = Object.freeze({
 });
 
 // Effect-level `target` values (spec §3 effects[].target).
-//   "self"     — applies to caster stats (runEffectPipeline)
-//   "enemy"    — applies to target stats (runTargetPipeline)
-//   "either"   — ability exposes per-ability applyToSelf / applyToEnemy
-//                checkboxes; user picks one/both/neither. Both → the
-//                entry routes to both pipelines simultaneously
-//   "party" / "nearby_allies" / "nearby_enemies" — display-only in
-//                snapshot mode; engine treats them as self
-// Distinct from ability-level TARGETING (which gates what the ability
-// can be cast on).
+//   "self"          — applies to caster stats (runEffectPipeline)
+//   "ally"          — applies to an ally target (display-only in snapshot;
+//                     engine projection deferred to Phase 11 ally-buff panel
+//                     via the atomsByTarget query API)
+//   "self_or_ally"  — self-cast or ally-cast; display-only in snapshot
+//   "enemy"         — applies to target stats (runTargetPipeline)
+//   "either"        — ability exposes per-ability applyToSelf / applyToEnemy
+//                     checkboxes; user picks one/both/neither. Both → the
+//                     entry routes to both pipelines simultaneously
+//   "party" / "nearby_allies" / "nearby_enemies" — display-only in snapshot
+//                     mode; engine treats them as self
+// Distinct from ability-level TARGETING (which gates what the ability can
+// be cast on).
 export const EFFECT_TARGETS = new Set([
-  "self", "enemy", "either", "party", "nearby_allies", "nearby_enemies",
+  "self", "ally", "self_or_ally", "enemy", "either",
+  "party", "nearby_allies", "nearby_enemies",
+]);
+
+// Display-only atom `tags` vocabulary for engine-observable capabilities
+// carried by bare atoms (no stat/value/phase). Canonicalized Phase 3 from
+// Warlock authoring patterns. Extension policy: adding a tag is a
+// vocabulary update (edit this Set + vocabulary.md), not a quiet add or
+// pre-allocated placeholder.
+export const CAPABILITY_TAGS = new Set([
+  "cooldown_gated",
+  "phase_through",
+  "spells_cannot_kill",
+  "detects_hidden",
+  "possessable",
+  "can_move_while_channeling",
+  "irreversible_until_contract_ends",
 ]);
 
 // ── UI-oriented constants consumed by existing components ──

@@ -103,7 +103,23 @@ export const STAT_META = {
   equippedArmorRatingBonus: { label: "Equipped Armor Rating Bonus", unit: "percent", cat: "defense" },
 
   // Offensive (per-target / per-context multipliers)
-  typeDamageBonus: { label: "Type Damage Bonus", unit: "percent", cat: "offense" },
+  // Typed-damage-bonus stats — one per magical subtype. Applied at the
+  // `type_damage_bonus` phase, additive with MPB × Scaling in the spell
+  // damage formula (damage_formulas.md:130–143). Class-data-authored only;
+  // gear rolls only `physicalDamageBonus` / `magicalDamageBonus`. The
+  // universal `magicalDamageBonus` applies to ALL magic types
+  // (damage_formulas.md:122); these typed stats apply only to matching type.
+  divineDamageBonus:    { label: "Divine Damage Bonus",    unit: "percent", cat: "offense" },
+  darkDamageBonus:      { label: "Dark Damage Bonus",      unit: "percent", cat: "offense" },
+  evilDamageBonus:      { label: "Evil Damage Bonus",      unit: "percent", cat: "offense" },
+  fireDamageBonus:      { label: "Fire Damage Bonus",      unit: "percent", cat: "offense" },
+  iceDamageBonus:       { label: "Ice Damage Bonus",       unit: "percent", cat: "offense" },
+  lightningDamageBonus: { label: "Lightning Damage Bonus", unit: "percent", cat: "offense" },
+  airDamageBonus:       { label: "Air Damage Bonus",       unit: "percent", cat: "offense" },
+  earthDamageBonus:     { label: "Earth Damage Bonus",     unit: "percent", cat: "offense" },
+  arcaneDamageBonus:    { label: "Arcane Damage Bonus",    unit: "percent", cat: "offense" },
+  spiritDamageBonus:    { label: "Spirit Damage Bonus",    unit: "percent", cat: "offense" },
+  lightDamageBonus:     { label: "Light Damage Bonus",     unit: "percent", cat: "offense" },
   buffWeaponDamage: { label: "Buff Weapon Damage", unit: "flat", cat: "offense" },
   headshotPower: { label: "Headshot Power", unit: "percent", cat: "offense" },
   headPenetration: { label: "Head Penetration", unit: "percent", cat: "offense" },

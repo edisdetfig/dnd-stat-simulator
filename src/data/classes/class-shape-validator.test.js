@@ -93,6 +93,21 @@ const VALID_SUPPLEMENT_CLASS = {
           condition: { type: "damage_type", damageType: "fire_magical" } },
       ],
     },
+    // Ally / self_or_ally EFFECT_TARGETS coverage + typed-damage stat +
+    // CAPABILITY_TAGS display-only atom.
+    {
+      id: "ally_targets_coverage",
+      type: "perk", name: "Ally Targets Coverage",
+      desc: "Exercises ally / self_or_ally EFFECT_TARGETS, typed-damage stat, capability tag.",
+      activation: "passive",
+      effects: [
+        { stat: "luck", value: 2, phase: "post_curve", target: "ally" },
+        { stat: "luck", value: 1, phase: "post_curve", target: "self_or_ally" },
+        { stat: "darkDamageBonus", value: 0.10, phase: "type_damage_bonus" },
+        { tags: ["detects_hidden"], target: "self",
+          desc: "Display-only capability atom." },
+      ],
+    },
   ],
 
   skills: [
@@ -136,11 +151,11 @@ const VALID_SUPPLEMENT_CLASS = {
           condition: { type: "tier", tier: "good" } },
       ],
     },
-    // Extended DAMAGE_ATOM fields: trueDamage, weaponDamageScale, percentMaxHealth.
+    // Extended DAMAGE_ATOM fields: trueDamage, weaponDamageScale, percentMaxHealth, lifestealRatio.
     {
       id: "extended_damage",
       type: "spell", name: "Extended Damage",
-      desc: "Exercises trueDamage, weaponDamageScale, percentMaxHealth damage fields.",
+      desc: "Exercises trueDamage, weaponDamageScale, percentMaxHealth, lifestealRatio damage fields.",
       activation: "cast",
       cost: { type: "cooldown", value: 10 },
       memoryCost: 2,
@@ -151,6 +166,9 @@ const VALID_SUPPLEMENT_CLASS = {
           weaponDamageScale: 1.5 },
         { base: 0, scaling: 0, damageType: "magical", target: "enemy",
           percentMaxHealth: 0.05 },
+        { base: 5, scaling: 0.25, damageType: "evil_magical", target: "enemy",
+          lifestealRatio: 1.0,
+          desc: "Lifesteal channel — derived heal = 100% × damage (LOCK 3)." },
       ],
     },
     // Prerequisite spells for mergedSpells.
@@ -336,6 +354,13 @@ describe('validator self-tests — negative', () => {
     }, "C.display_only");
   });
 
+  it('C.capability_tags — display-only atom with tag not in ATOM_TAGS or CAPABILITY_TAGS', () => {
+    assertHasRule({ ...BASE,
+      perks: [{ id: "p", name: "P", type: "perk", desc: "x", activation: "passive",
+        effects: [{ tags: ["not_a_capability_or_cc_tag"], target: "self" }] }],
+    }, "C.capability_tags");
+  });
+
   it('C.stacking — atom has both maxStacks and resource', () => {
     assertHasRule({ ...BASE,
       classResources: { my_pool: { maxStacks: 3, desc: "x" } },
@@ -383,6 +408,24 @@ describe('validator self-tests — negative', () => {
         memoryCost: 1, cost: { type: "none", value: 0 },
         damage: [{ base: 10, scaling: 1, damageType: "physical", target: "enemy", count: 0 }] }],
     }, "D.count");
+  });
+
+  it('D.lifestealRatio — out-of-range lifestealRatio (> 1)', () => {
+    assertHasRule({ ...BASE,
+      spells: [{ id: "s", name: "S", type: "spell", desc: "x", activation: "cast",
+        memoryCost: 1, cost: { type: "none", value: 0 },
+        damage: [{ base: 10, scaling: 1, damageType: "dark_magical", target: "enemy",
+                   lifestealRatio: 1.5 }] }],
+    }, "D.lifestealRatio");
+  });
+
+  it('D.lifestealRatio — negative lifestealRatio', () => {
+    assertHasRule({ ...BASE,
+      spells: [{ id: "s", name: "S", type: "spell", desc: "x", activation: "cast",
+        memoryCost: 1, cost: { type: "none", value: 0 },
+        damage: [{ base: 10, scaling: 1, damageType: "evil_magical", target: "enemy",
+                   lifestealRatio: -0.2 }] }],
+    }, "D.lifestealRatio");
   });
 
   // ── E: HEAL_ATOM / SHIELD_ATOM ─────────────────────────────────

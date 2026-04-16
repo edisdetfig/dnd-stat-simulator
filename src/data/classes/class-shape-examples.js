@@ -243,10 +243,10 @@ export const soulCollector = {
   activation: "passive",
   tags: ["dark"],
   effects: [
-    { stat: "allAttributes",  value: 1,    phase: "pre_curve_flat",
+    { stat: "allAttributes",   value: 1,    phase: "pre_curve_flat",
       resource: "darkness_shards" },
-    { stat: "typeDamageBonus", value: 0.33, phase: "type_damage_bonus",
-      damageType: "dark_magical", resource: "darkness_shards" },
+    { stat: "darkDamageBonus", value: 0.33, phase: "type_damage_bonus",
+      resource: "darkness_shards" },
   ],
 };
 
@@ -302,11 +302,11 @@ export const bloodPact = {
     { stat: "magicResistance", value: 50, phase: "pre_curve_flat",
       condition: { type: "effect_active", effectId: "blood_pact" } },
     // Locked-shard scaling contributions
-    { stat: "allAttributes",  value: 1,    phase: "pre_curve_flat",
+    { stat: "allAttributes",   value: 1,    phase: "pre_curve_flat",
       resource: "blood_pact_locked_shards",
       condition: { type: "effect_active", effectId: "blood_pact" } },
-    { stat: "typeDamageBonus", value: 0.33, phase: "type_damage_bonus",
-      damageType: "dark_magical", resource: "blood_pact_locked_shards",
+    { stat: "darkDamageBonus", value: 0.33, phase: "type_damage_bonus",
+      resource: "blood_pact_locked_shards",
       condition: { type: "effect_active", effectId: "blood_pact" } },
   ],
   damage: [
