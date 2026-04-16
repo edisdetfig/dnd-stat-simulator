@@ -102,9 +102,10 @@ export const STAT_META = {
 
   // Class / spell mechanics
   curseDurationBonus: { label: "Curse Duration", unit: "percent", cat: "utility", direction: "caster", tag: "curse" },
-  spellChargeMultiplier: { label: "Spell Charge Multiplier", unit: "percent", cat: "utility" },
+  spellChargeBonus: { label: "Spell Charge Bonus", unit: "percent", cat: "utility" },
   spellCooldownMultiplier: { label: "Spell Cooldown Multiplier", unit: "percent", cat: "utility" },
   drawSpeed: { label: "Draw Speed", unit: "percent", cat: "utility" },
+  memorySlots: { label: "Memory Slots", unit: "flat", cat: "utility" },
 
   // ── Phase 1.3 §B additions ──
   // Duration-modifier entries carry `direction` ("caster" | "receiver") and

@@ -4,7 +4,7 @@ Dark and Darker — Research & Simulator
 
 # Project Description
 
-Research verified game mechanics and build an interactive character simulator for Dark and Darker. The project maintains two parallel tracks: (1) documenting and verifying in-game formulas, stat curves, and damage mechanics through real-time testing, and (2) implementing those mechanics as a React-based character builder that evaluates gear swaps by comparing damage output, survivability, and derived stats. Accuracy is the core constraint — every formula must trace to a verified source, and in-game discrepancies halt development until resolved.
+Research verified game mechanics and build an interactive character simulator for Dark and Darker. The project maintains two parallel tracks: (1) documenting and verifying in-game formulas, stat curves, and damage mechanics through real-time testing, and (2) implementing a real-time stat snapshot simulator as a React-based character builder that evaluates gear swaps by comparing damage output, survivability, and derived stats. Accuracy is the core constraint — every formula must trace to a verified source, and in-game discrepancies halt development until resolved.
 
 # Instructions
 
@@ -26,6 +26,8 @@ When a discrepancy is found: document it in unresolved_questions.md with a testi
 # Architecture & Key Files
 
 KNOWLEDGE FILE LAYOUT:
+- data/classes/class-shape.js - Authoritative class data shape that defines all class data and which all classes must conform to
+- data/classes/class-shape-examples.js - Concrete examples of class data
 - data/stat_curves.json — all 17 piecewise curve definitions (stable, patch-only changes)
 - docs/damage_formulas.md — physical/magical damage formulas, DR, penetration, Antimagic, DR caps
 - docs/season8_constants.md — global caps, derived stat formulas, season changes, balance notes
@@ -42,14 +44,14 @@ KNOWLEDGE FILE LAYOUT:
 
 **Stack:** Vite + React 19. Single-page character simulator. Deploys to GitHub Pages via `.github/workflows/static.yml` on push to `main`.
 
-**Phase status (2026-04-14):** Engine mid-rebuild (Phase 1.3 Section D). Class data is v3-native across all 10 classes. Non-load-bearing pre-v3 engine code has been archived out of the project; only verified-math files (`curves.js`, `damage.js`, `recipes.js`) remain in `src/engine/`. The simulator UI does not currently run — `App.jsx` imports resolve to archived paths and will be re-wired during Phase D.0.3/D.0.4.
+**Classes** Class data across all 10 classes in `src/data/classes` is to only be used as a reference while building new class files from our class shape source file `class-shape.js`. Relevant examples can be found in `class-shape-examples.js`. Only verified-math files (`curves.js`, `damage.js`, `recipes.js`) remain in `src/engine/`. The simulator UI does not currently run — `App.jsx` imports resolve to archived paths.
 
 **Source layout:**
-- `src/App.jsx` — main simulator UI (currently broken; pending re-wire to the rebuilt engine)
-- `src/components/` — gear editors, panels, curve charts
-- `src/data/classes/` — v3 class data (10 classes, all fully authored)
-- `src/data/constants.js` — enums (EFFECT_PHASES, CONDITION_TYPES, STATUS_TYPES, PLAYER_STATES, WEAPON_TYPES, TARGETING, EFFECT_TARGETS, etc.)
-- `src/data/stat-meta.js` — canonical stat registry with direction/tag metadata for duration modifiers
+- `src/App.jsx` — main simulator UI (currently broken; pending re-wire to the newly built engine)
+- `src/components/` — gear editors, panels, curve charts, etc, more to be determined during architecture
+- `src/data/classes/` — Class data across all 10 classes that should only be used to reference the data, not the structure (10 classes, all need to be fully created with `class-shape.js`)
+- `src/data/constants.js` — enums for different effect phases, condition types, etc, to be followed and updated as needed.
+- `src/data/stat-meta.js` — canonical stat registry with direction/tag metadata for duration modifiers (may be stale and need updated)
 - `src/engine/curves.js` — piecewise curve evaluation + 17 curves
 - `src/engine/damage.js` — verified damage formulas
 - `src/engine/recipes.js` — HP / PPB / MPB / PDR / MDR derived-stat recipes + `RECIPE_IDS` registry (distinct from STAT_META — the two-namespace model)
@@ -64,9 +66,14 @@ npm run build           # Production build -> dist/
 npm test                # Run vitest
 ```
 
+**Ability data shape consolidation in flight** — see `docs/perspective.md` for the project's mental model (read this first on a fresh session), and `docs/class-shape-progress.md` for the current state of the class-shape work. The shape itself is defined in `src/data/classes/class-shape.js`, with concrete examples in `src/data/classes/class-shape-examples.js`. Real class data (`barbarian.js` etc.) is simply a reference for the underlying data, not shape — it along with every other class need to be completely rebuild to adhere to `src/data/classes/class-shape.js`.
+
 **Tracker + architecture docs:**
-- `docs/engine_architecture.md` — authoritative engine reference (ctx shape, contracts, stage pipeline, module map, public API; §6 D-row tracker D.1–D.26; §8 open items)
-- `docs/vocabulary.md` — controlled vocabulary (enum values, conventions, tags, direction semantics)
+- `docs/rebuild-plan.md` — authoritative 13-phase roadmap from locked `class-shape.js` to shipping UI; every phase session reads this first
+- `docs/perspective.md` — project mental model and core principles
+- `src/data/classes/class-shape.js` - Authoritative class data shape
+- `src/data/classes/class-shape-examples.js` - Concrete examples of class data
+- `docs/class-shape-progress.md` — in-flight state of the class-data shape consolidation
 
 **Two-namespace stat model:**
 - STAT_META keys = gear/perk additive contributions (e.g., `physicalDamageReductionBonus`, `maxHealthBonus`)

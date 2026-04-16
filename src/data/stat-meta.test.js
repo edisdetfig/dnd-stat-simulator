@@ -33,8 +33,8 @@ describe('STAT_META v3 additions (spec §5)', () => {
     "recoverableHealth",
     "typeDamageBonus", "buffWeaponDamage", "headshotPower",
     "headPenetration", "impactPower", "impactResistance",
-    "equippedArmorRatingBonus", "spellChargeMultiplier", "spellCooldownMultiplier",
-    "flatDamageReduction", "drawSpeed",
+    "equippedArmorRatingBonus", "spellChargeBonus", "spellCooldownMultiplier",
+    "flatDamageReduction", "drawSpeed", "memorySlots",
   ];
 
   for (const key of v3Keys) {
