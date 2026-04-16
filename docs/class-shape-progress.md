@@ -167,6 +167,34 @@ Each atom carries its own `target`, `condition`, `duration`, optional `tags` (gr
 
 ---
 
+## Engine architecture open questions
+
+Captured here for whichever phase builds the engine architecture doc. These
+questions are about *how the engine evaluates the shape*, not about the
+shape itself — so they don't block further class-shape work.
+
+1. **`hp_below` condition creates a Stage 2 ↔ Stage 5 cycle.** Stage 2
+   (`filterByConditions`) needs to evaluate `{ type: "hp_below", threshold }`;
+   that requires current HP, which is produced by Stage 5 (`deriveStats`).
+   Candidate resolutions:
+   - (a) Compute HP-before-conditions once at Stage 0 (run the HP recipe
+     with `bonuses = {}`); accept that `hp_below` only sees the unconditional
+     baseline.
+   - (b) Reframe `hp_below` as a user-settable "HP %" toggle — snapshot-model
+     consistent with the rest of the ctx (no causation in data); the engine
+     reads the user-set value and no cycle exists.
+   Surfaced by Phase 0 performance-budget work. Not resolved.
+
+2. **Stage 2 cache-key granularity.** Stage 2 depends on a declared subset
+   of `ctx` (selected abilities, `activeBuffs`, `weapon_type`, `player_state`,
+   `equipment`, `creature_type`, `damage_type`, `environment`, `tier`). A
+   fine-grained dependency-declared key would maximize cache hits; a coarse
+   whole-`ctx` key is simpler. Phase 0's checkpoint spec records the
+   dependency set but defers the key-layout choice to the engine
+   implementation plan phase.
+
+---
+
 ## How to continue
 
 1. Read `docs/perspective.md` for the mental model.

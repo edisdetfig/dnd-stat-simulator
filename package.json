@@ -10,6 +10,7 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
+    "bench": "vitest bench --run",
     "lint": "eslint src"
   },
   "dependencies": {

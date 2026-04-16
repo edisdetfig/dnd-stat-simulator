@@ -12,6 +12,16 @@ export const ARMOR_SLOTS = [
   "head", "chest", "back", "hands", "legs", "feet", "ring1", "ring2", "necklace",
 ];
 
+// ── Combat multipliers (consumed by src/engine/damage.js) ──
+//
+// Restored during Phase 0. Only the fields damage.js references today —
+// speculative restoration of BASE_MOVE_SPEED / MOVE_SPEED_CAP /
+// ANTIMAGIC_REDUCTION deferred to whichever phase first needs them.
+export const COMBAT = Object.freeze({
+  HS_BASE_MULT: 0.5,   // VERIFIED — docs/season8_constants.md:22
+  LIMB_MULT:    0.5,   // VERIFIED — docs/season8_constants.md:23
+});
+
 // ── Patch-derived constants ──
 
 // Verified via docs/health_formula.md.
