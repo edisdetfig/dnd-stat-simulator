@@ -10,7 +10,7 @@ import { wizard } from './wizard.js';
 import { sorcerer } from './sorcerer.js';
 import { bard } from './bard.js';
 import { druid } from './druid.js';
-import { warlock } from './warlock.js';
+import { warlock } from './warlock.new.js';
 
 export const CLASSES = {
   fighter,

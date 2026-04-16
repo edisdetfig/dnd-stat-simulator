@@ -17,6 +17,10 @@ export const STAT_META = {
   wil: { label: "WIL", unit: "flat", cat: "attr", gearStat: true },
   kno: { label: "KNO", unit: "flat", cat: "attr", gearStat: true },
   res: { label: "RES", unit: "flat", cat: "attr", gearStat: true },
+  // Composite — applies the value to each of the 7 core attributes. Used by
+  // e.g. Soul Collector (+1 per shard), Blood Pact (+1 per locked shard),
+  // Curse of Weakness (-25% via attribute_multiplier on enemy).
+  allAttributes: { label: "All Attributes", unit: "flat", cat: "attr" },
 
   // ── Offensive ──
   physicalPower: { label: "Physical Power", unit: "flat", cat: "offense", gearStat: true },
@@ -31,6 +35,11 @@ export const STAT_META = {
   additionalMagicalDamage: { label: "Add. Magical Damage", unit: "flat", cat: "offense", gearStat: true },
   demonDamageBonus: { label: "Demon Damage Bonus", unit: "percent", cat: "offense", gearStat: true },
   undeadDamageBonus: { label: "Undead Damage Bonus", unit: "percent", cat: "offense", gearStat: true },
+  // Lifesteal family. No direction: Convention 13 is for duration modifiers.
+  //   lifestealOnDamage       — % of damage dealt healed back (Warlock Life Drain: 1.0 = 100% pre-MDR).
+  //   lifestealOfTargetMaxHp  — % of target's max HP healed per triggering hit (Warlock Exploitation Strike: 0.10).
+  lifestealOnDamage:      { label: "Lifesteal On Damage",        unit: "percent", cat: "offense" },
+  lifestealOfTargetMaxHp: { label: "Lifesteal of Target Max HP", unit: "percent", cat: "offense" },
 
   // ── Defensive ──
   armorRating: { label: "Armor Rating", unit: "flat", cat: "defense", gearStat: true },
@@ -131,6 +140,10 @@ export const STAT_META = {
   shoutDurationBonus: { label: "Shout Duration", unit: "percent", cat: "utility", direction: "caster", tag: "shout" },
   burnDurationAdd: { label: "Burn Duration Add", unit: "flat", cat: "utility", direction: "caster", tag: "burn" },
   drunkDurationBonus: { label: "Drunk Duration", unit: "percent", cat: "utility", direction: "receiver", tag: "drunk" },
+
+  // Ability-property modifier (Convention 13: direction + tag). +100% cost
+  // multiplier on spell-tagged abilities (Warlock Torture Mastery: 1.0).
+  spellCostBonus: { label: "Spell Cost Bonus", unit: "percent", cat: "utility", direction: "caster", tag: "spell" },
 };
 
 export const DERIVED_DISPLAY = {
