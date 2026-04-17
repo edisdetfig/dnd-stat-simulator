@@ -89,8 +89,12 @@ const VALID_SUPPLEMENT_CLASS = {
           condition: { type: "equipment", slot: "head", equipped: true } },
         { stat: "luck", value: 5, phase: "post_curve",
           condition: { type: "environment", env: "dungeon" } },
-        { stat: "luck", value: 3, phase: "post_curve",
-          condition: { type: "damage_type", damageType: "fire_magical" } },
+        // damage_type variant coverage — authored at post_cap_multiplicative_layer
+        // per C.damage_type_phase_invariant (Antimagic-like pattern).
+        { stat: "magicDamageTaken", value: 0.80, phase: "post_cap_multiplicative_layer",
+          condition: { type: "not", conditions: [
+            { type: "damage_type", damageType: "divine_magical" },
+          ]} },
       ],
     },
     // Ally / self_or_ally EFFECT_TARGETS coverage + typed-damage stat +
@@ -589,6 +593,82 @@ describe('validator self-tests — negative', () => {
         effects: [{ stat: "luck", value: 1, phase: "post_curve",
                     source: { kind: "perk", abilityId: "p", className: "test" } }] }],
     }, "K.atom_source");
+  });
+
+  // ── Phase 6 LOCK F: three new rules ────────────────────────────
+
+  it('K.afterEffect_forbidden — grants inside afterEffect', () => {
+    assertHasRule({ ...BASE,
+      spells: [{ id: "s", name: "S", type: "spell", desc: "x", activation: "cast_buff",
+        memoryCost: 1, cost: { type: "none", value: 0 },
+        afterEffect: {
+          duration: 5,
+          effects: [{ stat: "luck", value: 1, phase: "post_curve" }],
+          grants: [{ type: "ability", abilityId: "s" }],
+        }}],
+    }, "K.afterEffect_forbidden");
+  });
+
+  it('K.afterEffect_forbidden — removes inside afterEffect', () => {
+    assertHasRule({ ...BASE,
+      spells: [{ id: "s", name: "S", type: "spell", desc: "x", activation: "cast_buff",
+        memoryCost: 1, cost: { type: "none", value: 0 },
+        afterEffect: {
+          duration: 5,
+          effects: [{ stat: "luck", value: 1, phase: "post_curve" }],
+          removes: [{ type: "armor", armorType: "plate" }],
+        }}],
+    }, "K.afterEffect_forbidden");
+  });
+
+  it('C.memorySlots_abilityType_required — memorySlots without abilityType', () => {
+    assertHasRule({ ...BASE,
+      skills: [{ id: "m", name: "Memory", type: "skill", desc: "x", activation: "passive",
+        effects: [{ stat: "memorySlots", value: 5, phase: "post_curve" }] }],
+    }, "C.memorySlots_abilityType_required");
+  });
+
+  it('C.damage_type_phase_invariant — damage_type condition at non-post-cap phase', () => {
+    assertHasRule({ ...BASE,
+      perks: [{ id: "p", name: "P", type: "perk", desc: "x", activation: "passive",
+        effects: [{ stat: "luck", value: 1, phase: "post_curve",
+                    condition: { type: "damage_type", damageType: "fire_magical" } }] }],
+    }, "C.damage_type_phase_invariant");
+  });
+
+  it('C.damage_type_phase_invariant — damage_type nested inside not at non-post-cap phase', () => {
+    assertHasRule({ ...BASE,
+      perks: [{ id: "p", name: "P", type: "perk", desc: "x", activation: "passive",
+        effects: [{ stat: "luck", value: 1, phase: "post_curve",
+                    condition: { type: "not", conditions: [
+                      { type: "damage_type", damageType: "divine_magical" },
+                    ]} }] }],
+    }, "C.damage_type_phase_invariant");
+  });
+
+  it('C.damage_type_phase_invariant — nested inside all/any at non-post-cap phase', () => {
+    assertHasRule({ ...BASE,
+      perks: [{ id: "p", name: "P", type: "perk", desc: "x", activation: "passive",
+        effects: [{ stat: "luck", value: 1, phase: "post_curve",
+                    condition: { type: "all", conditions: [
+                      { type: "any", conditions: [
+                        { type: "damage_type", damageType: "dark_magical" },
+                      ]},
+                    ]} }] }],
+    }, "C.damage_type_phase_invariant");
+  });
+
+  it('C.damage_type_phase_invariant — ALLOWED at post_cap_multiplicative_layer (no error)', () => {
+    const fixture = { ...BASE,
+      perks: [{ id: "p", name: "P", type: "perk", desc: "x", activation: "passive",
+        effects: [{ stat: "magicDamageTaken", value: 0.80, phase: "post_cap_multiplicative_layer",
+                    condition: { type: "not", conditions: [
+                      { type: "damage_type", damageType: "divine_magical" },
+                    ]} }] }],
+    };
+    const errors = validateClass(fixture);
+    const rules = errors.map(e => e.rule);
+    expect(rules, formatErrors(errors)).not.toContain("C.damage_type_phase_invariant");
   });
 
   // ── L: cross-class id collision ────────────────────────────────

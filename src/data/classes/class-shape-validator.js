@@ -447,10 +447,23 @@ function validateAtomContainers(ab, base, condCtx, errors) {
     const p = `${base}.afterEffect`;
     if (typeof ae !== "object" || Array.isArray(ae)) {
       errors.push(errAt(p, "is not an object", "C.shape"));
-    } else if (Array.isArray(ae.effects)) {
-      ae.effects.forEach((atom, i) => {
-        validateStatEffectAtom(atom, `${p}.effects[${i}]`, condCtx, errors);
-      });
+    } else {
+      if (Array.isArray(ae.effects)) {
+        ae.effects.forEach((atom, i) => {
+          validateStatEffectAtom(atom, `${p}.effects[${i}]`, condCtx, errors);
+        });
+      }
+      // K.afterEffect_forbidden — per docs/engine_architecture.md §14 + plan §8:
+      // afterEffect carries only `effects[]`. grants[] / removes[] represent
+      // availability facts that are state-independent and must live on the
+      // ability itself, not inside the afterEffect wrapper.
+      for (const k of ["grants", "removes"]) {
+        if (k in ae) {
+          errors.push(errAt(`${p}.${k}`,
+            `'${k}' is forbidden inside afterEffect — availability facts live on the ability, not the post-effect wrapper (see docs/engine_architecture.md §14)`,
+            "K.afterEffect_forbidden"));
+        }
+      }
     }
   }
 }
@@ -533,12 +546,45 @@ function validateStatEffectAtom(atom, path, condCtx, errors) {
       `'${atom.abilityType}' is not in ABILITY_TYPES`, "C.abilityType"));
   }
 
+  // C.memorySlots_abilityType_required — per plan §6.3: `memorySlots` atoms
+  // add only to the pool named by their `abilityType` discriminator. Without
+  // it, the engine can't route the capacity contribution to a pool.
+  if (atom.stat === "memorySlots" && !("abilityType" in atom)) {
+    errors.push(errAt(path,
+      "memorySlots atom missing required `abilityType` discriminator (must name the pool: 'spell' | 'transformation' | 'music')",
+      "C.memorySlots_abilityType_required"));
+  }
+
+  // C.damage_type_phase_invariant — per plan §3.6 rule 5: a damage_type-
+  // conditioned atom can only live at phase 'post_cap_multiplicative_layer'.
+  // At any other phase, Stage 4 would silently sum it into bonuses/
+  // perTypeBonuses with the condition dropped (Antimagic is the canonical
+  // post-cap consumer). A damage_type condition at any depth of the tree
+  // trips this check.
+  if (conditionTreeContainsDamageType(atom.condition)
+      && atom.phase !== "post_cap_multiplicative_layer") {
+    errors.push(errAt(path,
+      `atom has a damage_type condition but phase is ${JSON.stringify(atom.phase)} — damage_type conditions only make sense at phase 'post_cap_multiplicative_layer' (Antimagic pattern); at any other phase the condition is silently dropped by aggregate`,
+      "C.damage_type_phase_invariant"));
+  }
+
   validateScalesWith(atom.scalesWith, `${path}.scalesWith`, errors);
   validateStackingXor(atom, path, condCtx, errors);
 
   if (atom.condition != null) {
     validateCondition(atom.condition, `${path}.condition`, condCtx, errors);
   }
+}
+
+// Recursively walks a condition tree looking for a `damage_type` node.
+// Used by C.damage_type_phase_invariant.
+function conditionTreeContainsDamageType(cond) {
+  if (!cond || typeof cond !== "object") return false;
+  if (cond.type === "damage_type") return true;
+  if (Array.isArray(cond.conditions)) {
+    return cond.conditions.some(conditionTreeContainsDamageType);
+  }
+  return false;
 }
 
 function validateDamageAtom(atom, path, condCtx, errors) {
