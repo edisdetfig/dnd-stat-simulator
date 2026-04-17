@@ -169,7 +169,7 @@ Update this table after every completed phase.
 | 5 — Engine implementation plan | DONE | `docs/session-prompts/phase-5-engine-implementation-plan.md` | `b47312d` |
 | 6 — Engine implementation | DONE | `docs/session-prompts/phase-6-engine-implementation.md` | `0e69523` |
 | 6.5a — Gear wiki facts | DONE | `docs/session-prompts/phase-6-5-a-gear-wiki-facts.md` | `7ba5734` |
-| 6.5b — Gear & character mapping | — | — | — |
+| 6.5b — Gear & character mapping | DONE | `docs/session-prompts/phase-6-5-b-gear-character-mapping.md` | `62c64c3` |
 | 6.5c — Gear & character shape design | — | — | — |
 | 7 — Anchor class wiring + minimal UI | — | — | — |
 | 8 — End-to-end verification | — | — | — |
