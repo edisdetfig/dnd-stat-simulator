@@ -165,7 +165,7 @@ Update this table after every completed phase.
 | 1 — Class-shape validator | DONE | `docs/session-prompts/phase-1-class-shape-validator.md` | `c5160d7` |
 | 2 — Warlock migration | DONE | `docs/session-prompts/phase-2-warlock-migration.md` | `f8431ad` |
 | 3 — engine_architecture.md + vocabulary.md | DONE | `docs/session-prompts/phase-3-engine-architecture.md` | `5f99a80` |
-| 4 — Architecture doc verification pass | — | — | — |
+| 4 — Architecture doc verification pass | DONE | `docs/session-prompts/phase-4-architecture-verification.md` | `f93dec2` |
 | 5 — Engine implementation plan | — | — | — |
 | 6 — Engine implementation | — | — | — |
 | 7 — Anchor class wiring + minimal UI | — | — | — |
