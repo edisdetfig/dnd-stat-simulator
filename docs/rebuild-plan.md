@@ -259,6 +259,28 @@ For each module:
 
 ---
 
+## Phase 6.5 — Gear & Character Shape
+
+**Goal.** Close two shape gaps the original plan treated as implicit: the Gear shape (per-slot items with inherent + socketed rolls, rarity-driven modifier counts, class gating, two weapon loadouts + `weaponHeldState` toggle) and the Character shape (identity + persistent selections + gear-loadout reference). Phase 6 shipped with a `Build.gear = { weapon, bonuses }` pass-through that worked for the engine but isn't expressive enough for the user-facing data model. Lock the shapes before Phase 7's `App.jsx` wiring bakes an implicit version into the engine seam.
+
+**Sub-phases.** Each is a bounded fresh-session phase following the standard 5-stage operating protocol.
+
+- **6.5a — Gear Wiki Facts.** Research-only. Answers the 13 OQ-W research questions in `docs/session-prompts/gear-shape-design.md § 5` with wiki-sourced citations + verification levels. Output: `docs/gear-wiki-facts.md`.
+- **6.5b — Gear & Character Mapping.** Research-only. Maps current-state integration seams (engine `buildContext` inputs, `ctx` shape, `Snapshot` shape, `App.jsx` expectations). Gap-analyzes against `gear-shape-design.md` requirements + 6.5a wiki facts. Output: mapping doc + gap inventory + refined OQ list.
+- **6.5c — Gear & Character Shape Design.** Clean-slate design. Resolves `gear-shape-design.md § 6` OQ-D list. Output: `gear-shape.js`, `character-shape.js`, normalizer spec, validator spec. May commit engine-seam changes if the shape design requires them. No UI code (Phase 7 / 11).
+
+**Source of truth.** `docs/session-prompts/gear-shape-design.md` is the requirements doc — clean-slate framing (§1), locked decisions L1–L14 (§3), authoritative metadata (§4), seeded OQ lists (§5–§6). Every 6.5 session reads it first as canonical input.
+
+**Watch for.**
+- **Clean-slate shape discipline.** The new shapes are not templates derived from the existing `Build.gear` pass-through; current engine surface is an integration seam to respect or deliberately change, per `gear-shape-design.md § 1`.
+- **Authoritative-source discipline.** Metadata in §4 is the source of truth for every gear-piece example, inherent stat, modifier pool, and rarity decision. Silences become Open Questions, not inventions.
+- **Accuracy-first compliance.** Every wiki fact carries a citation + verification level (VERIFIED / WIKI-SOURCED / UNRESOLVED) per project doctrine.
+- **Sub-phase ordering.** 6.5b does not start until 6.5a's completion report is signed off; 6.5c does not start until 6.5b's is signed off. Standard phase-gate discipline.
+
+**Success criteria.** All three sub-phase completion reports signed off. Gear + Character shape files produced with examples, normalizer spec, and validator spec. `gear-shape-design.md § 6` OQ-D list fully resolved. Phase 7 input unblocked: `App.jsx` wiring has locked Character + Gear shapes to consume.
+
+---
+
 ## Phase 7 — Anchor class wiring + minimal UI
 
 **Goal.** Replace broken `App.jsx` with a minimal Warlock-only UI proving end-to-end flow works.
