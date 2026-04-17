@@ -209,6 +209,25 @@ shape itself — so they don't block further class-shape work.
 
 ---
 
+## Gear-shape open questions
+
+Captured here for whichever phase designs the gear-data shape (likely
+Phase 11 when the gear editor is rebuilt, but an engine-facing `gear`
+shape may emerge earlier as Phase 7/8 wiring exposes needs). These
+concern how gear pieces are authored, not how classes are authored.
+
+1. **Per-piece weapon-attached damage riders — e.g., Spiked Gauntlet
+   onHit: +1 true_physical damage.** **RESOLVED in Phase 6.5c.1
+   (2026-04-17).** OQ-D6 picks shape candidate (a): `ctx.gear.onHitEffects[]`
+   — shape authored in `src/data/gear/gear-shape.js` as `ON_HIT_EFFECT_ATOM`
+   `{ damage, damageType, trueDamage, scaling, separateInstance, notes? }`;
+   Spiked Gauntlet instance authored in `src/data/gear/gear-shape-examples.js`.
+   Shape + validator shipped in 6.5c.1. Engine read (`projectDamage.js`
+   consumption at the VERIFIED post-floor true-physical additive position,
+   `docs/damage_formulas.md:235-240`) + normalizer aggregation ship in 6.5c.2.
+
+---
+
 ## How to continue
 
 1. Read `docs/perspective.md` for the mental model.

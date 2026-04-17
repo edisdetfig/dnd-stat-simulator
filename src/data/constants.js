@@ -12,6 +12,35 @@ export const ARMOR_SLOTS = [
   "head", "chest", "back", "hands", "legs", "feet", "ring1", "ring2", "necklace",
 ];
 
+// ── Gear-shape vocabulary (gear-shape-design.md § 4.1 / § 4.4) ──
+
+// Item-definition `slotType` — 10 distinct types (ring1 and ring2 both map
+// to slotType "ring"; §4.5 treats them as sharing the `ring` pool per L9).
+// Used by gear-definition-validator to type-check items; used by
+// character-gear-validator to match item.slotType against loadout slot key.
+export const SLOT_TYPES = new Set([
+  "primaryWeapon", "secondaryWeapon",
+  "head", "chest", "back", "hands", "legs", "feet",
+  "ring", "necklace",
+]);
+
+// Loadout slot keys — the 11 keys on `gear.loadout.slots` (§4.1). Distinct
+// from SLOT_TYPES because ring1/ring2 are separate equip slots both of
+// slotType "ring", and weapon loadouts are {primary, secondary} envelopes.
+export const ITEM_SLOT_KEYS = new Set([
+  "weaponSlot1", "weaponSlot2",
+  "head", "chest", "back", "hands", "legs", "feet",
+  "ring1", "ring2", "necklace",
+]);
+
+// Weapon handedness (§4.4 `item.handType`). Canonical camelCase per L2 +
+// OQ-D12 resolution. Distinct from WEAPON_TYPES virtual categories
+// "one_handed"/"two_handed" used in condition dispatch (those rename in
+// 6.5c.2 alongside the engine-side `handed` → `handType` field rename).
+export const HAND_TYPES = new Set([
+  "oneHanded", "twoHanded",
+]);
+
 // ── Combat multipliers (consumed by src/engine/damage.js) ──
 //
 // Restored during Phase 0. Only the fields damage.js references today —
@@ -201,6 +230,11 @@ export const WEAPON_TYPES = new Set([
   "axe", "sword", "dagger", "bow", "crossbow", "staff", "blunt",
   "rapier", "spear", "two_handed", "one_handed", "ranged", "instrument",
   "unarmed", "shield", "spellbook", "firearm", "dual_wield",
+  // "magicStuff" per L2.1 — weapons that also count as magic items (crystal
+  // swords, spellbooks). Real vocabulary entry, not placeholder. Authored
+  // as a secondary entry in multi-type weaponType arrays, e.g. Frostlight
+  // Crystal Sword: ["sword", "magicStuff"].
+  "magicStuff",
 ]);
 
 // Map of category → list of specific weapon types that satisfy the category.

@@ -81,6 +81,16 @@ export const STAT_META = {
   weaponDamage: { label: "Weapon Damage", unit: "flat", cat: "weapon" },
   magicalDamage: { label: "Magical Damage", unit: "flat", cat: "weapon" },
   magicWeaponDamage: { label: "Magic Weapon Damage", unit: "flat", cat: "weapon" },
+  // Inherent-only weapon/shield properties per gear-shape-design.md L4.
+  // Structural richness (per-combo-stage arrays, per-strike-zone mappings,
+  // per-stage windup/hit/recovery seconds) lives on the item-definition
+  // `inherentWeaponProperties` sub-shape, not as numeric STAT_META
+  // contributions. These entries exist for label/unit lookup only — they
+  // never participate in aggregate bonuses (no gearStat) and are not
+  // surfaced in any modifier pool (§4.5 omits them).
+  comboMultiplier:  { label: "Combo Multiplier",  unit: "percent", cat: "weapon" },
+  impactZone:       { label: "Impact Zone",       unit: "percent", cat: "weapon" },
+  swingTiming:      { label: "Swing Timing",      unit: "flat",    cat: "weapon" },
 
   // ── v3 additions (data spec §5) ──
   // Display-only entries: no gearStat flag — these come from abilities/perks,

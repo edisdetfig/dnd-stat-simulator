@@ -168,13 +168,14 @@ describe('membership sets', () => {
     expect(PLAYER_STATES.size).toBe(12);
   });
 
-  it('WEAPON_TYPES contains all 18 weapon kinds and virtual categories', () => {
+  it('WEAPON_TYPES contains all 19 weapon kinds and virtual categories', () => {
     for (const w of [
       "axe", "sword", "dagger", "bow", "crossbow", "staff", "blunt",
       "rapier", "spear", "two_handed", "one_handed", "ranged", "instrument",
       "unarmed", "shield", "spellbook", "firearm", "dual_wield",
+      "magicStuff",  // added Phase 6.5c.1 per L2.1 (multi-type weaponType array support)
     ]) expect(WEAPON_TYPES.has(w)).toBe(true);
-    expect(WEAPON_TYPES.size).toBe(18);
+    expect(WEAPON_TYPES.size).toBe(19);
   });
 
   it('CAPABILITY_TAGS contains the seven Phase-3-locked display-only-atom capabilities', () => {
