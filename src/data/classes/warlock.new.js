@@ -77,7 +77,7 @@ export const warlock = {
       id: "shadow_touch",
       type: "perk",
       name: "Shadow Touch",
-      desc: "Dealing physical damage to an enemy with a melee weapon deals 2 true dark magical damage and heals you for 2 health. The true damage and healing do not scale. Per-melee-hit semantics; projection displays the flat 2 damage + 2 heal contribution.",
+      desc: "Dealing physical damage to an enemy via melee attack (any weapon or bare hands) deals 2 true dark magical damage and heals you for 2 health. The true damage and healing do not scale.",
       activation: "passive",
       tags: ["dark"],
       damage: [
@@ -381,13 +381,13 @@ export const warlock = {
             { type: "weapon_type", weaponType: "unarmed" },
           ]} },
       ],
-      effects: [
-        { stat: "lifestealOfTargetMaxHp", value: 0.10, phase: "post_curve", duration: 15,
-          condition: { type: "all", conditions: [
-            { type: "effect_active", effectId: "exploitation_strike" },
-            { type: "weapon_type", weaponType: "unarmed" },
-          ]} },
-      ],
+      heal: { baseHeal: 0, scaling: 0, healType: "magical", target: "self",
+        percentMaxHealth: 0.10,
+        desc: "10% of the enemy's max HP per unarmed hit while Exploitation Strike buff is active",
+        condition: { type: "all", conditions: [
+          { type: "effect_active", effectId: "exploitation_strike" },
+          { type: "weapon_type", weaponType: "unarmed" },
+        ]} },
       _unverified: {
         tooltipMismatch: "Tooltip says 2s; in-game base is ~15s (measured 18s with +20% buffDurationBonus). Authored to the in-game base.",
       },
@@ -472,7 +472,7 @@ export const warlock = {
       id: "bloodstained_blade",
       type: "spell",
       name: "Bloodstained Blade",
-      desc: "While active, the target gains 5 weapon damage for 20 seconds. When the target swings their weapon, they take 3 evil magical damage. Self cast if no target is found. (In-game targeting also supports ally cast — captured in desc; snapshot models self-cast via target: self on the atoms.) Does not scale.",
+      desc: "While active, the target gains 5 weapon damage for 20 seconds. When the target swings their weapon, they take 3 evil magical damage. Self cast if no target is found. Does not scale.",
       activation: "cast_buff",
       cost: { type: "health", value: 4 },
       memoryCost: 2,
@@ -480,11 +480,11 @@ export const warlock = {
       tags: ["blood"],
       duration: { base: 20, type: "buff" },
       effects: [
-        { stat: "buffWeaponDamage", value: 5, phase: "post_curve", target: "self", duration: 20,
+        { stat: "buffWeaponDamage", value: 5, phase: "post_curve", target: "self_or_ally", duration: 20,
           condition: { type: "effect_active", effectId: "bloodstained_blade" } },
       ],
       damage: [
-        { base: 3, scaling: 0, damageType: "evil_magical", target: "self",
+        { base: 3, scaling: 0, damageType: "evil_magical", target: "self_or_ally",
           desc: "per weapon swing while Bloodstained Blade is active",
           condition: { type: "effect_active", effectId: "bloodstained_blade" } },
       ],
@@ -579,10 +579,7 @@ export const warlock = {
       duration: { base: 7.5, type: "other" },
       damage: [
         { base: 5, scaling: 0.25, damageType: "evil_magical", isDot: true, tickRate: 1,
-          target: "enemy", desc: "per second" },
-      ],
-      effects: [
-        { stat: "lifestealOnDamage", value: 1.0, phase: "post_curve" },
+          target: "enemy", lifestealRatio: 1.0, desc: "per second" },
       ],
     },
 
@@ -619,11 +616,9 @@ export const warlock = {
         duration: 6,
         effects: [
           { stat: "darkDamageBonus", value: 0.30, phase: "type_damage_bonus",
-            target: "self",
-            condition: { type: "effect_active", effectId: "eldritch_shield" } },
+            target: "self" },
           { stat: "spellCastingSpeed", value: 0.50, phase: "post_curve",
-            target: "self",
-            condition: { type: "effect_active", effectId: "eldritch_shield" } },
+            target: "self" },
         ],
         desc: "Shield-break proc: next dark spell within 6s",
       },

@@ -35,11 +35,6 @@ export const STAT_META = {
   additionalMagicalDamage: { label: "Add. Magical Damage", unit: "flat", cat: "offense", gearStat: true },
   demonDamageBonus: { label: "Demon Damage Bonus", unit: "percent", cat: "offense", gearStat: true },
   undeadDamageBonus: { label: "Undead Damage Bonus", unit: "percent", cat: "offense", gearStat: true },
-  // Lifesteal family. No direction: Convention 13 is for duration modifiers.
-  //   lifestealOnDamage       — % of damage dealt healed back (Warlock Life Drain: 1.0 = 100% pre-MDR).
-  //   lifestealOfTargetMaxHp  — % of target's max HP healed per triggering hit (Warlock Exploitation Strike: 0.10).
-  lifestealOnDamage:      { label: "Lifesteal On Damage",        unit: "percent", cat: "offense" },
-  lifestealOfTargetMaxHp: { label: "Lifesteal of Target Max HP", unit: "percent", cat: "offense" },
 
   // ── Defensive ──
   armorRating: { label: "Armor Rating", unit: "flat", cat: "defense", gearStat: true },

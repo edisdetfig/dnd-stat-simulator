@@ -172,6 +172,8 @@ Every atom is self-contained: carries its own `target`, `condition`, `duration`,
 
 The `source` + `atomId` fields on every atom are **engine-populated at Stage 1**, not authored. Authoring either field is a validator error (`K.atom_source`).
 
+**Ability-level `duration` / `cooldown` / `castTime`** are display projections per §2 — not engine-gating. They render in tooltips, modified by Convention-13 tag-scoped stat modifiers (see §7). Atom-level `duration` (per-atom lifetime) is a separate concept and is also not engine-gating; see §6.1.
+
 ### 6.1 `STAT_EFFECT_ATOM`
 
 ```
@@ -208,6 +210,8 @@ Warlock ground cases:
 - `cap_override`: forward-spec (Fighter Defense Mastery raises `pdr` cap to 0.75; stat ID is the recipe ID `pdr`).
 - `scalesWith: hp_missing`: forward-spec (Barbarian Berserker).
 - `scalesWith: attribute`: forward-spec (Druid shapeshift damage atoms).
+
+**Target routing: `"either"`.** Atoms authored with `target: "either"` expose per-ability `applyToSelf` / `applyToEnemy` user toggles (per `constants.js:231–234`). When both toggles are on, a single `"either"` atom routes **simultaneously** into both the self projection (summed into caster's `bonuses`) and the enemy projection (summed into target's `bonuses`) at Stages 4 and 6; the UI surfaces either or both at user discretion. When only one toggle is on, only the matching projection fires. When neither is on, the atom contributes nothing. Warlock ground case: Power of Sacrifice (`warlock.new.js:425, 429, 430` — damage + 2 attribute buffs all `target: "either"`).
 
 ### 6.2 `DAMAGE_ATOM`
 
@@ -360,6 +364,8 @@ Per `docs/damage_formulas.md:180–188`:
 Effective_magic_damage_taken = (1 - min(MDR, MDR_cap)) × (1 - 0.20)
 ```
 At Stage 4, Antimagic's atom routes into `postCapMultiplicativeLayers` with `{ stat: "magicDamageTaken", multiplier: 0.80, condition: not(damage_type: divine_magical) }`. At Stage 6, the damage projection re-evaluates the condition per outgoing damage type; if true, the post-MDR damage is multiplied by 0.80. The stat screen's MDR value is unchanged (Antimagic does not feed `bonuses.magicalDamageReductionBonus`); the effect applies only inside the damage-projection formula.
+
+**Convention-13 tag-scoped duration modifiers.** Certain `post_curve` stats (`curseDurationBonus`, `shoutDurationBonus`, `burnDurationAdd`, `drunkDurationBonus`, `spellCostBonus`, ...) are tag-scoped: they carry `direction: "caster" | "receiver"` and `tag: <string>` metadata in `STAT_META` and modify the **ability-level displayed** `duration` / `cooldown` / `cost` when the consuming ability's free-form `tags[]` or `duration.tags[]` intersects. See `vocabulary.md §10` + `src/data/stat-meta.js` Convention 13 for the full rule. Engine consumption is display-only (ability-level display projections per §6 opening) — no Stage-4 aggregation special-case.
 
 ---
 
@@ -598,11 +604,24 @@ First anticipated consumer (Phase 4): Warlock Life Drain's damage atom, re-autho
 
 ### 16.3 `percentMaxHealth` on HEAL_ATOM
 
-Semantic: "% of whichever target is contextually relevant." Self-target atoms use caster max HP; target-scoped atoms use target max HP.
+Dual-context semantic: the atom's `target` names the **heal destination**; `percentMaxHealth × source_max_hp` is the **heal amount**. The `source_max_hp` depends on whether the heal is *self-inflicted* or *hit-derived*.
 
-Implementation: at Stage 6, `heal_amount = percentMaxHealth × targetMaxHp`, where `targetMaxHp = (target === "self") ? derivedStats.health.value : ctx.target.maxHealth`.
+- **Self-inflicted** heals (no per-hit gating in the atom's condition tree): `source_max_hp = destination max HP`. Computed as `(target === "self") ? derivedStats.health.value : ctx.target.maxHealth`.
+- **Hit-derived** heals (the atom's condition tree includes a per-hit gate — `weapon_type`, `damage_type`, or equivalent that fires the heal on weapon/spell impact): `source_max_hp = ctx.target.maxHealth` (the hit enemy's max HP), regardless of the heal's `target`.
 
-First anticipated consumer (Phase 4): Exploitation Strike (`lifestealOfTargetMaxHp: 0.10` becomes a HEAL_ATOM with `percentMaxHealth: 0.10, target: "self", derivedFrom: target-max-HP`).
+Implementation at Stage 6:
+```
+source_max_hp = isHitTriggered(atom)
+  ? ctx.target.maxHealth
+  : (atom.target === "self" ? derivedStats.health.value : ctx.target.maxHealth);
+heal_amount = atom.percentMaxHealth × source_max_hp;
+```
+
+`isHitTriggered(atom)` is a Phase 6 implementation detail: the engine flags atoms whose condition tree contains a hit-scoped gate (e.g., `weapon_type` nested inside `all`).
+
+Worked example — **Exploitation Strike** (Phase 4 land; hit-derived): `percentMaxHealth: 0.10`, `target: "self"`, condition `all(effect_active: exploitation_strike + weapon_type: unarmed)`. Per the rule above, `source_max_hp = ctx.target.maxHealth`; destination is the caster (`target: "self"`). On hitting a 100-HP enemy, the caster heals 10 HP.
+
+First anticipated consumer (Phase 4): Exploitation Strike — re-authored as a HEAL_ATOM with `percentMaxHealth: 0.10, target: "self"` + the hit-scoped condition tree above.
 
 ---
 
