@@ -166,7 +166,7 @@ Update this table after every completed phase.
 | 2 — Warlock migration | DONE | `docs/session-prompts/phase-2-warlock-migration.md` | `f8431ad` |
 | 3 — engine_architecture.md + vocabulary.md | DONE | `docs/session-prompts/phase-3-engine-architecture.md` | `5f99a80` |
 | 4 — Architecture doc verification pass | DONE | `docs/session-prompts/phase-4-architecture-verification.md` | `f93dec2` |
-| 5 — Engine implementation plan | — | — | — |
+| 5 — Engine implementation plan | DONE | `docs/session-prompts/phase-5-engine-implementation-plan.md` | `b47312d` |
 | 6 — Engine implementation | — | — | — |
 | 7 — Anchor class wiring + minimal UI | — | — | — |
 | 8 — End-to-end verification | — | — | — |
