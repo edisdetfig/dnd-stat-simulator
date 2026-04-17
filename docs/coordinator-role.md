@@ -167,13 +167,23 @@ Update this table after every completed phase.
 | 3 — engine_architecture.md + vocabulary.md | DONE | `docs/session-prompts/phase-3-engine-architecture.md` | `5f99a80` |
 | 4 — Architecture doc verification pass | DONE | `docs/session-prompts/phase-4-architecture-verification.md` | `f93dec2` |
 | 5 — Engine implementation plan | DONE | `docs/session-prompts/phase-5-engine-implementation-plan.md` | `b47312d` |
-| 6 — Engine implementation | — | — | — |
+| 6 — Engine implementation | IN-FLIGHT | `docs/session-prompts/phase-6-engine-implementation.md` | — |
 | 7 — Anchor class wiring + minimal UI | — | — | — |
 | 8 — End-to-end verification | — | — | — |
 | 9 — Doc maintenance sweep | — | — | — |
 | 10 — Migrate remaining 9 classes | — | — | — |
 | 11 — Full UI rebuild | — | — | — |
 | 12 — Deferred features + cleanup | — | — | — |
+
+---
+
+## In-flight (as of 2026-04-16)
+
+**Phase 6** prompt was pasted into a fresh session; awaiting Plan Report. Coordinator decision queue is empty. All architectural decisions through Phase 5 are durable in docs. The Phase 6 prompt's LOCK A–K capture every coordinator-bound decision the session needs.
+
+When Phase 6's Plan Report arrives, review per the standard pattern (verify concrete claims; categorize required revisions / open question answers / suggestions; draft suggested-reply-to-session). When it lands, commit per the standard pattern + update the phase index above + remove this In-flight section.
+
+Phase 6 is the largest phase; expect long Plan and Completion Reports. The 16-step execution sequence in the prompt is non-binding only in fine-grained ordering; the broad bottom-up approach is binding.
 
 ---
 
