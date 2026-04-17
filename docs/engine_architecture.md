@@ -37,7 +37,7 @@ Pipeline shape (per `docs/performance-budget.md § 6`, reproduced with Phase 3 a
 | Stage | Purpose | Principal inputs | Principal outputs | Purity |
 |---|---|---|---|---|
 | 0 — `buildContext` | Turn `Build` into `ctx`. Availability resolver, memory-budget validator, derived weapon-state. | All `Build` fields | `ctx` (read-only), `availableAbilityIds`, `activeAbilityIds`, `lockedAbilityIds`, `memoryBudget` | Pure (reads `Build`; writes `ctx`) |
-| 1 — `collectAtoms` | Walk every active ability's atom containers. Populate `source` + `atomId` per atom. | `ctx.activeAbilityIds`, class data | Flat atom lists per category: `effects`, `damage`, `heal`, `shield`, `afterEffects`, `grants`, `removes` | Pure |
+| 1 — `collectAtoms` | Walk available abilities' atom containers; populate `source` + `atomId`. **Damage atoms** collect for every available ability (cast spells project damage even when not state-active — *"what would this spell do if cast now?"*). **Effects / heal / shield / grants / removes** collect only for state-contributing abilities (in `activeAbilityIds`). `afterEffect` short-circuit (LOCK 5) applies inside the state-contributing path. | `ctx.availableAbilityIds` + `ctx.activeAbilityIds` + class data | Flat atom lists per category: `effects`, `damage`, `heal`, `shield`, `grants`, `removes` | Pure |
 | 2 — `filterByConditions` | Evaluate each atom's `condition`; drop false ones. | Stage 1 lists, condition-input subset of `ctx` | Filtered atom lists | Pure |
 | 3 — `materializeStacking` | Apply `maxStacks` / `resource` count; apply `scalesWith` to derive the atom value from ctx. | Stage 2 lists, `ctx.stackCounts`, `ctx.classResourceCounters`, `ctx.attributes`, `ctx.hpFraction` | Atoms with materialized `value` | Pure |
 | 4 — `aggregate` | Bucket stat-effect atoms by `(stat, phase)`. Route typed-damage-bonus atoms into `perTypeBonuses`. Route `post_cap_multiplicative_layer` atoms into `postCapMultiplicativeLayers`. | Stage 3 `effects` atoms | `bonuses` (per-stat per-phase), `perTypeBonuses` (damage-type → list), `postCapMultiplicativeLayers` (list) | Pure |
@@ -51,7 +51,7 @@ Stage-boundary dependency declarations (for memoization):
 | Stage | Reads | Invalidates on |
 |---|---|---|
 | 0 | Full `Build` | Any `Build` field changes |
-| 1 | `ctx.activeAbilityIds` + class data (static) | `activeAbilityIds` set changes |
+| 1 | `ctx.availableAbilityIds` + `ctx.activeAbilityIds` + class data (static) | Either set changes |
 | 2 | Stage 1 output + selected sets + `ctx.activeBuffs`, `weaponType`, `playerStates`, `equipment`, `target.creatureType`, `environment`, `selectedTiers`, `hpFraction` | Stage 1 out, OR any condition source changes |
 | 3 | Stage 2 output + `ctx.stackCounts` + `ctx.classResourceCounters` + `ctx.attributes` + `ctx.hpFraction` | Stage 2 out, OR any materialization source changes |
 | 4 | Stage 3 output (effects + afterEffects routed into bonuses when `viewingAfterEffect` applies) | Stage 3 out, OR `viewingAfterEffect` changes |
@@ -422,7 +422,7 @@ Stage 2 (`filterByConditions`) runs a dispatch table keyed on `condition.type`. 
 |---|---|
 | `hp_below` | `ctx.hpFraction < cond.threshold` (see § 19) |
 | `ability_selected` | `cond.abilityId ∈ (ctx.selectedPerks ∪ ctx.selectedSkills ∪ ctx.selectedSpells)` |
-| `effect_active` | Dispatch on target ability's `activation`: `passive` → selected; `cast_buff` / `toggle` → selected AND `abilityId ∈ ctx.activeBuffs`; `cast` → always false |
+| `effect_active` | `cond.effectId ∈ ctx.activeAbilityIds`. The `activeAbilityIds` set is composed in Stage 0 (§ 5) as: passive abilities that are selected, plus `cast_buff` / `toggle` abilities that are available (selected OR granted) AND in `activeBuffs`. Cast abilities are never in `activeAbilityIds` (no persistent state). This handles **granted abilities** correctly — e.g., Warlock Exploitation Strike is granted by Blood Pact (not directly in selected sets) but enters `activeAbilityIds` when in `activeBuffs`. |
 | `environment` | `ctx.environment === cond.env` |
 | `weapon_type` | `ctx.weaponType === cond.weaponType` OR virtual-category resolution (`ranged` via `WEAPON_TYPE_CATEGORIES.ranged`; `two_handed` / `unarmed` / `instrument` / `dual_wield` via gear properties) |
 | `player_state` | `cond.state ∈ ctx.playerStates` |
