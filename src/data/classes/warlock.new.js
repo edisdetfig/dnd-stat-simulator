@@ -375,19 +375,13 @@ export const warlock = {
       duration: { base: 15, type: "buff" },
       damage: [
         { base: 20, scaling: 1.0, damageType: "evil_magical", target: "enemy",
-          desc: "per unarmed hit while Exploitation Strike buff is active",
+          targetMaxHpRatio: 0.10,
+          desc: "per unarmed hit while Exploitation Strike buff is active; derived heal = 10% of enemy's max HP",
           condition: { type: "all", conditions: [
             { type: "effect_active", effectId: "exploitation_strike" },
             { type: "weapon_type", weaponType: "unarmed" },
           ]} },
       ],
-      heal: { baseHeal: 0, scaling: 0, healType: "magical", target: "self",
-        percentMaxHealth: 0.10,
-        desc: "10% of the enemy's max HP per unarmed hit while Exploitation Strike buff is active",
-        condition: { type: "all", conditions: [
-          { type: "effect_active", effectId: "exploitation_strike" },
-          { type: "weapon_type", weaponType: "unarmed" },
-        ]} },
       _unverified: {
         tooltipMismatch: "Tooltip says 2s; in-game base is ~15s (measured 18s with +20% buffDurationBonus). Authored to the in-game base.",
       },

@@ -199,9 +199,20 @@ const DAMAGE_ATOM = {
   //                 any magical subtype → "magical"; see engine_architecture.md §16)
   // Flat-field pattern parallel to `percentMaxHealth`; per-atom granularity
   // lets multi-damage abilities lifesteal on a subset of their atoms.
-  // Example first consumer (Phase 4): Warlock Life Drain damage atom with
-  // lifestealRatio: 1.0.
+  // Consumer: Warlock Life Drain damage atom with lifestealRatio: 1.0.
   lifestealRatio:    0,          // optional — [0, 1]
+
+  // Target-max-HP ratio — optional flat field (0–1). When present, the engine
+  // projects a derived heal alongside this damage atom whose magnitude is
+  // a fraction of the damage atom's target's max HP:
+  //   heal_amount = targetMaxHpRatio × damage_atom_target's max HP
+  //   target      = "self"
+  //   healType    = family-collapse of damageType (same rule as lifestealRatio)
+  // Flat-field pattern symmetric with `lifestealRatio`. Use when the heal
+  // scales from the hit target's max HP rather than the damage dealt.
+  // Consumer: Warlock Exploitation Strike damage atom with targetMaxHpRatio: 0.10
+  // (10% of the enemy's max HP per unarmed hit while the buff is active).
+  targetMaxHpRatio:  0,          // optional — [0, 1]
 
   scalesWith:        {},         // optional — see constants.js::SCALES_WITH_TYPES. Same polymorphism as STAT_EFFECT_ATOM.scalesWith.
   count:             1,          // optional — number of hits this atom produces per cast (missiles, chains, etc.)

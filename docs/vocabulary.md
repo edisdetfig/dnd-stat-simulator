@@ -90,7 +90,7 @@ Bonus semantics (critical — `docs/damage_formulas.md:116–143`):
 - Typed-damage stats (`darkDamageBonus`, `fireDamageBonus`, etc.) apply **only to matching subtype**. `darkDamageBonus` does nothing to `evil_magical` damage.
 
 ### 3.2 Damage-type → heal-type family collapse
-Used by the `lifestealRatio` DAMAGE_ATOM field to derive a HEAL projection's `healType`.
+Used by both `lifestealRatio` and `targetMaxHpRatio` DAMAGE_ATOM fields to derive a HEAL projection's `healType` (see §12).
 
 | DAMAGE_ATOM.damageType | Derived HEAL_ATOM.healType |
 |---|---|
@@ -219,7 +219,7 @@ UI pattern: the engine surfaces a toggle for a state only when some selected abi
 | `hp_missing` | `per`, `valuePerStep`, `maxValue` | Atom `value` = `min(floor((1 - hpFraction) × 100 / per) × valuePerStep, maxValue)`. (Barbarian Berserker.) |
 | `attribute` | `curve`, `attribute` | Atom `value` = `evaluateCurve(STAT_CURVES[curve], ctx.attributes[attribute])`. (Druid shapeshift damage atoms.) |
 
-Phase 3 note: `lifestealRatio` uses a **flat field on DAMAGE_ATOM**, not a `scalesWith` variant. See §12 below and `docs/engine_architecture.md §16`.
+Note: `lifestealRatio` and `targetMaxHpRatio` both use **flat fields on DAMAGE_ATOM**, not `scalesWith` variants. See §12 below and `docs/engine_architecture.md §16`.
 
 ---
 
@@ -252,7 +252,7 @@ Typed-damage-bonus stats (added Phase 3):
 
 ---
 
-## 12. DAMAGE_ATOM field reference (Phase 3 additions)
+## 12. DAMAGE_ATOM field reference
 
 ### 12.1 `lifestealRatio` — optional flat field [0, 1]
 Engine rule when present on a DAMAGE_ATOM:
@@ -263,11 +263,22 @@ Engine rule when present on a DAMAGE_ATOM:
 
 Pattern: flat field parallel to `percentMaxHealth`. Per-atom granularity lets multi-damage abilities lifesteal on a subset of their atoms.
 
-First anticipated consumer (Phase 4): Warlock Life Drain's damage atom — `lifestealRatio: 1.0`.
+Consumer: Warlock Life Drain's damage atom — `lifestealRatio: 1.0`.
 
-### 12.2 `percentMaxHealth` — HEAL_ATOM + DAMAGE_ATOM
-On DAMAGE_ATOM: damage = `percentMaxHealth × target-max-HP` (e.g., Blood Pact Abyssal Flame self-damage 1%/s).
-On HEAL_ATOM: heal = `percentMaxHealth × target-max-HP`. Semantic: "% of whichever target is contextually relevant" (first anticipated consumer: Exploitation Strike).
+### 12.2 `targetMaxHpRatio` — optional flat field [0, 1]
+Engine rule when present on a DAMAGE_ATOM:
+- Derive a HEAL projection alongside the damage projection.
+- `heal_amount = targetMaxHpRatio × damage_atom_target's max HP`
+- `target = "self"`
+- `healType = damageTypeToHealType(atom.damageType)` (see §3.2)
+
+Pattern: symmetric with `lifestealRatio`. Use when the heal scales from the **damage atom's target's** max HP per hit (rather than from the damage value itself).
+
+Consumer: Warlock Exploitation Strike's damage atom — `targetMaxHpRatio: 0.10` (10% of the enemy's max HP per unarmed hit while the buff is active).
+
+### 12.3 `percentMaxHealth` — HEAL_ATOM + DAMAGE_ATOM
+On DAMAGE_ATOM: damage = `percentMaxHealth × target-max-HP` (e.g., Blood Pact Abyssal Flame self-damage 1%/s; the atom's `target` names whose max HP is used).
+On HEAL_ATOM: heal = `percentMaxHealth × heal target's max HP` — single-context (the heal atom's `target` names whose max HP is used). For heals that scale from a damage target's max HP per hit (Exploitation Strike pattern), use `targetMaxHpRatio` on the corresponding DAMAGE_ATOM (§12.2) instead.
 
 ---
 

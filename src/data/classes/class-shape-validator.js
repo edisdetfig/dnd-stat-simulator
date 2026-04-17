@@ -583,6 +583,18 @@ function validateDamageAtom(atom, path, condCtx, errors) {
     }
   }
 
+  // D: targetMaxHpRatio optional numeric 0..1.
+  // Engine rule: derived heal = targetMaxHpRatio × damage_atom_target's max HP,
+  // target: "self", healType via family-collapse. Symmetric with lifestealRatio.
+  // See docs/engine_architecture.md §16.
+  if ("targetMaxHpRatio" in atom && atom.targetMaxHpRatio != null) {
+    const v = atom.targetMaxHpRatio;
+    if (typeof v !== "number" || v < 0 || v > 1) {
+      errors.push(errAt(`${path}.targetMaxHpRatio`,
+        "must be a number in [0, 1]", "D.targetMaxHpRatio"));
+    }
+  }
+
   validateTagsField(atom.tags, `${path}.tags`, errors);
   validateScalesWith(atom.scalesWith, `${path}.scalesWith`, errors);
   validateStackingXor(atom, path, condCtx, errors);

@@ -42,7 +42,7 @@ Pipeline shape (per `docs/performance-budget.md § 6`, reproduced with Phase 3 a
 | 3 — `materializeStacking` | Apply `maxStacks` / `resource` count; apply `scalesWith` to derive the atom value from ctx. | Stage 2 lists, `ctx.stackCounts`, `ctx.classResourceCounters`, `ctx.attributes`, `ctx.hpFraction` | Atoms with materialized `value` | Pure |
 | 4 — `aggregate` | Bucket stat-effect atoms by `(stat, phase)`. Route typed-damage-bonus atoms into `perTypeBonuses`. Route `post_cap_multiplicative_layer` atoms into `postCapMultiplicativeLayers`. | Stage 3 `effects` atoms | `bonuses` (per-stat per-phase), `perTypeBonuses` (damage-type → list), `postCapMultiplicativeLayers` (list) | Pure |
 | 5 — `deriveStats` | Run `DERIVED_STAT_RECIPES(attrs, bonuses, capOverrides)`. | `bonuses` (flat), `ctx.attributes`, `ctx.capOverrides` | `derivedStats` (every recipe output, with `{ value, rawValue?, cap? }`) | Pure (calls into `recipes.js`) |
-| 6 — `projectDamage` / `projectHealing` / `projectShield` | Per-atom projections through `applyDamage` / `calcHealing`. Derive lifesteal HEAL projections from DAMAGE_ATOMs carrying `lifestealRatio`. | Stage 3 damage/heal/shield atoms, `derivedStats`, `perTypeBonuses`, `postCapMultiplicativeLayers`, `ctx.target`, `ctx.viewingAfterEffect` | `damageProjections[]`, `healProjections[]`, `shieldProjections[]` | Pure (calls into `damage.js`) |
+| 6 — `projectDamage` / `projectHealing` / `projectShield` | Per-atom projections through `applyDamage` / `calcHealing`. Derive HEAL projections from DAMAGE_ATOMs carrying `lifestealRatio` (§16.2) or `targetMaxHpRatio` (§16.4). | Stage 3 damage/heal/shield atoms, `derivedStats`, `perTypeBonuses`, `postCapMultiplicativeLayers`, `ctx.target`, `ctx.viewingAfterEffect` | `damageProjections[]`, `healProjections[]`, `shieldProjections[]` | Pure (calls into `damage.js`) |
 
 The availability resolver runs inside Stage 0 and counts within the budget.
 
@@ -92,7 +92,7 @@ DamageProjection = {
   source:       { kind, abilityId, className },
   damageType:   DamageType,
   hit:          { body?: number, head?: number, limb?: number },   // shape per Phase 5 pin; see § 4.1
-  derivedHeal?: HealProjection,        // present iff source atom has lifestealRatio
+  derivedHeal?: HealProjection,        // present iff source atom has lifestealRatio (§16.2) or targetMaxHpRatio (§16.4)
   derivedPercentMaxHealthDamage?: number,  // present iff source atom has percentMaxHealth
 }
 
@@ -227,7 +227,8 @@ DAMAGE_ATOM = {
   trueDamage?:       boolean,             // bypasses DR
   weaponDamageScale?: number,             // scales against weapon damage
   percentMaxHealth?: number,              // % of (target's) max HP as damage
-  lifestealRatio?:   number,              // [0, 1] — see § 16 engine rule
+  lifestealRatio?:   number,              // [0, 1] — see § 16.2 engine rule (derived heal from damage dealt)
+  targetMaxHpRatio?: number,              // [0, 1] — see § 16.4 engine rule (derived heal from target max HP)
   scalesWith?:       ScalesWith,
   count?:            number,              // number of hits this atom produces per cast (missiles, chains)
   desc?:             string,
@@ -239,15 +240,14 @@ DAMAGE_ATOM = {
 }
 ```
 
-Validator rule codes: `D.required` (base/scaling/damageType/target) / `D.damageType` / `D.target` / `D.count` / `D.lifestealRatio`.
+Validator rule codes: `D.required` (base/scaling/damageType/target) / `D.damageType` / `D.target` / `D.count` / `D.lifestealRatio` / `D.targetMaxHpRatio`.
 
 Warlock ground cases:
 - Direct: `bolt_of_darkness.damage[0]:467` (`base: 20, scaling: 1.0, dark_magical, enemy`).
 - True damage: `shadow_touch.damage[0]:84` (`trueDamage: true`).
-- DoT: `life_drain.damage[0]:582` (`isDot: true, tickRate: 1`, `evil_magical`).
+- DoT: `life_drain.damage[0]:582` (`isDot: true, tickRate: 1`, `evil_magical`, `lifestealRatio: 1.0`).
 - percentMaxHealth (self): `blood_pact.damage[1]:310` (`percentMaxHealth: 0.01`, Abyssal Flame self-damage).
-- Conditional weapon_type: `exploitation_strike.damage[0]:378` (`condition: all(effect_active + weapon_type: unarmed)`).
-- `lifestealRatio` (forward-spec — Phase 4 re-authors Life Drain's damage atom with `lifestealRatio: 1.0`).
+- Conditional weapon_type + `targetMaxHpRatio`: `exploitation_strike.damage[0]:377` (`condition: all(effect_active + weapon_type: unarmed)`, `targetMaxHpRatio: 0.10` — engine derives a 10%-of-enemy-max-HP heal per hit).
 - `count ≥ 2` (forward-spec — Ranger multi-shot).
 - `scalesWith: attribute` (forward-spec — Druid shapeshift).
 
@@ -262,7 +262,7 @@ HEAL_ATOM = {
   isHot?:           boolean,
   tickRate?:        number,
   duration?:        number,
-  percentMaxHealth?: number,              // % of contextually-relevant target's max HP
+  percentMaxHealth?: number,              // % of heal target's max HP (single-context — see § 16.3)
   desc?:            string,
   condition?:       Condition,
   source, atomId,                          // engine-populated (atomId = "<abilityId>:heal:0" — singular)
@@ -271,7 +271,7 @@ HEAL_ATOM = {
 
 Warlock ground cases: `shadow_touch.heal:87` (`baseHeal: 2, scaling: 0`, flat 2 per melee hit), `torture_mastery.heal:146` (`baseHeal: 2, scaling: 0.15`, per curse tick). Both `healType: "magical"`, `target: "self"`.
 
-`percentMaxHealth` semantic: "% of whichever target is contextually relevant" — self-heal for self-targeted, target for target-max-HP heals. First anticipated consumer: Exploitation Strike (`lifestealOfTargetMaxHp: 0.10`), Phase 4 re-authors into a HEAL_ATOM with `percentMaxHealth: 0.10, target: "self"` and `derivedFrom: target-max-HP` semantics.
+`percentMaxHealth` semantic: single-context — `% × heal target's max HP`. For heals that scale from a damage target's max HP per hit, see `targetMaxHpRatio` on DAMAGE_ATOM (§16.4) — Exploitation Strike's authoring lives there, not here.
 
 HoT is forward-spec: Druid Nature's Touch (`isHot: true, tickRate: 1, duration: 12`).
 
@@ -604,24 +604,33 @@ First anticipated consumer (Phase 4): Warlock Life Drain's damage atom, re-autho
 
 ### 16.3 `percentMaxHealth` on HEAL_ATOM
 
-Dual-context semantic: the atom's `target` names the **heal destination**; `percentMaxHealth × source_max_hp` is the **heal amount**. The `source_max_hp` depends on whether the heal is *self-inflicted* or *hit-derived*.
+Single-context semantic: `heal_amount = atom.percentMaxHealth × heal_target's max HP`. The percentage is always taken from the heal atom's own `target`'s max HP — `derivedStats.health.value` when `target === "self"`, `ctx.target.maxHealth` when `target === "enemy"`, etc.
 
-- **Self-inflicted** heals (no per-hit gating in the atom's condition tree): `source_max_hp = destination max HP`. Computed as `(target === "self") ? derivedStats.health.value : ctx.target.maxHealth`.
-- **Hit-derived** heals (the atom's condition tree includes a per-hit gate — `weapon_type`, `damage_type`, or equivalent that fires the heal on weapon/spell impact): `source_max_hp = ctx.target.maxHealth` (the hit enemy's max HP), regardless of the heal's `target`.
-
-Implementation at Stage 6:
 ```
-source_max_hp = isHitTriggered(atom)
-  ? ctx.target.maxHealth
-  : (atom.target === "self" ? derivedStats.health.value : ctx.target.maxHealth);
-heal_amount = atom.percentMaxHealth × source_max_hp;
+heal_amount = atom.percentMaxHealth × resolveTargetMaxHealth(atom.target);
 ```
 
-`isHitTriggered(atom)` is a Phase 6 implementation detail: the engine flags atoms whose condition tree contains a hit-scoped gate (e.g., `weapon_type` nested inside `all`).
+Use `percentMaxHealth` for self-restoration patterns (e.g., Cleric "heal 10% of your max HP") and ally-restoration patterns. For heals that scale from the **damage target's** max HP per hit (Exploitation Strike pattern), use `targetMaxHpRatio` on the corresponding DAMAGE_ATOM (§16.4) — that field is causally tight (heal lives on the atom that produces the hit) and avoids the inference complexity of cross-context resolution.
 
-Worked example — **Exploitation Strike** (Phase 4 land; hit-derived): `percentMaxHealth: 0.10`, `target: "self"`, condition `all(effect_active: exploitation_strike + weapon_type: unarmed)`. Per the rule above, `source_max_hp = ctx.target.maxHealth`; destination is the caster (`target: "self"`). On hitting a 100-HP enemy, the caster heals 10 HP.
+### 16.4 `targetMaxHpRatio` engine rule
 
-First anticipated consumer (Phase 4): Exploitation Strike — re-authored as a HEAL_ATOM with `percentMaxHealth: 0.10, target: "self"` + the hit-scoped condition tree above.
+For every DAMAGE_ATOM with a present `targetMaxHpRatio ∈ [0, 1]`, the engine derives a HEAL projection symmetric with the lifesteal rule (§16.2):
+
+```
+heal_amount = targetMaxHpRatio × damage_atom_target's max HP
+target      = "self"
+healType    = damageTypeToHealType(damage_atom.damageType)
+atomId      = damage_atom's atomId
+derivedFrom = { kind: "targetMaxHp", damageAtomId: damage_atom.atomId }
+```
+
+Same family-collapse `damageTypeToHealType` as §16.2. Same routing through `calcHealing` with `baseHeal = heal_amount`, `scaling = 0`. The derived HEAL is appended to `healProjections[]`; the source `DamageProjection` carries `derivedHeal` as a back-reference.
+
+**Worked example — Exploitation Strike.** Damage atom: `{ base: 20, scaling: 1.0, damageType: "evil_magical", target: "enemy", targetMaxHpRatio: 0.10, condition: all(effect_active: exploitation_strike + weapon_type: unarmed) }`. On hitting a 100-HP enemy, the engine emits two projections from this single atom:
+- Damage projection: 20 (+ MPB scaling) evil-magical to the enemy.
+- Derived heal: `0.10 × 100 = 10` HP to the caster, healType `magical` (family-collapse from `evil_magical`).
+
+Consumer: Warlock Exploitation Strike's damage atom — `targetMaxHpRatio: 0.10`.
 
 ---
 
@@ -755,8 +764,7 @@ Patterns Warlock does not exercise but the engine must support. Each is specifie
 | `scalesWith: attribute` | § 12 | Druid shapeshift |
 | `count ≥ 2` on DAMAGE_ATOM | § 6.2 | Ranger multi-shot |
 | `cap_override` phase | § 7 | Fighter Defense Mastery (PDR), Barbarian Iron Will (MDR) |
-| `lifestealRatio` on DAMAGE_ATOM | § 16.2 | Warlock Life Drain (Phase 4 re-author) |
-| `afterEffect` with LOCK 5 `viewingAfterEffect` flow | § 14 | Warlock Eldritch Shield (Phase 4 re-author); Barbarian Adrenaline Rush pattern |
+| `afterEffect` with LOCK 5 `viewingAfterEffect` flow (additional consumers) | § 14 | Barbarian Adrenaline Rush pattern (Warlock Eldritch Shield is the anchor) |
 
 ---
 
