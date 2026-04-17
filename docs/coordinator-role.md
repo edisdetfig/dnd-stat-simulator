@@ -170,7 +170,8 @@ Update this table after every completed phase.
 | 6 — Engine implementation | DONE | `docs/session-prompts/phase-6-engine-implementation.md` | `0e69523` |
 | 6.5a — Gear wiki facts | DONE | `docs/session-prompts/phase-6-5-a-gear-wiki-facts.md` | `7ba5734` |
 | 6.5b — Gear & character mapping | DONE | `docs/session-prompts/phase-6-5-b-gear-character-mapping.md` | `62c64c3` |
-| 6.5c — Gear & character shape design | — | — | — |
+| 6.5c.1 — Gear & character shape design (shape + validators) | DONE | `docs/session-prompts/phase-6-5-c-gear-character-shape-design.md` | `aabb921` |
+| 6.5c.2 — Gear & character shape design (normalizer + engine seams) | — | `docs/session-prompts/phase-6-5-c-gear-character-shape-design.md` | — |
 | 7 — Anchor class wiring + minimal UI | — | — | — |
 | 8 — End-to-end verification | — | — | — |
 | 9 — Doc maintenance sweep | — | — | — |
