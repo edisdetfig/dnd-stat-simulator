@@ -14,6 +14,13 @@ describe("character-shape-validator — warlockCharacter", () => {
   });
 });
 
+describe("character-shape-validator — Phase 7 anchor fixture integration", () => {
+  it("validates the Phase 7 Warlock anchor character with zero errors", async () => {
+    const { warlockBloodTitheBuild } = await import("../../fixtures/warlock-blood-tithe.fixture.js");
+    expect(validateCharacter(warlockBloodTitheBuild.character)).toEqual([]);
+  });
+});
+
 // ── Per-rule failures ─────────────────────────────────────────────
 
 describe("character-shape-validator — CH.required", () => {

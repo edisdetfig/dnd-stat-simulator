@@ -11,6 +11,8 @@
 //
 // Rule code prefix: CG.*
 
+import { getAllAbilities } from "../classes/ability-helpers.js";
+
 const VALID_HELD_STATES = new Set(["unarmed", "slot1", "slot2"]);
 
 const SLOT_KEY_TO_SLOT_TYPE = Object.freeze({
@@ -129,22 +131,34 @@ function validateEquippedItem(errors, slotKey, sub, instance, expectedSlotType, 
 
 /**
  * Effective armor proficiency = class.armorProficiency
- *   ∪ (grants[].type === "armor" from selectedPerks + active abilities)
- *   − (removes[].type === "armor" from selectedPerks + active abilities)
+ *   ∪ (grants[].type === "armor" from selected abilities)
+ *   − (removes[].type === "armor" from selected abilities)
  *
- * Returns null if classData is not provided (caller should skip armor checks).
- * Simplified for 6.5c.1: grant/remove conditions are NOT evaluated — any
- * authored grant/remove on a selected perk is applied. A full implementation
- * evaluates conditions at runtime and lives in 6.5c.2 normalizer + runtime
- * fixpoint.
+ * Returns null if classData is not provided (caller should skip armor
+ * checks). Iterates every ability container (perks / skills / spells /
+ * mergedSpells) via `getAllAbilities`, filtered by the character's
+ * persistent selections. Previously reached for a fictional
+ * `classData.abilities` field that never exists on real class data —
+ * every grant was silently no-op against a production classData object,
+ * forcing callers to feed synthetic `{ abilities: [...] }` fixtures.
+ *
+ * Simplified for 6.5c.1: grant/remove conditions are NOT evaluated —
+ * any authored grant/remove on a selected ability is applied. A full
+ * implementation evaluates conditions at runtime and lives in 6.5c.2's
+ * normalizer + runtime fixpoint.
  */
 export function computeEffectiveArmorProficiency(character, classData) {
   if (!classData || !classData.armorProficiency) return null;
   const result = new Set(classData.armorProficiency);
-  const selectedPerks = new Set(character?.persistentSelections?.selectedPerks ?? []);
-  const abilities = Array.isArray(classData.abilities) ? classData.abilities : [];
-  for (const ab of abilities) {
-    if (!selectedPerks.has(ab.id)) continue;
+  const sel = character?.persistentSelections ?? {};
+  const selectedIds = new Set([
+    ...(sel.selectedPerks  ?? []),
+    ...(sel.selectedSkills ?? []),
+    ...(sel.selectedSpells ?? []),
+  ]);
+
+  for (const ab of getAllAbilities(classData)) {
+    if (!selectedIds.has(ab.id)) continue;
     if (Array.isArray(ab.grants)) {
       for (const g of ab.grants) {
         if (g?.type === "armor" && typeof g.armorType === "string") result.add(g.armorType);

@@ -1,78 +1,68 @@
-// TargetEditor — target PDR/MDR/HSDR editor with preset buttons
+// TargetEditor — numeric inputs for target.pdr / mdr / headshotDR.
+// Display is percent (e.g. "-22"); internal is decimal (-0.22).
+// Presets for common Dark and Darker target profiles are kept simple
+// for Phase 7 scope — a single Training Dummy preset.
 
-import { TARGET_PRESETS } from '../data/constants.js';
-import { styles } from '../styles/theme.js';
-import { InfoTip } from './ui/InfoTip.jsx';
+const PRESETS = [
+  { label: "Training Dummy", pdr: -0.22, mdr: 0.06, headshotDR: 0 },
+  { label: "Unarmored",      pdr: 0,     mdr: 0,    headshotDR: 0 },
+  { label: "Plate Squishy",  pdr: 0.50,  mdr: 0.20, headshotDR: 0.10 },
+];
+
+function PctInput({ value, onChange }) {
+  const display = Math.round((value ?? 0) * 1000) / 10; // 1 decimal place for %.
+  return (
+    <input
+      type="number"
+      step={1}
+      value={display}
+      onChange={(e) => onChange(Number(e.target.value) / 100)}
+    />
+  );
+}
 
 export function TargetEditor({ target, onChange }) {
-  const handlePreset = (preset) => {
-    onChange({ pdr: preset.pdr, mdr: preset.mdr, headshotDR: preset.headshotDR });
-  };
-  const handleFieldChange = (field, displayVal) => {
-    const raw = parseFloat(displayVal);
-    if (isNaN(raw)) return;
-    onChange({ ...target, [field]: raw / 100 });
-  };
-  const matchedPreset = TARGET_PRESETS.find(p =>
-    Math.abs(target.pdr - p.pdr) < 0.001 &&
-    Math.abs(target.mdr - p.mdr) < 0.001 &&
-    Math.abs(target.headshotDR - p.headshotDR) < 0.001
-  );
   return (
-    <div>
-      <div style={{ display: "flex", gap: 4, marginBottom: 10, flexWrap: "wrap" }}>
-        {TARGET_PRESETS.map(preset => {
-          const isActive = matchedPreset && matchedPreset.id === preset.id;
-          return (
-            <button key={preset.id} onClick={() => handlePreset(preset)}
-              style={{ flex: "1 1 0", minWidth: 90, background: isActive ? "var(--sim-surface-shadow)" : "transparent",
-                border: `1px solid ${isActive ? "var(--sim-border-focus)" : "var(--sim-border-hairline)"}`, color: isActive ? "var(--sim-accent-arcane-pale)" : "var(--sim-text-whisper)",
-                padding: "6px 8px", borderRadius: 4, cursor: "pointer", fontFamily: "inherit", fontSize: 10,
-                fontWeight: isActive ? 600 : 400, transition: "all 0.15s" }}>
-              {preset.name}
-              {preset.verification === "VERIFIED" && <span style={{ marginLeft: 3, fontSize: 8, color: "var(--sim-accent-verdant-life)" }}>{"\u2713"}</span>}
-            </button>
-          );
-        })}
+    <div className="p7-panel">
+      <h2>Target</h2>
+
+      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 8 }}>
+        {PRESETS.map((p) => (
+          <button
+            key={p.label}
+            type="button"
+            onClick={() => {
+              onChange("pdr", p.pdr);
+              onChange("mdr", p.mdr);
+              onChange("headshotDR", p.headshotDR);
+            }}
+          >
+            {p.label}
+          </button>
+        ))}
       </div>
-      {matchedPreset && matchedPreset.description && (
-        <div style={{ fontSize: 9, color: "var(--sim-text-whisper)", marginBottom: 8, fontStyle: "italic" }}>
-          {matchedPreset.description}
-          {matchedPreset.verification === "ESTIMATED" && <span style={{ color: "var(--sim-accent-flame-rust)", marginLeft: 6 }}>ESTIMATED</span>}
-        </div>
-      )}
-      {!matchedPreset && <div style={{ fontSize: 9, color: "var(--sim-text-whisper)", marginBottom: 8 }}>Custom target values</div>}
-      <div style={{ display: "flex", gap: 8 }}>
-        {[
-          { key: "pdr", label: "PDR", color: "var(--sim-stat-defensive-physical)", softColor: "var(--sim-stat-defensive-physical-soft)", info: "Target Physical Damage Reduction. Negative = amplifies damage. Pen has no effect when negative." },
-          { key: "mdr", label: "MDR", color: "var(--sim-stat-defensive-magical)", softColor: "var(--sim-stat-defensive-magical-soft)", info: "Target Magical Damage Reduction. Your Magic Pen reduces this." },
-          { key: "headshotDR", label: "HS DR", color: "var(--sim-stat-defensive-headshot)", softColor: "var(--sim-stat-defensive-headshot-soft)", info: "Target Headshot Damage Reduction. Subtracted from headshot multiplier." },
-        ].map(field => {
-          const displayVal = (target[field.key] * 100);
-          const displayStr = displayVal === 0 ? "0" : (Number.isInteger(displayVal) ? String(displayVal) : displayVal.toFixed(1).replace(/\.0$/, ''));
-          return (
-            <div key={field.key} style={{ flex: 1 }}>
-              <div style={{ fontSize: 9, color: field.color, fontWeight: 600, marginBottom: 3, display: "flex", alignItems: "center" }}>
-                {field.label}<InfoTip text={field.info} color={field.softColor} />
-              </div>
-              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                <input type="number" step="0.5" value={displayStr}
-                  onChange={(e) => handleFieldChange(field.key, e.target.value)}
-                  style={{ ...styles.numInput, width: "100%", fontSize: 14, fontWeight: 600,
-                    textAlign: "center", padding: "8px 32px 8px 10px",
-                    color: target[field.key] < 0 ? "var(--sim-accent-blood-wound)" : "var(--sim-text-primary)", background: "var(--sim-surface-input)",
-                    border: `1px solid ${!matchedPreset ? "var(--sim-border-edge)" : "var(--sim-border-hairline)"}` }} />
-                <span style={{ position: "absolute", right: 22, color: "var(--sim-text-whisper)", fontSize: 11, pointerEvents: "none" }}>%</span>
-              </div>
-            </div>
-          );
-        })}
+
+      <div className="p7-row">
+        <span className="p7-label">PDR %</span>
+        <PctInput value={target.pdr} onChange={(v) => onChange("pdr", v)} />
       </div>
-      {target.pdr > 0 && (
-        <div style={{ marginTop: 8, padding: "5px 8px", background: "var(--sim-surface-void)", border: "1px solid var(--sim-surface-shadow)", borderRadius: 4, fontSize: 9, color: "var(--sim-text-ghost)" }}>
-          DR formula: max(1 {"\u2212"} DR{"\u00d7"}(1{"\u2212"}Pen), 1{"\u2212"}DR). Pen cannot push DR below 0%.
-        </div>
-      )}
+      <div className="p7-row">
+        <span className="p7-label">MDR %</span>
+        <PctInput value={target.mdr} onChange={(v) => onChange("mdr", v)} />
+      </div>
+      <div className="p7-row">
+        <span className="p7-label">HS DR %</span>
+        <PctInput value={target.headshotDR} onChange={(v) => onChange("headshotDR", v)} />
+      </div>
+      <div className="p7-row">
+        <span className="p7-label">Max HP</span>
+        <input
+          type="number"
+          step={10}
+          value={target.maxHealth ?? 100}
+          onChange={(e) => onChange("maxHealth", Number(e.target.value))}
+        />
+      </div>
     </div>
   );
 }

@@ -38,6 +38,7 @@
 // constants.js + conditions.js AND this key composition.
 
 import { evaluateCondition } from './conditions.js';
+import { findAbility } from '../data/classes/ability-helpers.js';
 
 export function filterByConditions(atoms, ctx) {
   return {
@@ -78,18 +79,12 @@ function conditionTreeContainsDamageType(cond) {
 function abilityShapeFromSource(atom, ctx) {
   const id = atom.source?.abilityId;
   if (!id || !ctx.klass) return undefined;
-  for (const section of ["perks", "skills", "spells", "mergedSpells"]) {
-    const list = ctx.klass[section];
-    if (!Array.isArray(list)) continue;
-    const match = list.find(a => a?.id === id);
-    if (match) {
-      return {
-        id: match.id,
-        activation: match.activation,
-        type: match.type,
-        tags: match.tags,
-      };
-    }
-  }
-  return undefined;
+  const match = findAbility(ctx.klass, id);
+  if (!match) return undefined;
+  return {
+    id: match.id,
+    activation: match.activation,
+    type: match.type,
+    tags: match.tags,
+  };
 }

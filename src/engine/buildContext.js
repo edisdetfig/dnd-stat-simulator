@@ -23,6 +23,7 @@
 import { evaluateCurve, STAT_CURVES } from './curves.js';
 import { evaluateCondition } from './conditions.js';
 import { WEAPON_TYPE_CATEGORIES } from '../data/constants.js';
+import { findAbility } from '../data/classes/ability-helpers.js';
 
 // Per OQ3 sign-off: default target.maxHealth when Build omits it. Documented
 // here so downstream modules can rely on the field always being present.
@@ -375,17 +376,6 @@ function preliminaryMemoryBudget(ctx) {
   return budget;
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// Utilities
-// ─────────────────────────────────────────────────────────────────────
-
-function lookupAbility(klass, abilityId) {
-  if (!klass) return null;
-  for (const section of ["perks", "skills", "spells", "mergedSpells"]) {
-    const list = klass[section];
-    if (!Array.isArray(list)) continue;
-    const match = list.find(a => a?.id === abilityId);
-    if (match) return match;
-  }
-  return null;
-}
+// Ability lookup now delegates to `findAbility` in data/classes/ability-helpers.
+// Kept as a local alias so existing call sites read unchanged.
+const lookupAbility = findAbility;

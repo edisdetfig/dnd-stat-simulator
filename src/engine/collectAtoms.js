@@ -21,6 +21,8 @@
 //   - Output `heal` / `shield` are 0- or 1-entry arrays (authored as singulars).
 //   - Atoms are shallow-cloned; the original authored data is not mutated.
 
+import { findAbility as lookupAbility } from '../data/classes/ability-helpers.js';
+
 export function collectAtoms(ctx) {
   const klass = ctx.klass;
   const out = {
@@ -95,13 +97,3 @@ function walkSingular(atom, source, container, target) {
   });
 }
 
-function lookupAbility(klass, abilityId) {
-  if (!klass) return null;
-  for (const section of ["perks", "skills", "spells", "mergedSpells"]) {
-    const list = klass[section];
-    if (!Array.isArray(list)) continue;
-    const match = list.find(a => a?.id === abilityId);
-    if (match) return match;
-  }
-  return null;
-}

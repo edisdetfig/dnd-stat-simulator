@@ -27,21 +27,14 @@
 import {
   WEAPON_TYPE_CATEGORIES,
 } from '../data/constants.js';
+import { findAbility } from '../data/classes/ability-helpers.js';
 
 // ─────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────
 
 function lookupAbility(ctx, abilityId) {
-  const klass = ctx?.klass;
-  if (!klass) return null;
-  for (const section of ["perks", "skills", "spells", "mergedSpells"]) {
-    const list = klass[section];
-    if (!Array.isArray(list)) continue;
-    const match = list.find(a => a?.id === abilityId);
-    if (match) return match;
-  }
-  return null;
+  return findAbility(ctx?.klass, abilityId);
 }
 
 function isSelected(ctx, abilityId) {

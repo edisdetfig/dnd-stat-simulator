@@ -28,6 +28,16 @@ describe("gear-instance-validator — anchor instances", () => {
   it("Foul Boots instance validates clean (rare modCount=3 per override)", () => {
     expect(validateGearInstance(foulBootsInstance, foulBoots)).toEqual([]);
   });
+
+  // Phase 7 anchor-fixture integration gate.
+  it("validates every instance in the Phase 7 anchor fixture against its definition with zero errors", async () => {
+    const { warlockBloodTitheBuild } = await import("../../fixtures/warlock-blood-tithe.fixture.js");
+    const { itemInstances, itemDefinitions } = warlockBloodTitheBuild;
+    for (const [id, inst] of Object.entries(itemInstances)) {
+      const def = itemDefinitions[inst.definitionId];
+      expect({ id, errors: validateGearInstance(inst, def) }).toEqual({ id, errors: [] });
+    }
+  });
   it("Spiked Gauntlet instance validates clean (epic + craftable → 4 modifiers)", () => {
     expect(validateGearInstance(spikedGauntletInstance, spikedGauntlet)).toEqual([]);
   });

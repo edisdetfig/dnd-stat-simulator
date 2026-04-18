@@ -18,6 +18,7 @@ import { buildContext } from './buildContext.js';
 import { collectAtoms } from './collectAtoms.js';
 import { filterByConditions } from './filterByConditions.js';
 import { materializeStacking } from './materializeStacking.js';
+import { findAbility } from '../data/classes/ability-helpers.js';
 import { aggregate } from './aggregate.js';
 import { deriveStats } from './deriveStats.js';
 import { projectDamage } from './projectDamage.js';
@@ -156,15 +157,9 @@ function conditionTreeContainsDamageType(cond) {
 function abilityShapeFromSource(atom, ctx) {
   const id = atom.source?.abilityId;
   if (!id || !ctx.klass) return undefined;
-  for (const section of ["perks", "skills", "spells", "mergedSpells"]) {
-    const list = ctx.klass[section];
-    if (!Array.isArray(list)) continue;
-    const match = list.find(a => a?.id === id);
-    if (match) {
-      return { id: match.id, activation: match.activation, type: match.type, tags: match.tags };
-    }
-  }
-  return undefined;
+  const match = findAbility(ctx.klass, id);
+  if (!match) return undefined;
+  return { id: match.id, activation: match.activation, type: match.type, tags: match.tags };
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -235,16 +230,7 @@ function wireDerivedHealBackRefs(damageProjections, healProjections) {
   }
 }
 
-function lookupAbility(klass, abilityId) {
-  if (!klass) return null;
-  for (const section of ["perks", "skills", "spells", "mergedSpells"]) {
-    const list = klass[section];
-    if (!Array.isArray(list)) continue;
-    const match = list.find(a => a?.id === abilityId);
-    if (match) return match;
-  }
-  return null;
-}
+const lookupAbility = findAbility;
 
 // ─────────────────────────────────────────────────────────────────────
 // Query API companions (arch-doc §20)

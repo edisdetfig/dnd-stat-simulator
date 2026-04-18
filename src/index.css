@@ -1,0 +1,160 @@
+/* Phase 7 plain-CSS layout. Minimal + readable. No theming.
+   Phase 11 will introduce the full theme system. */
+
+:root {
+  --bg: #0e0e14;
+  --panel: #14141d;
+  --panel-border: #2a2a3a;
+  --text: #d8d8e0;
+  --text-dim: #8a8a99;
+  --text-accent: #c9a46c;
+  --positive: #7ec586;
+  --negative: #e08080;
+  --toggle-on: #3a6ec9;
+  --hairline: #22222d;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+a { color: inherit; }
+
+button, select, input[type="number"], input[type="range"] {
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--text);
+  background: #0b0b11;
+  border: 1px solid var(--panel-border);
+  border-radius: 3px;
+  padding: 3px 6px;
+  cursor: pointer;
+}
+
+button:hover { border-color: var(--text-accent); }
+button[aria-pressed="true"] { background: var(--toggle-on); border-color: var(--toggle-on); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+input[type="number"] { width: 70px; }
+input[type="range"] { width: 100%; }
+input[type="checkbox"] { cursor: pointer; accent-color: var(--toggle-on); }
+
+.p7-app {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.p7-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.p7-header h1 { font-size: 16px; margin: 0; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-accent); }
+.p7-header .p7-subtitle { font-size: 11px; color: var(--text-dim); }
+
+.p7-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr 340px;
+  gap: 14px;
+}
+
+.p7-col { display: flex; flex-direction: column; gap: 10px; }
+
+.p7-panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+
+.p7-panel h2 {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-accent);
+  margin: 0 0 8px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.p7-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
+  gap: 8px;
+}
+
+.p7-row > .p7-label { color: var(--text-dim); flex: 1; }
+.p7-row > .p7-value { font-variant-numeric: tabular-nums; }
+.p7-row + .p7-row { border-top: 1px dotted var(--hairline); }
+
+.p7-ability-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+.p7-ability-row .p7-name { flex: 1; }
+.p7-ability-row .p7-tag { color: var(--text-dim); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; }
+.p7-ability-locked { opacity: 0.4; }
+
+.p7-seg {
+  display: inline-flex;
+  border: 1px solid var(--panel-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.p7-seg button {
+  border: none;
+  border-radius: 0;
+  padding: 4px 10px;
+  background: transparent;
+}
+.p7-seg button + button { border-left: 1px solid var(--panel-border); }
+.p7-seg button[aria-pressed="true"] { background: var(--toggle-on); }
+
+.p7-proj {
+  padding: 6px 8px;
+  border: 1px solid var(--hairline);
+  border-radius: 3px;
+  background: #0b0b11;
+  margin-bottom: 6px;
+}
+.p7-proj .p7-proj-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 4px;
+}
+.p7-proj .p7-proj-ability { font-weight: 600; color: var(--text-accent); }
+.p7-proj .p7-proj-type { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
+.p7-proj .p7-proj-numbers { display: flex; gap: 12px; font-variant-numeric: tabular-nums; }
+.p7-proj .p7-proj-derived { font-size: 11px; color: var(--positive); margin-top: 2px; }
+
+.p7-mini { font-size: 11px; color: var(--text-dim); }
+.p7-positive { color: var(--positive); }
+.p7-negative { color: var(--negative); }
+
+.p7-error {
+  background: #3a0f0f;
+  border: 1px solid #7a2020;
+  color: #ffd0d0;
+  padding: 6px 10px;
+  font-size: 11px;
+  border-radius: 3px;
+  margin-bottom: 10px;
+}

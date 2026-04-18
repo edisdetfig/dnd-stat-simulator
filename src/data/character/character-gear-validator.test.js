@@ -7,26 +7,38 @@ import { ITEM_DEFINITIONS } from "../gear/gear-shape-examples.js";
 
 function rulesOf(errs) { return errs.map(e => e.rule); }
 
-// Minimal Warlock classData stub — just enough for armor-proficiency + grants.
+// Minimal Warlock classData stub — uses real class-shape containers
+// (perks / skills / spells) so the validator's lookups land. A prior
+// revision of this file used a fictional `abilities: [...]` flat field
+// which the validator silently ignored against real data. The helper
+// at `src/data/classes/ability-helpers.js` is now the single source of
+// truth for ability lookup — any synthetic fixture must conform to
+// that contract.
 const warlockClassStub = {
   id: "warlock",
   armorProficiency: ["cloth", "leather"],
-  abilities: [
+  perks: [
     {
       id: "demon_armor",
       type: "perk",
+      activation: "passive",
       grants: [{ type: "armor", armorType: "plate" }],
     },
     {
       id: "torture_mastery",
       type: "perk",
+      activation: "passive",
       grants: [],
     },
+  ],
+  skills: [
     {
       id: "phantomize",
       type: "skill",
+      activation: "cast_buff",
     },
   ],
+  spells: [],
 };
 
 // Context for happy-path — Warlock with Demon Armor perk selected, Spiked
@@ -156,6 +168,28 @@ describe("character-gear-validator — CG.loadoutRef", () => {
     });
     const errs = validateCharacterGear(ctx);
     expect(rulesOf(errs)).toContain("CG.loadoutRef");
+  });
+});
+
+// ── Phase 7 anchor-fixture integration gate ──────────────────────
+// Guards the bug class "validator silently accepts / rejects a valid
+// fixture under real class data". A test failure here on future edits
+// means either the fixture went bad or the validator drifted.
+describe("character-gear-validator — Phase 7 anchor fixture integration", () => {
+  it("validates the Phase 7 Warlock anchor fixture with zero errors", async () => {
+    const { warlockBloodTitheBuild } = await import("../../fixtures/warlock-blood-tithe.fixture.js");
+    const { getClass } = await import("../classes/index.js");
+    const classData = getClass(warlockBloodTitheBuild.character.className);
+
+    const errors = validateCharacterGear({
+      character:       warlockBloodTitheBuild.character,
+      session:         warlockBloodTitheBuild.session,
+      loadout:         warlockBloodTitheBuild.loadout,
+      itemInstances:   warlockBloodTitheBuild.itemInstances,
+      itemDefinitions: warlockBloodTitheBuild.itemDefinitions,
+      classData,
+    });
+    expect(errors).toEqual([]);
   });
 });
 

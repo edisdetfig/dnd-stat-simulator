@@ -27,6 +27,15 @@ describe("gear-definition-validator — anchor items", () => {
   it("Spiked Gauntlet validates with zero errors", () => {
     expect(validateGearDefinition(spikedGauntlet)).toEqual([]);
   });
+
+  // Phase 7 anchor-fixture integration gate.
+  it("validates every definition referenced by the Phase 7 anchor fixture with zero errors", async () => {
+    const { warlockBloodTitheBuild } = await import("../../fixtures/warlock-blood-tithe.fixture.js");
+    const defs = warlockBloodTitheBuild.itemDefinitions;
+    for (const [id, def] of Object.entries(defs)) {
+      expect({ id, errors: validateGearDefinition(def) }).toEqual({ id, errors: [] });
+    }
+  });
   it("validateAllGearDefinitions returns clean byId map", () => {
     const { byId } = validateAllGearDefinitions(ITEM_DEFINITIONS);
     for (const [itemId, errs] of Object.entries(byId)) {

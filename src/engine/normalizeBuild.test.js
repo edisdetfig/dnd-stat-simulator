@@ -13,8 +13,17 @@ import {
 } from "../data/character/character-shape-examples.js";
 
 // Minimal Warlock classData stub (normalizer does not introspect beyond
-// passthrough as `build.klass`).
-const warlockClassStub = { id: "warlock", armorProficiency: ["cloth", "leather"], abilities: [] };
+// passthrough as `build.klass`). Uses the real class-shape container
+// layout (perks/skills/spells) — a flat `abilities` field is fictional
+// per `src/data/classes/ability-helpers.js` and no lookup ever resolves
+// through it.
+const warlockClassStub = {
+  id: "warlock",
+  armorProficiency: ["cloth", "leather"],
+  perks: [],
+  skills: [],
+  spells: [],
+};
 
 function baseInput(overrides = {}) {
   return {
