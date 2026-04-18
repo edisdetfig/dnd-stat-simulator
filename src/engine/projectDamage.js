@@ -13,10 +13,10 @@
 //   6. Lifesteal/targetMaxHp: emit DerivedHealDescriptor (consumed by
 //      projectHealing).
 //
-// Lifesteal pre-MDR: replicates calcSpellDamage up to but excluding the
-// MDR clamp — per healing_verification.md:18-21, lifesteal uses outgoing
-// damage BEFORE reductions. We compute pre_mdr_body ourselves and thread
-// it into the descriptor.
+// Lifesteal (§16.2): derives a heal descriptor from the source atom's
+// already-computed post-DR `hit.body`. Per healing_verification.md
+// §Lifesteal (Life Drain) + the 2026-04-17 VERIFIED data, lifesteal's
+// basis is post-reduction damage dealt, not pre-reduction.
 //
 // Post-cap multiplicative layers (Antimagic pattern) applied AFTER the
 // MDR-clamped calcSpellDamage output; layers with damage_type-gated
@@ -94,12 +94,13 @@ export function projectDamage(
         atom.percentMaxHealth * resolveTargetMaxHealth(atom.target, ctx, derivedStats);
     }
 
-    // Lifesteal (arch-doc §16.2) — heal from pre-MDR damage dealt.
+    // Lifesteal (arch-doc §16.2) — heal from post-DR body damage dealt.
+    // Reads hit.body from the projection just computed above; no second
+    // pass through the damage formulas. `hit.body ?? 0` covers forward-spec
+    // atoms that might omit body (head/limb-only lifesteal sources today
+    // have no consumer — flagged as §16.2 follow-up).
     if (atom.lifestealRatio != null && atom.lifestealRatio > 0) {
-      const preMdr = isPhysical
-        ? computePhysicalPreDR(atom, derivedStats, target, gearWeapon, ctx)
-        : computeMagicalPreMDR(atom, derivedStats, perTypeBonuses, ctx);
-      const healAmount = atom.lifestealRatio * preMdr;
+      const healAmount = atom.lifestealRatio * (hit.body ?? 0);
       derivedHealDescriptors.push({
         kind:         "lifesteal",
         damageAtomId: atom.atomId,
@@ -198,32 +199,6 @@ function sumGearOnHitTruePhysical(atom, ctx) {
   return sum;
 }
 
-// Physical pre-DR computation for lifesteal — runs calcPhysicalMeleeDamage
-// with targetPDR = 0 and projectileReduction = 0 (simulates pre-reduction).
-function computePhysicalPreDR(atom, derivedStats, target, gearWeapon, ctx) {
-  const baseWeaponDmg = gearWeapon?.baseWeaponDmg ?? 0;
-  const gearWeaponDmg = gearWeapon?.gearWeaponDmg ?? 0;
-  const ppb = derivedStats.ppb?.value ?? 0;
-  const headshotBonus = derivedStats.headshotDamageBonus?.value ?? 0;
-  const buffWeaponDmg = ctx._buffWeaponDamageFlat ?? 0;
-  return calcPhysicalMeleeDamage({
-    baseWeaponDmg,
-    buffWeaponDmg,
-    comboMultiplier:       ctx.comboMultiplier ?? 1.0,
-    impactZone:            ctx.impactZone ?? 1.0,
-    gearWeaponDmg,
-    ppb,
-    additionalPhysicalDmg: atom.base ?? 0,
-    hitLocation:           "body",
-    headshotBonus,
-    targetHeadshotDR:      0,
-    targetPDR:             0,
-    attackerPen:           0,
-    projectileReduction:   0,
-    truePhysicalDmg:       atom.trueDamage ? (atom.base ?? 0) : 0,
-  });
-}
-
 // ─────────────────────────────────────────────────────────────────────
 // Magical dispatch
 // ─────────────────────────────────────────────────────────────────────
@@ -265,22 +240,6 @@ function projectMagicalHit(atom, hitLocation, derivedStats, perTypeBonuses, targ
   }
 
   return hitDmg;
-}
-
-// Magical pre-MDR computation for lifesteal. Per healing_verification.md:18-21,
-// lifesteal = outgoing × (1 + HealingMod) — the "outgoing" here is body damage
-// before MDR/DR clamp. We replicate the calcSpellDamage formula sans the MDR
-// multiplier.
-function computeMagicalPreMDR(atom, derivedStats, perTypeBonuses, ctx) {
-  const mpb = derivedStats.mpb?.value ?? 0;
-  const typeBonus = perTypeBonuses?.[atom.damageType] ?? 0;
-  const weaponMagicalDamage = ctx._weaponMagicalDamageFlat ?? 0;
-  const scaling = atom.scaling ?? 0;
-  const baseDamage = (atom.base ?? 0) + weaponMagicalDamage;
-  // Body hit location (hlm = 1.0) since lifesteal tracks per-hit pre-reduction
-  // at the body location.
-  const hlm = 1.0;
-  return Math.floor(baseDamage * (1 + mpb * scaling + typeBonus) * hlm);
 }
 
 // ─────────────────────────────────────────────────────────────────────

@@ -308,11 +308,12 @@ describe('projectDamage — AoE / DoT body-only', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────
-// V12 — Lifesteal descriptor (pre-MDR)
+// V12 — Lifesteal descriptor (post-DR basis per RESOLVED entry
+// "Life Drain Heal Basis = Post-DR Damage Dealt", 2026-04-17)
 // ─────────────────────────────────────────────────────────────────────
 
-describe('projectDamage — V12 Life Drain lifesteal descriptor (unresolved_questions.md:270-278)', () => {
-  it('lifestealRatio 1.0 emits descriptor with healAmount = pre-MDR body damage', () => {
+describe('projectDamage — V12 Life Drain lifesteal descriptor (healing_verification.md §Lifesteal, 2026-04-17)', () => {
+  it('lifestealRatio 1.0 emits descriptor with healAmount = post-DR body damage', () => {
     const atom = damageAtom({
       base: 5, scaling: 0.25, damageType: "evil_magical",
       isDot: true, tickRate: 1, lifestealRatio: 1.0,
@@ -322,18 +323,18 @@ describe('projectDamage — V12 Life Drain lifesteal descriptor (unresolved_ques
       [atom], ds({ mpb: { value: 0.23 } }), {}, [], target({ mdr: 0.075 }),
       null, { ...baseCtx, target: target({ mdr: 0.075 }) }
     );
-    // pre-MDR body = floor(5 × (1 + 0.23 × 0.25) × 1) = floor(5 × 1.0575) = 5
+    // Post-DR body = floor(5 × (1 + 0.23 × 0.25) × 1 × (1 - 0.075))
+    //              = floor(5 × 1.0575 × 0.925) = floor(4.89) = 4
+    expect(damageProjections[0].hit.body).toBe(4);
     expect(derivedHealDescriptors).toHaveLength(1);
     expect(derivedHealDescriptors[0]).toMatchObject({
       kind: "lifesteal",
       damageAtomId: "life_drain:damage:0",
-      healAmount: 5,
+      healAmount: 4,
       healType: "magical",
       target: "self",
     });
-    // Post-MDR damage (displayed): floor(5 × 1.0575 × 0.925) = floor(4.89) = 4
-    expect(damageProjections[0].hit.body).toBe(4);
-    // Lifesteal recovers 5 (pre-MDR), not 4 (post-MDR).
+    // Lifesteal tracks post-DR hit.body (4), mirroring in-game 1:1 ratio.
   });
 });
 

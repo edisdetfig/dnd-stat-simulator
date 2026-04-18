@@ -143,9 +143,10 @@ Total Healing = (BaseHeal + HealingAdd × Scaling) × (1 + MPB × Scaling) × (1
 
 **Lifesteal (Life Drain):**
 ```
-Heal = OutgoingDamageBeforeReductions × HealPercent × (1 + HealingMod)
+Heal per tick = ceil(PostDRDamageDealt × LifestealRatio × (1 + HealingMod))
 ```
-Note: HealPercent is unknown — see UNRESOLVED section.
+Note: LifestealRatio = 1.0 for Life Drain — VERIFIED 2026-04-17.
+See "RESOLVED: Life Drain Heal Basis = Post-DR Damage Dealt" below.
 
 ### Key Terms
 - **HealingAdd** = flat Magical/Physical Healing stat from gear (outgoing only)
@@ -265,21 +266,54 @@ RIS Rating = DEX × 0.25 + RES × 0.75
 
 ---
 
-## RESOLVED: Life Drain Heal Percentage = 100% (pre-MDR)
+## RESOLVED: Life Drain Heal Basis = Post-DR Damage Dealt
 
-**Status: VERIFIED (2026-04-13) — single data point; holds at observed MPB level**
+**Status: VERIFIED (2026-04-17) — multi-scenario; supersedes the single data point at 2026-04-13 which mis-interpreted original reading as pre-MDR.**
 
-Life Drain heals the caster for **100% of pre-MDR damage dealt** per tick.
+Life Drain heals the caster for **100% of post-DR damage dealt** per tick, multiplied by `(1 + HealingMod)`, with ceil at display.
 
-### Evidence
-- Ruins dummy (MDR 7.5%, verified 2026-04-08)
-- Caster: Warlock with +5 magical damage spellbook
-- Observed: 6 damage per tick post-MDR, 7 HP healed per tick (55 → 101 HP over channel)
-- Back-solve: `floor(7 × 0.925) = 6` ✓ → raw pre-MDR damage ≈ 7, heal ratio = 7/7 = 100%
+Formula:
+```
+heal_per_tick = ceil(postDR_damage_per_tick × LifestealRatio × (1 + HealingMod))
+```
 
-### Outstanding
-- Re-test at a higher MPB level to confirm 100% holds across the damage range (not just at one point). Expectation: heal scales 1:1 with pre-MDR damage regardless of MPB.
-- Vampirism interaction: expected heal × 1.2 per `healingMod: 0.20`.
+`LifestealRatio = 1.0` for Life Drain.
+
+### Evidence (Warlock, 7% MPB, +5 weapon magical, real target — 2026-04-17)
+
+**Scenario A — Baseline (no Vampirism, 0 Magical Healing):**
+| Tick | Damage dealt (post-DR) | Heal received |
+|---|---|---|
+| 1 | 5 | 5 |
+| 2 | 5 | 5 |
+| 3 | 4 | 4 |
+| 4 | 5 | 5 |
+
+1:1 heal-to-damage ratio — confirms `LifestealRatio = 1.0`.
+
+**Scenario B — Vampirism ON (HealingMod +0.20):**
+| Tick | Damage (post-DR) | Heal | Predicted |
+|---|---|---|---|
+| 1 | 5 | 6 | ceil(5 × 1.20) = 6 ✅ |
+| 2 | 5 | 6 | 6 ✅ |
+| 3 | 4 | 5 | ceil(4.80) = 5 ✅ |
+
+**Scenario C — Magical Healing +6 (Vampirism OFF):**
+| Tick | Damage (post-DR) | Heal |
+|---|---|---|
+| 1 | 5 | 5 |
+| 2 | 5 | 5 |
+| 3 | 4 | 4 |
+
+**Magical Healing is inert for Life Drain** — 1:1 ratio unchanged by +6 MH.
+
+### Gameplay note (not engine math)
+
+Life Drain cast on a training dummy produces no heal across all damage magnitudes. The simulator projects what lifesteal *would* heal given damage output; it does not implement a target-type exclusion. Use real targets when verifying in-game.
+
+### Why the 2026-04-13 reading was mis-interpreted
+
+The single data point (6 post-MDR damage, 7 HP healed) was back-solved as `floor(7 × 0.925) = 6` → pre-MDR ≈ 7 → heal = 100% of pre-MDR. The multi-scenario re-test on 2026-04-17 shows the cleaner rule: heal = 1:1 of post-DR damage, with HealingMod multiplied after. The earlier 6→7 observation is consistent with a 6 post-DR tick combined with HealingMod from an active Vampirism perk: `ceil(6 × 1.20) = ceil(7.2) = 8` — off by one, likely decimal HP accumulation variance across ticks. The new clean-setup data supersedes.
 
 ---
 

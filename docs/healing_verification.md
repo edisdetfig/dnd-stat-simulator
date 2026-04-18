@@ -17,8 +17,14 @@ Total Healing = (BaseHeal + HealingAdd × Scaling) × (1 + MPB × Scaling) × (1
 
 ### Lifesteal (Life Drain)
 ```
-Heal = OutgoingDamageBefore Reductions × (1 + HealingMod)
+Heal per tick = ceil(PostDRDamageDealt × LifestealRatio × (1 + HealingMod))
 ```
+
+`PostDRDamageDealt` is the damage number the target receives *after* all target reductions (MDR for magical, PDR for physical). Ceil applies at display-surface; internal HP uses decimals (see "HP is tracked with decimals" below).
+
+**HealingAdd (Magical Healing / Physical Healing) does NOT apply to lifesteal.** MPB contributes to the damage value itself (which feeds the post-DR basis); it does not multiply the heal a second time.
+
+Anchor: Life Drain, `LifestealRatio = 1.0`. Verified 2026-04-17 — see "Verification Data — Life Drain Lifesteal (2026-04-17)" below.
 
 ## Terms
 - **HealingAdd** = flat "Magical Healing" or "Physical Healing" stat from gear (outgoing only)
@@ -32,7 +38,7 @@ Heal = OutgoingDamageBefore Reductions × (1 + HealingMod)
 |---|---|---|---|---|
 | Torture Mastery | 2 | 0.15 | Magical | Per second of curse damage. NOT a HoT — new instance each tick. |
 | Shadow Touch | 2 | 0 | Magical | Always flat 2. Gear MH and MPB have NO effect (0% scaling). |
-| Life Drain | = dmg dealt | N/A | Lifesteal | Only HealingMod applies. |
+| Life Drain | = post-DR dmg dealt | N/A | Lifesteal | Only HealingMod applies. See §Lifesteal (Life Drain). |
 | Healing Potion | 20 | 0.50 | Magical | HoT over varying duration by rarity. Affected by Buff Duration. |
 | Troll's Blood | 30 | 0.50 | Magical | HoT. Affected by Buff Duration. |
 
@@ -64,3 +70,44 @@ All tests: Poor Healing Potion (20 HP over 20s, 0.50 scaling)
 | 6 | Fighter geared + 8 MH | 8 | 0% | 14.5% | 26.40 | 27 | ✅ ceil |
 
 All fractional results consistent with decimal HP + ceil display.
+
+## Verification Data — Life Drain Lifesteal (2026-04-17)
+
+Caster: Warlock, 7% MPB, +5 magical damage spellbook equipped. Target: real target (not training dummy). Life Drain cast, per-tick damage and heal observed.
+
+Formula: `heal = ceil(postDR_damage × LifestealRatio × (1 + HealingMod))`, with `LifestealRatio = 1.0` for Life Drain.
+
+### Scenario A — Baseline (no Vampirism, 0 Magical Healing)
+
+| Tick | Damage dealt (post-DR) | Heal received | Predicted |
+|---|---|---|---|
+| 1 | 5 | 5 | ceil(5 × 1.0 × 1.0) = 5 ✅ |
+| 2 | 5 | 5 | 5 ✅ |
+| 3 | 4 | 4 | 4 ✅ |
+| 4 | 5 | 5 | 5 ✅ |
+
+1:1 heal-to-damage confirms `LifestealRatio = 1.0`.
+
+### Scenario B — Vampirism ON (HealingMod +0.20, 0 Magical Healing)
+
+| Tick | Damage dealt (post-DR) | Heal received | Predicted |
+|---|---|---|---|
+| 1 | 5 | 6 | ceil(5 × 1.0 × 1.20) = ceil(6.00) = 6 ✅ |
+| 2 | 5 | 6 | 6 ✅ |
+| 3 | 4 | 5 | ceil(4 × 1.0 × 1.20) = ceil(4.80) = 5 ✅ |
+
+Vampirism multiplicative at the end; ceil applies at display.
+
+### Scenario C — Magical Healing +6 (Vampirism OFF)
+
+| Tick | Damage dealt (post-DR) | Heal received | Predicted |
+|---|---|---|---|
+| 1 | 5 | 5 | 5 ✅ |
+| 2 | 5 | 5 | 5 ✅ |
+| 3 | 4 | 4 | 4 ✅ |
+
+**Magical Healing is inert for Life Drain.** +6 MH leaves the 1:1 heal ratio unchanged — confirms "Only HealingMod applies" (see §Warlock Healing Sources).
+
+### Gameplay note — training dummy
+
+Life Drain cast on a training dummy produces **no heal** across all damage magnitudes. This is a gameplay rule (target-type exclusion), not engine math. The simulator projects what lifesteal *would* heal given damage output; it does not filter by target type. Use real targets for lifesteal verification.

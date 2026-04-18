@@ -158,14 +158,16 @@ describe('Warlock fixture — blood-pact', () => {
 // ─────────────────────────────────────────────────────────────────────
 
 describe('Warlock fixture — life-drain', () => {
-  it('V12: life_drain damage atom emits lifesteal descriptor with pre-MDR healAmount', () => {
+  it('V12: life_drain damage atom emits lifesteal descriptor with post-DR healAmount', () => {
     const result = runPipeline(WARLOCK_LIFE_DRAIN_BUILD);
     const desc = result.derivedHealDescriptors.find(d =>
       d.damageAtomId === "life_drain:damage:0" && d.kind === "lifesteal");
     expect(desc).toBeDefined();
-    // Pre-MDR body damage for life_drain (base 5, scaling 0.25, mpb ~0.23):
-    // floor(5 × (1 + 0.23 × 0.25) × 1) = floor(5 × 1.0575) = 5.
-    expect(desc.healAmount).toBe(5);
+    // Post-DR body damage for life_drain (base 5, scaling 0.25, mpb ~0.23,
+    // target.mdr 0.075):
+    // floor(5 × (1 + 0.23 × 0.25) × 1 × (1 - 0.075))
+    //   = floor(5 × 1.0575 × 0.925) = floor(4.891) = 4.
+    expect(desc.healAmount).toBe(4);
     expect(desc.healType).toBe("magical");   // evil_magical family-collapse
   });
 
@@ -174,8 +176,10 @@ describe('Warlock fixture — life-drain', () => {
     const heal = result.healProjections.find(h =>
       h.atomId === "life_drain:damage:0" && h.derivedFrom?.kind === "lifesteal");
     expect(heal).toBeDefined();
-    // 5 × (1 + 0.20) = 6
-    expect(heal.amount).toBeCloseTo(6);
+    // Engine surface is float; 4 × (1 + 0.20) = 4.8. Display-surface
+    // ceil to 5 is applied by the UI (Phase 7+), not here — per
+    // healing_verification.md:49.
+    expect(heal.amount).toBeCloseTo(4.8);
   });
 });
 

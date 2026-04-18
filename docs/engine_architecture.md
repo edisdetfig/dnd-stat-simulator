@@ -592,15 +592,17 @@ Implemented by `src/engine/damage.js::calcHealing`.
 
 ### 16.2 Lifesteal engine rule (LOCK 3)
 
-For every DAMAGE_ATOM with a present `lifestealRatio ∈ [0, 1]`, the engine derives a HEAL projection:
+For every DAMAGE_ATOM with a present `lifestealRatio ∈ [0, 1]`, the engine derives a HEAL projection from the source atom's already-computed **post-DR** body damage:
 
 ```
-heal_amount = lifestealRatio × damage_atom_projection
+heal_amount = lifestealRatio × damage_atom_projection.hit.body
 target      = "self"
 healType    = damageTypeToHealType(damage_atom.damageType)
 atomId      = damage_atom's atomId   // Reuse the source atom's id; provenance in derivedFrom.
 derivedFrom = { kind: "lifesteal", damageAtomId: damage_atom.atomId }
 ```
+
+`hit.body` is the post-DR body-location damage computed in the same Stage 6 pass via `calcPhysicalMeleeDamage` / `calcSpellDamage`; the lifesteal derivation reads it directly rather than re-computing. For atoms whose projection omits `hit.body` (future forward-spec: head- or limb-only lifesteal sources), the engine treats the missing location as 0 — lifesteal sources body damage today.
 
 The derived HEAL is appended to `healProjections[]`. The `DamageProjection` for the source atom carries `derivedHeal` as a back-reference so UI can co-locate damage and lifesteal in a single visual row.
 
@@ -611,9 +613,9 @@ The derived HEAL is appended to `healProjections[]`. The `DamageProjection` for 
 | `physical` | `physical` |
 | Any magical subtype (`magical`, `dark_magical`, `fire_magical`, `evil_magical`, ...) | `magical` |
 
-The collapse is a small utility shipped with the engine. Lifesteal routes through `calcHealing` with `baseHeal = heal_amount`, `scaling = 0` (since the amount is already derived), `healingMod = bonuses.healingMod` (Vampirism still applies; per `docs/healing_verification.md:18–21`, Life Drain has "Only HealingMod applies").
+The collapse is a small utility shipped with the engine. Lifesteal routes through `calcHealing` with `baseHeal = heal_amount`, `scaling = 0` (since the amount is already derived), `mpb = 0`, `healingAdd = 0` (HealingAdd / MPB do not contribute a second time; MPB is already baked into the damage value that fed the post-DR basis), `healingMod = bonuses.healingMod` (Vampirism still applies; per `docs/healing_verification.md` §Lifesteal (Life Drain), "Only HealingMod applies"). Ceil at display-surface per `docs/healing_verification.md:49`; the engine returns a float and the UI applies ceil.
 
-First anticipated consumer (Phase 4): Warlock Life Drain's damage atom, re-authored with `lifestealRatio: 1.0`. Verified test point: `docs/unresolved_questions.md:270–278` — Life Drain heals 100% of pre-MDR damage dealt.
+First anticipated consumer (Phase 4): Warlock Life Drain's damage atom, re-authored with `lifestealRatio: 1.0`. Verified test points: `docs/unresolved_questions.md` "RESOLVED: Life Drain Heal Basis = Post-DR Damage Dealt" (2026-04-17) and `docs/healing_verification.md` "Verification Data — Life Drain Lifesteal (2026-04-17)" — three scenarios confirming 1:1 post-DR basis, Vampirism multiplicative, Magical Healing inert.
 
 ### 16.3 `percentMaxHealth` on HEAL_ATOM
 
