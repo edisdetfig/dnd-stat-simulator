@@ -119,10 +119,10 @@ describe('buildContext weapon-state derivation', () => {
     expect(ctx.isUnarmed).toBe(true);
   });
 
-  it('virtual two_handed: reads gear.weapon.handed', () => {
+  it('virtual two_handed: reads gear.weapon.handType', () => {
     const ctx = buildContext(makeBuild({
       weaponType: "axe",
-      gear: { weapon: { weaponType: "axe", handed: "two_handed" }, bonuses: {} },
+      gear: { weapon: { weaponType: "axe", handType: "twoHanded" }, bonuses: {} },
     }));
     expect(ctx.isTwoHanded).toBe(true);
     expect(ctx.isOneHanded).toBe(false);

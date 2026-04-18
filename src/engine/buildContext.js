@@ -92,7 +92,7 @@ export function buildContext(build) {
     environment:           build.environment,
     target,
 
-    gear:                  build.gear ?? { weapon: null, bonuses: {} },
+    gear: normalizeGearPayload(build.gear),
     weaponType:            weaponState.weaponType,
     isRanged:              weaponState.isRanged,
     isTwoHanded:           weaponState.isTwoHanded,
@@ -126,6 +126,22 @@ export function buildContext(build) {
 }
 
 // ─────────────────────────────────────────────────────────────────────
+// Gear payload normalization — guarantees ctx.gear shape fields present
+// ─────────────────────────────────────────────────────────────────────
+
+function normalizeGearPayload(gear) {
+  if (!gear) {
+    return { weapon: null, bonuses: {}, onHitEffects: [] };
+  }
+  return {
+    ...gear,
+    weapon:       gear.weapon       ?? null,
+    bonuses:      gear.bonuses      ?? {},
+    onHitEffects: gear.onHitEffects ?? [],
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────
 // §6.4 — weapon-state derivation
 // ─────────────────────────────────────────────────────────────────────
 
@@ -136,9 +152,9 @@ function deriveWeaponState(build) {
   const weaponType = build.weaponType ?? weapon?.weaponType ?? null;
 
   const isRanged = WEAPON_TYPE_CATEGORIES.ranged.includes(weaponType);
-  const handed   = weapon?.handed ?? null;   // forward-spec: gear may author this
-  const isTwoHanded = build.isTwoHanded ?? handed === "two_handed";
-  const isOneHanded = build.isOneHanded ?? handed === "one_handed";
+  const handType = weapon?.handType ?? null;   // canonical per OQ-D12 (Phase 6.5c.2)
+  const isTwoHanded = build.isTwoHanded ?? handType === "twoHanded";
+  const isOneHanded = build.isOneHanded ?? handType === "oneHanded";
   const isUnarmed   = build.isUnarmed   ?? (weapon == null || weaponType === "unarmed");
   const isInstrument = build.isInstrument
     ?? (Array.isArray(weapon?.tags) && weapon.tags.includes("instrument"));

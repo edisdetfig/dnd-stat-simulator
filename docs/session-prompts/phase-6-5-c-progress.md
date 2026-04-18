@@ -29,6 +29,21 @@ Awareness notes absorbed:
 | 12 | `npm test` full suite | 2026-04-17 | 2026-04-17 | done — 523 passing, 10 failing (all pre-existing class-shape-validator migration-to-do-list; LOCK H out-of-scope). VERIFIED Warlock 32/32. |
 | 13 | Doc updates: close class-shape-progress.md § Gear-shape open questions § 1 | 2026-04-17 | 2026-04-17 | done — parked Spiked Gauntlet onHit item resolved by OQ-D6 (a) |
 
-## 6.5c.2 — Normalizer + engine seams (held for separate sign-off)
+## 6.5c.2 — Normalizer + engine seams
 
-Begins only after 6.5c.1 Completion Report signed off.
+Sign-off received 2026-04-17 with three awareness flags:
+1. `inherentWeaponProperties` → `ctx.comboMultiplier / impactZone` normalization deferred to Phase 11 (deliberate scope decision; fixture side-channel retained this phase).
+2. Pre-Step-3 grep confirms `conditions.js` has no `.handed` field reads — only virtual-category string matches (`"two_handed"` / `"one_handed"` in `WEAPON_TYPES` vocabulary, untouched by this rename).
+3. `ctx.gear` default at `buildContext.js:95` must include `onHitEffects: []` default — handled in Step 4 via `normalizeGearPayload` helper.
+
+| Step | Work | Started | Completed | Result |
+|---|---|---|---|---|
+| 1 | Perf baseline (`max-loadout.fixture.js`) | 2026-04-17 | 2026-04-17 | done — mean 0.0546 ms, p99 0.2488 ms (well under 50 ms budget) |
+| 2 | `src/engine/normalizeBuild.js` + tests | 2026-04-17 | 2026-04-17 | done — 12 tests; held-loadout pick (OQ-D7 path a); percent→decimal conversion; alias resolution via `resolveCanonicalStat`; onHitEffects aggregation with `sourceItemId`; attr pre-sum |
+| 3 | `handType` rename cascade | 2026-04-17 | 2026-04-17 | done — `buildContext.js:139-141` + `buildContext.test.js:122-125`; conditions.js confirmed untouched (virtual-category strings ≠ `.handed` field reads); fixtures did not author `handed` so no cascade |
+| 4 | `ctx.gear.onHitEffects[]` plumbing | 2026-04-17 | 2026-04-17 | done — `buildContext.js:95` via `normalizeGearPayload`; `projectDamage.js` sums riders into `truePhysicalDmg` arg for physical-primary-hit atoms gated on `atom.isWeaponPrimary === true`; `computePhysicalPreDR` gets same treatment for lifesteal consistency |
+| 5 | Spiked Gauntlet rider integration test | 2026-04-17 | 2026-04-17 | done — `gear-on-hit.test.js` 8 tests; includes VERIFIED `floor(X)+1` delta-shape anchor against `docs/damage_formulas.md:235-240` (delta assertion; full Warlock verification requires Phase 11 primary-attack synthesis) |
+| 6 | E2E smoke test (CharacterBuild → normalizeBuild → runSnapshot) | 2026-04-17 | 2026-04-17 | done — `normalizeBuild-e2e.test.js` 5 tests; warlockBuild pipeline validated; Plan's golden-diff against max-loadout.fixture.js downscoped (full 30-bonus parity requires Phase 11+ item catalog) |
+| 7 | Post-implementation perf | 2026-04-17 | 2026-04-17 | done — mean 0.0573 ms (delta +0.003, noise-level), p99 0.2118 ms (improved); budget +5ms unused |
+| 8 | Full `npm test` | 2026-04-17 | 2026-04-17 | done — 548 passing, 10 pre-existing class-migration failures unchanged, 0 new regressions. VERIFIED Warlock fixtures green. |
+| 9 | Doc updates: `engine_architecture.md §5` (ctx.gear shape extension + onHitEffects), `§15.1` (gear on-hit rider math); progress doc | 2026-04-17 | 2026-04-17 | done |

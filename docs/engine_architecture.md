@@ -148,7 +148,18 @@ ctx = {
   target:                { pdr, mdr, headshotDR, creatureType?, maxHealth? },
 
   // Gear + attributes
-  gear:                  { weapon, bonuses: Record<StatId, number>, ... },
+  //
+  // Gear sub-shape (Phase 6.5c.2):
+  //   weapon: { weaponType, handType, baseWeaponDmg, gearWeaponDmg, magicalDamage? } | null
+  //     handType ∈ {"oneHanded", "twoHanded"} — canonical per OQ-D12.
+  //   offhand: { weaponType } | null
+  //   bonuses: Record<StatId, number>
+  //   onHitEffects: Array<{ damage, damageType, trueDamage, scaling, separateInstance, sourceItemId }>
+  //     Per-hit riders on weapon-primary-hits (OQ-D6). Consumed by
+  //     projectDamage at the post-floor true-physical additive position
+  //     (docs/damage_formulas.md:235-240). Gated on
+  //     `atom.isWeaponPrimary === true`.
+  gear:                  { weapon, offhand, bonuses: Record<StatId, number>, onHitEffects: OnHitEffect[] },
   weaponType?:           string,                     // resolved from gear (see WEAPON_TYPES in vocabulary.md § 7.2)
   attributes:            { str, vig, agi, dex, wil, kno, res },   // base + gear contribution summed
 
@@ -508,6 +519,8 @@ Physical Damage = floor(
 ```
 
 Implemented by `src/engine/damage.js::calcPhysicalMeleeDamage`.
+
+**Gear on-hit riders (Phase 6.5c.2 / OQ-D6).** `ctx.gear.onHitEffects[]` entries whose `damageType === "physical"`, `trueDamage === true`, and `separateInstance === false` contribute into the `True Physical Damage` term above — summed as `sum(rider.damage × (rider.scaling ?? 1))`. The rider is gated on `atom.isWeaponPrimary === true` (so skills / AoEs / DoTs do not pick it up). Spiked Gauntlet +1 is the anchor case (`docs/damage_formulas.md:235-240`). Addition lands inside `Math.floor()` as the final term — for integer riders the end-state is identical to `floor(X)+1`.
 
 DR formula (per `docs/damage_formulas.md:47–55`):
 

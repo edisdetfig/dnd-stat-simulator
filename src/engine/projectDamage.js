@@ -143,6 +143,8 @@ function projectPhysicalHit(atom, hitLocation, derivedStats, target, gearWeapon,
   const headshotBonus = derivedStats.headshotDamageBonus?.value ?? 0;
   const buffWeaponDmg = ctx._buffWeaponDamageFlat ?? 0;
 
+  const gearOnHitTruePhys = sumGearOnHitTruePhysical(atom, ctx);
+
   return calcPhysicalMeleeDamage({
     baseWeaponDmg,
     buffWeaponDmg,
@@ -159,8 +161,41 @@ function projectPhysicalHit(atom, hitLocation, derivedStats, target, gearWeapon,
     projectileReduction:   (Array.isArray(atom.tags) && atom.tags.includes("projectile"))
                              ? (target?.projectileDR ?? 0)
                              : 0,
-    truePhysicalDmg:       atom.trueDamage ? (atom.base ?? 0) : 0,
+    truePhysicalDmg:       (atom.trueDamage ? (atom.base ?? 0) : 0) + gearOnHitTruePhys,
   });
+}
+
+// Gear on-hit-effect contribution to the true-physical slot (OQ-D6).
+// Applies only to physical primary-weapon-hit atoms — `atom.isWeaponPrimary
+// === true` gates the read so ability-authored atoms (skills, AoEs, DoTs)
+// never pick up the rider. Matching §4.4 Spiked Gauntlet semantics: +1 true
+// physical rolled into the main number per docs/damage_formulas.md:235-240
+// (added inside Math.floor as the final `+ truePhysicalDmg` term — for
+// integer riders the end-state equals `floor(X)+1`).
+//
+// Rider filter:
+//   - damageType === "physical"
+//   - trueDamage === true        (non-true-damage riders would need a
+//                                 separate non-trueDamage injection path)
+//   - separateInstance === false (true → separate DAMAGE atom; deferred)
+// Scaling: rider.scaling ?? 1 is applied multiplicatively to the damage
+// value. For flat integer riders (Spiked Gauntlet +1 × 1.0) scaling is a
+// passthrough; future riders may vary.
+function sumGearOnHitTruePhysical(atom, ctx) {
+  // atom.isWeaponPrimary: set by future weapon-primary-atom synthesis
+  // (Phase 11+). No pipeline stage populates it today; tests must set it
+  // manually. See engine_architecture.md § 15.1 for the contract.
+  if (!atom?.isWeaponPrimary) return 0;
+  const effs = ctx?.gear?.onHitEffects ?? [];
+  if (effs.length === 0) return 0;
+  let sum = 0;
+  for (const eff of effs) {
+    if (eff.damageType !== "physical") continue;
+    if (!eff.trueDamage) continue;
+    if (eff.separateInstance) continue;
+    sum += (eff.damage ?? 0) * (eff.scaling ?? 1);
+  }
+  return sum;
 }
 
 // Physical pre-DR computation for lifesteal — runs calcPhysicalMeleeDamage
